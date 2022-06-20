@@ -1,0 +1,99 @@
+// app global css in SCSS form
+body,
+.q-layout {
+  font-family: "Noto Sans", sans-serif;
+  font-size: 16px;
+  background-color: #fafafa;
+}
+a {
+  color: #0431ea;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.text-h1,
+.text-h2,
+.text-h3,
+.text-h4,
+.text-h5,
+.text-h6,
+.q-toolbar__title {
+  font-family: "Noto Serif", serif;
+  font-weight: 700;
+  line-height: 1em;
+  margin: 0;
+  overflow: visible;
+}
+h1,
+.text-h1 {
+  font-size: 2.6em;
+}
+h2,
+.text-h2 {
+  font-size: 1.8em;
+  // font-weight: 400;
+  font-style: italic;
+}
+h3,
+.text-h3 {
+  font-size: 1.6em;
+}
+h4,
+.text-h4 {
+  font-size: 1.4em;
+}
+h5,
+.text-h5 {
+  font-size: 1.2em;
+}
+h6,
+.text-h6 {
+  font-size: 1em;
+}
+.q-btn {
+  font-weight: 700;
+
+  &:not(.q-btn--round, .q-btn--fab, .q-btn--rounded) {
+    border-radius: 6px;
+  }
+}
+.q-card {
+  border-radius: 8px;
+  overflow: hidden;
+}
+.q-field--with-bottom {
+  padding-bottom: 0;
+}
+.q-field__bottom {
+  min-height: 0;
+  padding: 0;
+}
+.q-field__messages div,
+.q-field__counter {
+  padding: 8px 0;
+}
+.q-field__bottom--animated {
+  transform: none;
+  position: inherit;
+}
+.gradient {
+  background-image: linear-gradient(45deg, #d70057, #0431ea);
+}
+.gradient-text {
+  /* Fallback: Set a background color. */
+  background-color: #d70057;
+
+  background-image: linear-gradient(45deg, #d70057, #0431ea);
+  background-size: 100%;
+  background-repeat: repeat;
+
+  /* Use the text as a mask for the background. */
+  /* This will show the gradient as a text color rather than element bg. */
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  -moz-background-clip: text;
+  -moz-text-fill-color: transparent;
+}
