@@ -19,88 +19,44 @@
     outlined
   />
 
-  <editor-menu v-if="editorStore && editorStore.editor" />
+  <EditorMenu v-if="editorStore && editorStore.editor" />
 
-  <editor-content :editor="editorStore.editor" />
+  <TipTapEditor v-model="content" />
 
-  <div
-    class="text-center generator"
-    v-if="
-      editorStore &&
-      editorStore.editor &&
-      editorStore.editor.storage.characterCount.words() < 60
-    "
-    :class="{
-      'less-visible': editorStore.editor.storage.characterCount.words() > 30,
-    }"
-  >
-    <q-separator class="q-my-lg" />
-    <div class="text-caption q-mb-sm">
-      Don't feel like starting with an empty page?
-    </div>
-    <q-btn
-      label="Generate outline"
-      no-caps
-      class="gradient"
-      text-color="white"
-    />
-  </div>
-
-  <q-page-sticky
-    position="bottom-left"
-    :offset="[8, 8]"
-    v-if="editorStore && editorStore.editor"
-  >
-    <!-- {{ editorStore.editor.storage.collaborationCursor.users }} -->
-    <!-- <q-chip v-if="!saved">Saving...</q-chip> -->
-    <q-chip dense>
-      <span class="q-gutter-x-xs items-center flex q-pr-xs">
-        <q-icon name="mdi-circle" color="green" />
-        <strong>
-          {{
-            editorStore.editor.storage.collaborationCursor.users.length
-          }}</strong
-        >
-        <span>online</span>
-      </span>
-    </q-chip>
-  </q-page-sticky>
-  <q-page-sticky
-    position="bottom"
-    :offset="[8, 8]"
-    v-if="editorStore && editorStore.editor"
-  >
-    <!-- {{ editorStore.editor.storage.collaborationCursor.users }} -->
-    <!-- <q-chip v-if="!saved">Saving...</q-chip> -->
-    <q-chip square>
-      <span class="q-gutter-x-xs">
-        <strong>
-          {{ editorStore.editor.storage.characterCount.words() }}</strong
-        >
-        <span>words</span>
-      </span>
-    </q-chip>
+  <q-page-sticky position="bottom-left" :offset="[8, 8]">
+    <q-chip
+      v-if="
+        !saved &&
+        this.editorStore.clientID === this.articleSync.syncedByClientID
+      "
+      icon="mdi-sync"
+      >Saving...</q-chip
+    >
+    <q-chip v-else icon="mdi-cloud-check">Saved</q-chip>
   </q-page-sticky>
 </template>
 
 <script>
 import { useEditorStore } from "stores/editor";
 import { useFirebaseStore } from "stores/firebase";
-// import TestTest  from "components/TestTest2.vue";
 
+import sanitizeHtml from "sanitize-html";
+
+import {
+  getFirestore,
+  setDoc,
+  getDoc,
+  doc,
+  onSnapshot,
+  serverTimestamp,
+} from "firebase/firestore";
+const db = getFirestore();
+
+import _ from "lodash";
+
+// VUE COMPONENTS
+import TipTapEditor from "components/TipTapEditor.vue";
 import EditorMenu from "components/EditorMenu.vue";
-
-import { Editor, EditorContent } from "@tiptap/vue-3";
-import StarterKit from "@tiptap/starter-kit";
-import Link from "@tiptap/extension-link";
-import Placeholder from "@tiptap/extension-placeholder";
-import CharacterCount from "@tiptap/extension-character-count";
-
-import Collaboration from "@tiptap/extension-collaboration";
-import CollaborationCursor from "@tiptap/extension-collaboration-cursor";
-
-import * as Y from "yjs";
-import { WebrtcProvider } from "y-webrtc";
 
 export default {
   setup() {
@@ -114,96 +70,104 @@ export default {
     };
   },
   components: {
-    EditorContent,
+    TipTapEditor,
     EditorMenu,
   },
 
   data() {
     return {
-      // provider: useEditorStore(),
-      editor: null,
-      link: "",
-      linkDialog: false,
+      content: "",
       title: "",
       description: "",
-      currentLink: "",
-      backgroundColor: "",
-      textColor: "",
+      firstSave: true,
+      saved: true,
+      articleSync: null,
     };
   },
 
-  mounted() {
-    this.$nextTick(() => {
-      this.setUserColor();
-
-      // A new Y document
-      const ydoc = new Y.Doc();
-      // Registered with a WebRTC provider
-      this.provider = new WebrtcProvider("activisthandbook-edit", ydoc);
-
-      this.editorStore.editor = new Editor({
-        // content: "<p>I’m running Tiptap with Vue.js. 🎉</p>",
-        extensions: [
-          // StarterKit,
-
-          StarterKit.configure({
-            // The Collaboration extension comes with its own history handling
-            history: false,
-          }),
-          Collaboration.configure({
-            document: ydoc,
-          }),
-          CollaborationCursor.configure({
-            provider: this.provider,
-            user: {
-              firebaseID: this.firebaseStore.auth.currentUser.uid,
-              name: this.firebaseStore.auth.currentUser.displayName,
-              color: this.backgroundColor,
-              avatar: this.firebaseStore.auth.currentUser.photoURL,
-            },
-          }),
-          Link.configure({
-            openOnClick: false,
-            protocols: ["mailto"],
-          }),
-          CharacterCount,
-          Placeholder.configure({
-            // Use a placeholder:
-            // Use different placeholders depending on the node type:
-            placeholder: ({ node }) => {
-              if (node.type.name === "heading") {
-                return "Heading...";
-              }
-
-              return "Write something...";
-            },
-          }),
-        ],
-      });
+  mounted: function () {
+    const articleSyncRef = doc(db, "articleSync", "test");
+    onSnapshot(articleSyncRef, (doc) => {
+      this.articleSync = doc.data();
     });
   },
 
-  methods: {
-    setUserColor() {
-      // ** Colour Contrast Calculator ** //
-      // ** https://www.w3.org/TR/AERT#color-contrast ** //
-      // ** ((Red value X 299) + (Green value X 587) + (Blue value X 114)) / 1000 ** //
+  watch: {
+    content: async function (newValue, oldValue) {
+      // console.log(this.editor.getHTML());
+      if (!this.firstSave && !this.serverSave) {
+        console.log("watch content triggered");
+        this.debouncerFirst();
+        this.debouncerSecond(newValue);
+        this.saved = false;
+      } else {
+        this.firstSave = false;
+        if (newValue === "<p></p>") {
+          this.serverSave = true;
+          // no content yet
 
-      for (var i = 0; i < 100; i++) {
-        // Generate random RGB values
-        let color = "#";
-        for (let i = 0; i < 3; i++)
-          color += (
-            "0" +
-            Math.floor(((1 + Math.random()) * Math.pow(16, 2)) / 2).toString(16)
-          ).slice(-2);
-        this.backgroundColor = color;
+          getDoc(doc(db, "articles", "test"))
+            .then((snapshot) => {
+              if (snapshot.exists()) {
+                this.content = sanitizeHtml(snapshot.data().content);
+              } else {
+                console.log("No data available");
+              }
+            })
+            .catch((error) => {
+              console.error(error);
+            });
+        } else {
+          this.serverSave = false;
+        }
       }
     },
   },
 
-  beforeUnmount() {
-    this.editorStore.editor.destroy();
+  methods: {
+    debouncerFirst: _.debounce(function (newVal) {
+      if (
+        !this.articleSync ||
+        (Date.now() + 3 * 1000 > this.articleSync.timestampLastSynced &&
+          this.editorStore.clientID !== this.articleSync.syncedByClientID)
+      ) {
+        console.log("ok, I'm gonna do it!");
+        setDoc(
+          doc(db, "articleSync", "test"),
+          {
+            timestampLastSynced: serverTimestamp(),
+            syncedByClientID: this.editorStore.clientID,
+          },
+          { merge: true }
+        ).then(() => {
+          this.saved = true;
+        });
+      }
+    }, 5000),
+    debouncerSecond: _.debounce(function (newVal) {
+      console.log("debouncer");
+
+      // console.log(
+      //   this.editorStore.clientID === this.articleSync.syncedByClientID
+      // );
+      // console.log(Date.now() + 6 * 1000 > this.articleSync.timestampLastSynced);
+
+      if (
+        !this.articleSync ||
+        this.editorStore.clientID === this.articleSync.syncedByClientID
+      ) {
+        console.log("synced!");
+        setDoc(
+          doc(db, "articles/test"),
+          {
+            content: newVal,
+          },
+          { merge: true }
+        ).then(() => {
+          this.saved = true;
+        });
+      }
+    }, 6000),
   },
 };
 </script>
@@ -244,6 +208,7 @@ export default {
 
 /* Render the username above the caret */
 .collaboration-cursor__label {
+  opacity: 1;
   position: absolute;
   top: -1.4em;
   left: -1px;
@@ -252,11 +217,21 @@ export default {
   font-weight: 600;
   line-height: normal;
   user-select: none;
-  // color: #0d0d0d;
   padding: 0.1rem 0.3rem;
   border-radius: 3px 3px 3px 0;
   white-space: nowrap;
+  cursor: pointer;
+  z-index: 3000;
+
+  &:hover {
+    opacity: 0.5;
+  }
 }
+
+a:focus {
+  background: grey;
+}
+
 .generator {
   transition: 2s opacity;
 }

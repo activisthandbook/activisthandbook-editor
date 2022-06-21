@@ -4,10 +4,10 @@ import { boot } from "quasar/wrappers";
 import { initializeApp } from "firebase/app";
 import { getAnalytics, logEvent, setUserId } from "firebase/analytics";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "firebase/auth";
-import { getFirestore, enableIndexedDbPersistence } from "firebase/firestore";
+// import { getFirestore, enableIndexedDbPersistence } from "firebase/firestore";
 import { getFunctions } from "firebase/functions";
 import { getStorage } from "firebase/storage";
-// import { getDatabase } from "firebase/database";
+import { getDatabase } from "firebase/database";
 
 import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
 import { getPerformance } from "firebase/performance";
@@ -30,6 +30,8 @@ export const useFirebaseStore = defineStore("firebase", {
   state: () => ({
     auth: null,
     functions: null,
+    // database: null,
+    firestore: null,
     userAuthenticated: null,
   }),
 
@@ -41,7 +43,7 @@ export const useFirebaseStore = defineStore("firebase", {
       const firebaseApp = initializeApp(firebaseConfig);
 
       // 🔥 INITIALISE REALTIME DATABASE
-      // const database = getDatabase(firebaseApp);
+      // this.database = getDatabase(firebaseApp);
 
       /* 🔥 INITIALISE FUNCTIONS
       Docs: https://firebase.google.com/docs/web/setup
@@ -51,7 +53,7 @@ export const useFirebaseStore = defineStore("firebase", {
       /* 🔥 INITIALISE STORAGE
       Docs: https://firebase.google.com/docs/web/setup
       */
-      // store.commit("firebase/addStorage", getStorage(firebaseApp));
+      this.firestore = getStorage(firebaseApp);
 
       /* 📈 INITIALISE GOOGLE ANALYTICS
       Docs: https://firebase.google.com/docs/analytics
@@ -78,13 +80,13 @@ export const useFirebaseStore = defineStore("firebase", {
       /* 📶 OFFLINE PERSISTANCE FIRESTORE
       Docs: https://firebase.google.com/docs/firestore/manage-data/enable-offline
       */
-      enableIndexedDbPersistence(getFirestore()).catch((err) => {
-        if (err.code === "failed-precondition") {
-          /* Multiple tabs open, persistence can only be enabled in one tab at a a time. */
-        } else if (err.code === "unimplemented") {
-          /* The current browser does not support all of the features required to enable persistence */
-        }
-      });
+      // enableIndexedDbPersistence(getFirestore()).catch((err) => {
+      //   if (err.code === "failed-precondition") {
+      //     /* Multiple tabs open, persistence can only be enabled in one tab at a a time. */
+      //   } else if (err.code === "unimplemented") {
+      //     /* The current browser does not support all of the features required to enable persistence */
+      //   }
+      // });
 
       /* 🤖 RECAPTCHA APP CHECK
       Pass your reCAPTCHA v3 site key (public key) to activate(). Make sure this key is the counterpart to the secret key you set in the Firebase console.

@@ -18,7 +18,19 @@
           outline
           no-caps
         />
-        <q-btn label="Publish" color="secondary" no-caps class="q-ml-sm" />
+        <q-btn
+          color="secondary"
+          no-caps
+          class="q-ml-sm"
+          @click="publish()"
+          :disable="requestedPublication"
+          :icon="requestedPublication ? 'mdi-check' : 'mdi-send'"
+        >
+          <span class="q-ml-sm">
+            <span v-if="!requestedPublication">Publish</span>
+            <span v-else>Requested</span>
+          </span>
+        </q-btn>
         <!-- <q-avatar
           class="q-ml-sm"
           size="36px"
@@ -58,11 +70,32 @@
 
 <script>
 import { getAuth, signOut } from "firebase/auth";
+import { getFirestore, doc, setDoc } from "firebase/firestore";
+const db = getFirestore();
+
 const auth = getAuth();
 
 export default {
   name: "EditorLayout",
+  data: () => ({
+    requestedPublication: false,
+  }),
   methods: {
+    publish() {
+      console.log("publish");
+      setDoc(
+        doc(db, "articles", "test"),
+        {
+          requestPublication: true,
+        },
+        {
+          merge: true,
+        }
+      ).then(() => {
+        this.requestedPublication = true;
+        console.log("published");
+      });
+    },
     signOut() {
       signOut(auth)
         .then(() => {
