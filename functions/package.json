@@ -14,9 +14,11 @@
   "main": "index.js",
   "dependencies": {
     "@octokit/rest": "^18.12.0",
+    "@tiptap/extension-focus": "^2.0.0-beta.44",
     "firebase-admin": "^10.0.2",
     "firebase-functions": "^3.18.0",
     "js-base64": "^3.7.2",
+    "octokit-commit-multiple-files": "^4.1.0",
     "openai": "^3.0.0"
   },
   "devDependencies": {

@@ -69,6 +69,9 @@
 </template>
 
 <script>
+import { useEditorStore } from "stores/editor";
+import { useFirebaseStore } from "stores/firebase";
+
 import { getAuth, signOut } from "firebase/auth";
 import { getFirestore, doc, setDoc } from "firebase/firestore";
 const db = getFirestore();
@@ -77,9 +80,25 @@ const auth = getAuth();
 
 export default {
   name: "EditorLayout",
-  data: () => ({
-    requestedPublication: false,
-  }),
+  setup() {
+    const editorStore = useEditorStore();
+    const firebaseStore = useFirebaseStore();
+
+    return {
+      // you can return the whole store instance to use it in the template
+      editorStore,
+      firebaseStore,
+    };
+  },
+
+  computed: {
+    requestedPublication() {
+      if (this.editorStore.syncData) {
+        console.log(this.editorStore.syncData.get("requestedPublication"));
+        return this.editorStore.syncData.get("requestedPublication");
+      } else return false;
+    },
+  },
   methods: {
     publish() {
       console.log("publish");
@@ -92,7 +111,7 @@ export default {
           merge: true,
         }
       ).then(() => {
-        this.requestedPublication = true;
+        this.editorStore.syncData.set("requestedPublication", true);
         console.log("published");
       });
     },

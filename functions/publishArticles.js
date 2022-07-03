@@ -1,6 +1,8 @@
 const functions = require("firebase-functions");
 
-const { Octokit } = require("@octokit/rest");
+let { Octokit } = require("@octokit/rest");
+Octokit = Octokit.plugin(require("octokit-commit-multiple-files"));
+
 const { Base64 } = require("js-base64");
 
 exports.publishArticles = functions
@@ -19,42 +21,71 @@ async function syncWithGithub(token) {
     auth: token,
   });
 
-  await commitArticle({
-    title: "title",
-    content: "body of article",
+  const owner = "activisthandbook";
+  const repo = "activisthandbook";
+  const branch = "main";
+  const createBranch = false;
+
+  const commits = await octokit.rest.repos.createOrUpdateFiles({
+    owner,
+    repo,
+    branch,
+    createBranch,
+    changes: [
+      {
+        message: "Your commit message",
+        files: {
+          "test/test.md": `# This is a test`,
+          "test/test/test2.md": {
+            contents: `Something else`,
+          },
+        },
+      },
+      {
+        message: "This is a separate commit",
+        files: {
+          "second.md": "Where should we go today?",
+        },
+      },
+    ],
   });
 
+  // await commitArticle({
+  //   title: "title",
+  //   content: "body of article",
+  // });
+
   // SHA is required if updating an existing file
-  async function getSHA(path) {
-    const result = await octokit.repos.getContent({
-      owner: "activisthandbook",
-      repo: "activisthandbook",
-      path,
-    });
+  // async function getSHA(path) {
+  //   const result = await octokit.repos.getContent({
+  //     owner: "activisthandbook",
+  //     repo: "activisthandbook",
+  //     path,
+  //   });
 
-    const sha = result.data.sha;
+  //   const sha = result.data.sha;
 
-    return sha;
-  }
+  //   return sha;
+  // }
 
-  async function commitArticle(article) {
-    const path = `mypath`;
-    const sha = await getSHA(path);
+  // async function commitArticle(article) {
+  //   const path = `mypath`;
+  //   const sha = await getSHA(path);
 
-    // possible alternative for multiple files https://github.com/mheap/octokit-commit-multiple-files
-    // another solution: https://gist.github.com/StephanHoyer/91d8175507fcae8fb31a
-    // yet another one
-    const result = await octokit.repos.createOrUpdateFileContents({
-      owner: "activisthandbook",
-      repo: "activisthandbook",
-      path,
-      message: `Add article "${article.title}"`,
-      content: Base64.encode(article.content),
-      sha,
-    });
+  //   // possible alternative for multiple files https://github.com/mheap/octokit-commit-multiple-files
+  //   // another solution: https://gist.github.com/StephanHoyer/91d8175507fcae8fb31a
+  //   // yet another one
+  //   const result = await octokit.repos.createOrUpdateFileContents({
+  //     owner: "activisthandbook",
+  //     repo: "activisthandbook",
+  //     path,
+  //     message: `Add article "${article.title}"`,
+  //     content: Base64.encode(article.content),
+  //     sha,
+  //   });
 
-    // return result.status || 500;
-  }
+  //   // return result.status || 500;
+  // }
 }
 
 // https://codelounge.dev/getting-started-with-the-githubs-rest-api#write-comment

@@ -32,7 +32,8 @@ export const useFirebaseStore = defineStore("firebase", {
     functions: null,
     // database: null,
     firestore: null,
-    userAuthenticated: null,
+    userAuthenticated: false,
+    userLoaded: false,
   }),
 
   actions: {
@@ -63,8 +64,10 @@ export const useFirebaseStore = defineStore("firebase", {
       this.auth = getAuth();
 
       onAuthStateChanged(this.auth, (user) => {
+        this.userLoaded = true;
         if (user) {
           this.userAuthenticated = true;
+
           /* SIGNIN SUCCESFUL ✅
           User is signed in, see docs for a list of available properties:
           https://firebase.google.com/docs/reference/js/firebase.User */

@@ -1,5 +1,5 @@
 <template>
-  <q-input
+  <!-- <q-input
     placeholder="Title..."
     class="text-h1"
     v-model="title"
@@ -17,22 +17,24 @@
     v-model="description"
     autogrow
     outlined
-  />
+  /> -->
 
-  <EditorMenu v-if="editorStore && editorStore.editor" />
-
-  <TipTapEditor v-model="content" />
+  <TipTapEditor v-model="article" />
 
   <q-page-sticky position="bottom-left" :offset="[8, 8]">
     <q-chip
+      color="grey-3"
+      text-color="grey-8"
       v-if="
-        !saved &&
-        this.editorStore.clientID === this.articleSync.syncedByClientID
+        (lastEditTimestamp && !lastSaveTimestamp) ||
+        lastEditTimestamp > lastSaveTimestamp
       "
       icon="mdi-sync"
       >Saving...</q-chip
     >
-    <q-chip v-else icon="mdi-cloud-check">Saved</q-chip>
+    <q-chip color="grey-3" text-color="grey-8" v-else icon="mdi-cloud-check"
+      >Saved</q-chip
+    >
   </q-page-sticky>
 </template>
 
@@ -56,7 +58,6 @@ import _ from "lodash";
 
 // VUE COMPONENTS
 import TipTapEditor from "components/TipTapEditor.vue";
-import EditorMenu from "components/EditorMenu.vue";
 
 export default {
   setup() {
@@ -71,45 +72,160 @@ export default {
   },
   components: {
     TipTapEditor,
-    EditorMenu,
   },
 
   data() {
     return {
-      content: "",
-      title: "",
-      description: "",
-      firstSave: true,
-      saved: true,
       articleSync: null,
+      article: {
+        title: "",
+        description: "",
+        content: "",
+      },
+      numberOfSaves: 0,
+      lastEditTimestamp: null,
+      dataOrigin: null,
+      loadedFromServer: false,
+      firstCheckDone: false,
+      secondCheckDone: false,
     };
   },
 
-  mounted: function () {
-    const articleSyncRef = doc(db, "articleSync", "test");
-    onSnapshot(articleSyncRef, (doc) => {
-      this.articleSync = doc.data();
-    });
+  computed: {
+    nextSaveClaimedBy: function () {
+      if (this.editorStore.syncData) {
+        return this.editorStore.syncData.get("nextSaveClaimedBy");
+      } else return null;
+    },
+    nextSaveTimestamp: function () {
+      if (this.editorStore.syncData) {
+        return this.editorStore.syncData.get("nextSaveTimestamp");
+      } else return null;
+    },
+    lastSaveTimestamp: function () {
+      if (this.editorStore.syncData) {
+        return this.editorStore.syncData.get("lastSaveTimestamp");
+      } else return null;
+    },
+    connectedP2P: function () {
+      return this.editorStore.provider.connected;
+    },
   },
 
   watch: {
-    content: async function (newValue, oldValue) {
-      // console.log(this.editor.getHTML());
-      if (!this.firstSave && !this.serverSave) {
-        console.log("watch content triggered");
-        this.debouncerFirst();
-        this.debouncerSecond(newValue);
-        this.saved = false;
-      } else {
-        this.firstSave = false;
-        if (newValue === "<p></p>") {
-          this.serverSave = true;
-          // no content yet
+    article: {
+      handler(newValue) {
+        this.numberOfSaves += 1;
 
+        if (
+          this.editorStore.titleRendered &&
+          this.editorStore.descriptionRendered &&
+          this.editorStore.contentRendered
+        ) {
+          if (!this.firstCheckDone) {
+            // console.log("first check");
+            this.firstCheckDone = true;
+            // the first 3 times the article watcher is just updated from initialising the editor, the 4th time is from loading from p2p or server, so we do not have to save anything to the server in those cases
+
+            this.loadFromServer();
+          } else if (!this.secondCheckDone) {
+            this.secondCheckDone = true;
+            // console.log("second check");
+          } else {
+            // the document has been edited, so we set saved to false
+            this.lastEditTimestamp = Date.now();
+            this.announceSave();
+            this.save(newValue);
+          }
+        }
+        // else {
+        //   if (
+        //     newValue.title === "<p></p>" &&
+        //     newValue.description === "<p></p>" &&
+        //     newValue.content === "<p></p>" &&
+        //     !this.loadedFromServer
+        //   ) {
+        //     // console.log("test");
+        //     this.serverSave = true;
+        //     // no content yet
+
+        //     getDoc(doc(db, "articles", "test"))
+        //       .then((snapshot) => {
+        //         if (snapshot.exists()) {
+        //           this.article = {
+        //             title: sanitizeHtml(snapshot.data().title),
+        //             description: sanitizeHtml(snapshot.data().description),
+        //             content: sanitizeHtml(snapshot.data().content),
+        //           };
+        //           // console.log(this.article);
+        //           this.loadedFromServer = true;
+        //         } else {
+        //           console.log("No data available");
+        //         }
+        //       })
+        //       .catch((error) => {
+        //         console.error(error);
+        //       });
+        //   } else {
+        //     this.serverSave = false;
+        //   }
+        // }
+      },
+      deep: true,
+    },
+  },
+
+  methods: {
+    loadFromServer: function () {
+      if (this.connectedP2P) {
+        console.log("connected immediately");
+        this.fetch();
+      } else {
+        this.$watch("connectedP2P", (connected) => {
+          console.log("watching connect");
+          if (connected) {
+            console.log("connected after watch");
+            this.fetch();
+          }
+        });
+      }
+    },
+    fetch: async function () {
+      this.editorStore.provider.on("peers", (synced) => {
+        // NOTE: This is only called when a different browser connects to this client
+        // Windows of the same browser communicate directly with each other
+        // Although this behavior might be subject to change.
+        // It is better not to expect a synced event when using y-webrtc
+        console.log("peers!", synced);
+      });
+      setTimeout(() => {
+        // we don't really know when
+        if (
+          this.editorStore.content.storage.collaborationCursor.users.length ===
+          1
+        ) {
           getDoc(doc(db, "articles", "test"))
             .then((snapshot) => {
               if (snapshot.exists()) {
-                this.content = sanitizeHtml(snapshot.data().content);
+                this.editorStore.title.commands.setContent(
+                  sanitizeHtml(snapshot.data().title),
+                  true
+                );
+                this.editorStore.description.commands.setContent(
+                  sanitizeHtml(snapshot.data().description),
+                  true
+                );
+                this.editorStore.content.commands.setContent(
+                  sanitizeHtml(snapshot.data().content),
+                  true
+                );
+                this.editorStore.syncData.set(
+                  "requestedPublication",
+                  snapshot.data().requestedPublication
+                );
+                this.dataOrigin = "server";
+
+                this.loadedFromServer = true;
               } else {
                 console.log("No data available");
               }
@@ -117,53 +233,66 @@ export default {
             .catch((error) => {
               console.error(error);
             });
-        } else {
-          this.serverSave = false;
         }
-      }
+      }, 500);
     },
-  },
+    announceSave: _.debounce(function () {
+      console.log("announcing save");
 
-  methods: {
-    debouncerFirst: _.debounce(function (newVal) {
-      if (
-        !this.articleSync ||
-        (Date.now() + 3 * 1000 > this.articleSync.timestampLastSynced &&
-          this.editorStore.clientID !== this.articleSync.syncedByClientID)
-      ) {
-        console.log("ok, I'm gonna do it!");
-        setDoc(
-          doc(db, "articleSync", "test"),
-          {
-            timestampLastSynced: serverTimestamp(),
-            syncedByClientID: this.editorStore.clientID,
-          },
-          { merge: true }
-        ).then(() => {
-          this.saved = true;
-        });
-      }
-    }, 5000),
-    debouncerSecond: _.debounce(function (newVal) {
-      console.log("debouncer");
+      const time = Date.now();
 
       // console.log(
-      //   this.editorStore.clientID === this.articleSync.syncedByClientID
+      //   "same person",
+      //   this.nextSaveClaimedBy !== this.editorStore.clientID
       // );
-      // console.log(Date.now() + 6 * 1000 > this.articleSync.timestampLastSynced);
+      // console.log("time", this.nextSaveTimestamp, this.lastEditTimestamp);
 
       if (
-        !this.articleSync ||
-        this.editorStore.clientID === this.articleSync.syncedByClientID
+        !this.nextSaveTimestamp ||
+        (this.nextSaveClaimedBy !== this.editorStore.clientID && // someone else
+          this.nextSaveTimestamp < this.lastEditTimestamp) // their last save is not up-to-date
       ) {
-        console.log("synced!");
+        // console.log("I'm gonna do it");
+        this.editorStore.syncData.set(
+          "nextSaveClaimedBy",
+          this.editorStore.clientID
+        );
+        this.editorStore.syncData.set("nextSaveTimestamp", time);
+      }
+
+      // if (
+      //   !this.articleSync ||
+      //   (pointInFuture > this.articleSync.timestampLastSynced &&
+      //     this.editorStore.clientID !== this.articleSync.syncedByClientID)
+      // ) {
+      //   console.log("ok, I'm gonna do it!");
+      //   setDoc(
+      //     doc(db, "articleSync", "test"),
+      //     {
+      //       timestampLastSynced: serverTimestamp(),
+      //       syncedByClientID: this.editorStore.clientID,
+      //     },
+      //     { merge: true }
+      //   ).then(() => {
+      //     this.saved = true;
+      //   });
+      // }
+    }, 5000),
+    save: _.debounce(function (article) {
+      if (this.editorStore.clientID === this.nextSaveClaimedBy) {
         setDoc(
           doc(db, "articles/test"),
           {
-            content: newVal,
+            title: article.title.slice(3, -4), // removing the <p> and </p> tags
+            description: article.description.slice(3, -4), // removing the <p> and </p> tags
+            content: article.content,
           },
           { merge: true }
         ).then(() => {
+          // console.log("synced!");
+
+          const time = Date.now();
+          this.editorStore.syncData.set("lastSaveTimestamp", time);
           this.saved = true;
         });
       }
@@ -171,75 +300,3 @@ export default {
   },
 };
 </script>
-<style lang="scss">
-.is-active {
-  background: $secondary;
-  color: white;
-}
-.sticky {
-  position: sticky;
-  top: 16px;
-  z-index: 1;
-}
-.ProseMirror {
-  outline: none;
-  min-height: 180px;
-}
-
-// Placeholder
-.ProseMirror .is-empty::before {
-  content: attr(data-placeholder);
-  float: left;
-  color: #888;
-  pointer-events: none;
-  height: 0;
-}
-
-/* Give a remote user a caret */
-.collaboration-cursor__caret {
-  position: relative;
-  margin-left: -1px;
-  margin-right: -1px;
-  border-left: 1px solid #0d0d0d;
-  border-right: 1px solid #0d0d0d;
-  word-break: normal;
-  pointer-events: none;
-}
-
-/* Render the username above the caret */
-.collaboration-cursor__label {
-  opacity: 1;
-  position: absolute;
-  top: -1.4em;
-  left: -1px;
-  font-size: 12px;
-  font-style: normal;
-  font-weight: 600;
-  line-height: normal;
-  user-select: none;
-  padding: 0.1rem 0.3rem;
-  border-radius: 3px 3px 3px 0;
-  white-space: nowrap;
-  cursor: pointer;
-  z-index: 3000;
-
-  &:hover {
-    opacity: 0.5;
-  }
-}
-
-a:focus {
-  background: grey;
-}
-
-.generator {
-  transition: 2s opacity;
-}
-.less-visible {
-  opacity: 0.5;
-
-  &:hover {
-    opacity: 1;
-  }
-}
-</style>

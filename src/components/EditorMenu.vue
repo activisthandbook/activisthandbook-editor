@@ -1,8 +1,9 @@
 <template>
   <q-card
-    v-if="editor"
+    v-if="editor && editor.content"
     class="bg-white text-black justify-center sticky"
-    style="border-bottom: 1px solid rgba(0, 0, 0, 0.1)"
+    bordered
+    flat
   >
     <div class="q-gutter-xs flex q-pa-md">
       <q-btn
@@ -13,16 +14,19 @@
         align="between"
         class="btn-fixed-width"
       >
-        <span v-if="editor.isActive('heading', { level: 1 })">Heading 1</span>
-        <span v-else-if="editor.isActive('heading', { level: 2 })"
+        <span v-if="editor.content.isActive('heading', { level: 1 })"
+          >Heading 1</span
+        >
+        <span v-else-if="editor.content.isActive('heading', { level: 2 })"
           >Heading 2</span
         >
-        <span v-else-if="editor.isActive('heading', { level: 3 })"
+        <span v-else-if="editor.content.isActive('heading', { level: 3 })"
           >Heading 3</span
         >
         <span
           v-else-if="
-            editor.isActive('paragraph') || editor.isActive('introduction')
+            editor.content.isActive('paragraph') ||
+            editor.content.isActive('introduction')
           "
           >Paragraph</span
         >
@@ -32,7 +36,7 @@
               clickable
               @click="setHeading(1)"
               :class="{
-                'is-active': editor.isActive('heading', {
+                'is-active': editor.content.isActive('heading', {
                   level: 1,
                 }),
               }"
@@ -43,7 +47,7 @@
               clickable
               @click="setHeading(2)"
               :class="{
-                'is-active': editor.isActive('heading', {
+                'is-active': editor.content.isActive('heading', {
                   level: 2,
                 }),
               }"
@@ -54,7 +58,7 @@
               clickable
               @click="setHeading(3)"
               :class="{
-                'is-active': editor.isActive('heading', {
+                'is-active': editor.content.isActive('heading', {
                   level: 3,
                 }),
               }"
@@ -63,11 +67,11 @@
             </q-item>
             <q-item
               clickable
-              @click="editor.chain().focus().setParagraph().run()"
+              @click="editor.content.chain().focus().setParagraph().run()"
               :class="{
                 'is-active':
-                  editor.isActive('paragraph') ||
-                  editor.isActive('introduction'),
+                  editor.content.isActive('paragraph') ||
+                  editor.content.isActive('introduction'),
               }"
             >
               <q-item-section>Paragraph</q-item-section>
@@ -82,16 +86,16 @@
         padding="sm"
         flat
         icon="mdi-format-bold"
-        @click="editor.chain().focus().toggleBold().run()"
-        :class="{ 'is-active': editor.isActive('bold') }"
+        @click="editor.content.chain().focus().toggleBold().run()"
+        :class="{ 'is-active': editor.content.isActive('bold') }"
       />
 
       <q-btn
         padding="sm"
         flat
         icon="mdi-format-italic"
-        @click="editor.chain().focus().toggleItalic().run()"
-        :class="{ 'is-active': editor.isActive('italic') }"
+        @click="editor.content.chain().focus().toggleItalic().run()"
+        :class="{ 'is-active': editor.content.isActive('italic') }"
       />
 
       <q-btn
@@ -99,7 +103,7 @@
         flat
         icon="mdi-link"
         @click="openLinkDialog($event)"
-        :class="{ 'is-active': editor.isActive('link') }"
+        :class="{ 'is-active': editor.content.isActive('link') }"
       >
         <q-dialog v-model="linkDialog">
           <q-card style="min-width: 350px">
@@ -146,8 +150,8 @@
         padding="sm"
         flat
         icon="mdi-format-list-bulleted"
-        @click="editor.chain().focus().toggleBulletList().run()"
-        :class="{ 'is-active': editor.isActive('bulletList') }"
+        @click="editor.content.chain().focus().toggleBulletList().run()"
+        :class="{ 'is-active': editor.content.isActive('bulletList') }"
         class="gt-xs"
       />
 
@@ -155,8 +159,8 @@
         padding="sm"
         flat
         icon="mdi-format-list-numbered"
-        @click="editor.chain().focus().toggleOrderedList().run()"
-        :class="{ 'is-active': editor.isActive('orderedList') }"
+        @click="editor.content.chain().focus().toggleOrderedList().run()"
+        :class="{ 'is-active': editor.content.isActive('orderedList') }"
         class="gt-xs"
       />
 
@@ -168,8 +172,8 @@
         padding="sm"
         flat
         icon="mdi-format-quote-open"
-        @click="editor.chain().focus().toggleBlockquote().run()"
-        :class="{ 'is-active': editor.isActive('blockquote') }"
+        @click="editor.content.chain().focus().toggleBlockquote().run()"
+        :class="{ 'is-active': editor.content.isActive('blockquote') }"
         class="gt-xs"
       />
       <q-btn padding="sm" flat icon="mdi-image" class="gt-xs" />
@@ -191,7 +195,7 @@ import { useEditorStore } from "stores/editor";
 
 export default defineComponent({
   setup() {
-    const editor = useEditorStore().editor;
+    const editor = useEditorStore();
     return {
       // you can return the whole editorStore instance to use it in the template
       editor,
@@ -208,10 +212,10 @@ export default defineComponent({
   },
   methods: {
     setHeading(level) {
-      return this.editor.commands.setHeading({ level: level });
+      return this.editor.content.commands.setHeading({ level: level });
     },
     setLink(link) {
-      this.editor
+      this.editor.content
         .chain()
         .focus()
         .extendMarkRange("link")
@@ -220,9 +224,16 @@ export default defineComponent({
     },
     openLinkDialog(event) {
       event.preventDefault();
-      this.currentLink = this.editor.getAttributes("link").href;
+      this.currentLink = this.editor.content.getAttributes("link").href;
       this.linkDialog = true;
     },
   },
 });
 </script>
+<style scoped>
+.sticky {
+  position: sticky;
+  top: 8px;
+  z-index: 1;
+}
+</style>

@@ -1,8 +1,17 @@
 import { defineStore } from "pinia";
+import * as Y from "yjs";
 
 export const useEditorStore = defineStore("editor", {
   state: () => ({
-    editor: null,
+    provider: null,
+    article: null,
+    titleRendered: false,
+    descriptionRendered: false,
+    contentRendered: false,
+    title: null,
+    description: null,
+    content: null,
+    syncData: null,
     clientID: null,
   }),
 

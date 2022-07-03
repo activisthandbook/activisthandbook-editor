@@ -664,6 +664,14 @@
     prosemirror-view "^1.25.0"
     tippy.js "^6.3.7"
 
+"@tiptap/extension-focus@^2.0.0-beta.44":
+  version "2.0.0-beta.44"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-focus/-/extension-focus-2.0.0-beta.44.tgz#03158dc8cee40557119c33cec13d5bb70d2c365f"
+  integrity sha512-ZPst3N6rUL3vnfl/Z/kYFDop+r2HFgUd6iZaHRHsacconpb7nP/SH9CMDjkvMpHIIAoLvj89zTWxO25Jx/09+A==
+  dependencies:
+    prosemirror-state "^1.4.0"
+    prosemirror-view "^1.25.0"
+
 "@tiptap/extension-gapcursor@^2.0.0-beta.38":
   version "2.0.0-beta.38"
   resolved "https://registry.npmjs.org/@tiptap/extension-gapcursor/-/extension-gapcursor-2.0.0-beta.38.tgz"
@@ -737,6 +745,16 @@
   version "2.0.0-beta.29"
   resolved "https://registry.npmjs.org/@tiptap/extension-strike/-/extension-strike-2.0.0-beta.29.tgz"
   integrity sha512-zqFuY7GfNmZ/KClt6kxQ+msGo3syqucP/Xnlihxi+/h/G+oTvEwyOIXCtDOltvxcsWH/TUsdr5vzLp0j+Mdc6Q==
+
+"@tiptap/extension-task-item@^2.0.0-beta.37":
+  version "2.0.0-beta.37"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-task-item/-/extension-task-item-2.0.0-beta.37.tgz#fcf719c4f6d09a69a6525f116bb96560bddfdf51"
+  integrity sha512-zdTE7G6KHgdr+V32eWk7V6YkKxV3X0VJvfuybRlUcS4QyX4dSWnIqeHzzmX8Jd9IXjRghIFtjNi7IKxIGAhMsg==
+
+"@tiptap/extension-task-list@^2.0.0-beta.29":
+  version "2.0.0-beta.29"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-task-list/-/extension-task-list-2.0.0-beta.29.tgz#3ca388b9251e4d42d152177c609f6cebb57c4a1e"
+  integrity sha512-PbHlVmYWevClA3mmXyshhR58GT1J22vVlFEDj2o25WRPY2dCTv4X136wPRVf9ee4nZII0Xcp2SsVC1kfgtuVRg==
 
 "@tiptap/extension-text@^2.0.0-beta.17":
   version "2.0.0-beta.17"

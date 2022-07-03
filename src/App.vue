@@ -1,5 +1,8 @@
 <template>
-  <router-view v-if="firebaseStore.userAuthenticated" />
+  <div v-if="!firebaseStore.userLoaded">
+    <q-spinner class="fixed-center" color="grey" size="3em" />
+  </div>
+  <router-view v-else-if="firebaseStore.userAuthenticated" />
   <div style="max-width: 700px; margin: auto" v-else>
     <q-card class="q-ma-md">
       <q-card-section class="q-gutter-y-sm">
