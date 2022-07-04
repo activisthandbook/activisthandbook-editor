@@ -94,17 +94,17 @@ export default {
   computed: {
     nextSaveClaimedBy: function () {
       if (this.editorStore.syncData) {
-        return this.editorStore.syncData.get("nextSaveClaimedBy");
+        return null;
       } else return null;
     },
     nextSaveTimestamp: function () {
       if (this.editorStore.syncData) {
-        return this.editorStore.syncData.get("nextSaveTimestamp");
+        return null;
       } else return null;
     },
     lastSaveTimestamp: function () {
       if (this.editorStore.syncData) {
-        return this.editorStore.syncData.get("lastSaveTimestamp");
+        return null;
       } else return null;
     },
     connectedP2P: function () {
@@ -138,38 +138,6 @@ export default {
             this.save(newValue);
           }
         }
-        // else {
-        //   if (
-        //     newValue.title === "<p></p>" &&
-        //     newValue.description === "<p></p>" &&
-        //     newValue.content === "<p></p>" &&
-        //     !this.loadedFromServer
-        //   ) {
-        //     // console.log("test");
-        //     this.serverSave = true;
-        //     // no content yet
-
-        //     getDoc(doc(db, "articles", "test"))
-        //       .then((snapshot) => {
-        //         if (snapshot.exists()) {
-        //           this.article = {
-        //             title: sanitizeHtml(snapshot.data().title),
-        //             description: sanitizeHtml(snapshot.data().description),
-        //             content: sanitizeHtml(snapshot.data().content),
-        //           };
-        //           // console.log(this.article);
-        //           this.loadedFromServer = true;
-        //         } else {
-        //           console.log("No data available");
-        //         }
-        //       })
-        //       .catch((error) => {
-        //         console.error(error);
-        //       });
-        //   } else {
-        //     this.serverSave = false;
-        //   }
-        // }
       },
       deep: true,
     },
@@ -191,13 +159,6 @@ export default {
       }
     },
     fetch: async function () {
-      this.editorStore.provider.on("peers", (synced) => {
-        // NOTE: This is only called when a different browser connects to this client
-        // Windows of the same browser communicate directly with each other
-        // Although this behavior might be subject to change.
-        // It is better not to expect a synced event when using y-webrtc
-        console.log("peers!", synced);
-      });
       setTimeout(() => {
         // we don't really know when
         if (
@@ -215,11 +176,15 @@ export default {
                   sanitizeHtml(snapshot.data().description),
                   true
                 );
+                this.editorStore.path.commands.setContent(
+                  sanitizeHtml(snapshot.data().path),
+                  true
+                );
                 this.editorStore.content.commands.setContent(
                   sanitizeHtml(snapshot.data().content),
                   true
                 );
-                this.editorStore.syncData.set(
+                this.editorStore.syncYdoc.set(
                   "requestedPublication",
                   snapshot.data().requestedPublication
                 );
@@ -237,8 +202,6 @@ export default {
       }, 500);
     },
     announceSave: _.debounce(function () {
-      console.log("announcing save");
-
       const time = Date.now();
 
       // console.log(
@@ -253,11 +216,11 @@ export default {
           this.nextSaveTimestamp < this.lastEditTimestamp) // their last save is not up-to-date
       ) {
         // console.log("I'm gonna do it");
-        this.editorStore.syncData.set(
+        this.editorStore.syncYdoc.set(
           "nextSaveClaimedBy",
           this.editorStore.clientID
         );
-        this.editorStore.syncData.set("nextSaveTimestamp", time);
+        this.editorStore.syncYdoc.set("nextSaveTimestamp", time);
       }
 
       // if (
@@ -277,26 +240,29 @@ export default {
       //     this.saved = true;
       //   });
       // }
-    }, 5000),
+    }, 2000),
     save: _.debounce(function (article) {
       if (this.editorStore.clientID === this.nextSaveClaimedBy) {
-        setDoc(
-          doc(db, "articles/test"),
-          {
-            title: article.title.slice(3, -4), // removing the <p> and </p> tags
-            description: article.description.slice(3, -4), // removing the <p> and </p> tags
-            content: article.content,
-          },
-          { merge: true }
-        ).then(() => {
-          // console.log("synced!");
+        if (this.article.content !== "<p></p>") {
+          setDoc(
+            doc(db, "articles/test"),
+            {
+              title: article.title.slice(3, -4), // removing the <p> and </p> tags
+              description: article.description.slice(3, -4), // removing the <p> and </p> tags
+              path: article.path.slice(3, -4), // removing the <p> and </p> tags
+              content: article.content,
+            },
+            { merge: true }
+          ).then(() => {
+            // console.log("synced!");
 
-          const time = Date.now();
-          this.editorStore.syncData.set("lastSaveTimestamp", time);
-          this.saved = true;
-        });
+            const time = Date.now();
+            this.editorStore.syncYdoc.set("lastSaveTimestamp", time);
+            this.saved = true;
+          });
+        }
       }
-    }, 6000),
+    }, 3000),
   },
 };
 </script>

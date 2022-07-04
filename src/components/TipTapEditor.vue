@@ -167,10 +167,10 @@ export default {
   },
 
   methods: {
-    test() {
-      this.editorStore.syncData.set("test", Math.random());
-      console.log(this.editorStore.syncData.get("test"));
-    },
+    // test() {
+    //   this.editorStore.syncYdoc.set("test", Math.random());
+    //   // console.log(this.editorStore.syncYdoc.get("test"));
+    // },
     setupEditors() {
       console.log("setting up editors");
 
@@ -188,8 +188,35 @@ export default {
         avatar: this.firebaseStore.auth.currentUser.photoURL,
       };
 
-      // Method 1: Define a top-level type
-      this.editorStore.syncData = ydoc.getMap("syncData");
+      // this.editorStore.syncData
+      this.editorStore.syncYdoc = ydoc.getMap("syncData");
+      this.editorStore.syncYdoc.observe((ymapEvent) => {
+        console.log(ymapEvent.target === this.editorStore.syncData); // => true
+
+        // sample code.
+        ymapEvent.changes.keys.forEach((change, key) => {
+          if (change.action === "add" || change.action === "update") {
+            this.editorStore.syncData[key] = this.editorStore.syncYdoc.get(key);
+
+            // console.log(
+            // `Property "${key}" was added. Initial value: "${this.editorStore.syncYdoc.get(
+            //   key
+            // )}".`
+            // );
+          } else if (change.action === "delete") {
+            this.editorStore.syncData[key] = null;
+            // console.log(
+            //   `Property "${key}" was deleted. New value: undefined. Previous value: "${change.oldValue}".`
+            // );
+          }
+        });
+      });
+      // console.log(this.editorStore.syncData);
+      // this.editorStore.syncData
+      //   .observe("requestedPublication")
+      //   .then((value) => {
+      //     console.log(value);
+      //   });
 
       this.editorStore.title = new Editor({
         extensions: [
@@ -218,6 +245,7 @@ export default {
             title: this.editorStore.title.getHTML(),
             description: this.editorStore.description.getHTML(),
             content: this.editorStore.content.getHTML(),
+            path: this.editorStore.path.getHTML(),
           });
           // JSON
           // this.$emit("update:modelValue", this.editor.getJSON());
@@ -251,6 +279,7 @@ export default {
             title: this.editorStore.title.getHTML(),
             description: this.editorStore.description.getHTML(),
             content: this.editorStore.content.getHTML(),
+            path: this.editorStore.path.getHTML(),
           });
           // JSON
           // this.$emit("update:modelValue", this.editor.getJSON());
@@ -284,6 +313,7 @@ export default {
             title: this.editorStore.title.getHTML(),
             description: this.editorStore.description.getHTML(),
             content: this.editorStore.content.getHTML(),
+            path: this.editorStore.path.getHTML(),
           });
           // JSON
           // this.$emit("update:modelValue", this.editor.getJSON());
@@ -333,6 +363,7 @@ export default {
             title: this.editorStore.title.getHTML(),
             description: this.editorStore.description.getHTML(),
             content: this.editorStore.content.getHTML(),
+            path: this.editorStore.path.getHTML(),
           });
           // JSON
           // this.$emit("update:modelValue", this.editor.getJSON());
@@ -408,7 +439,7 @@ export default {
   }
 }
 .title {
-  font-size: 2m;
+  color: black;
 }
 .description {
   font-size: 1.2em;

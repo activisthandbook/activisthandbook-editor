@@ -5,80 +5,88 @@
     bordered
     flat
   >
-    <div class="q-gutter-xs flex q-pa-md">
-      <q-btn
-        icon-right="mdi-menu-down"
-        no-caps
-        outline
-        style="width: 150px"
-        align="between"
-        class="btn-fixed-width"
-      >
-        <span v-if="editor.content.isActive('heading', { level: 1 })"
-          >Heading 1</span
+    <div class="q-gutter-xs flex" style="padding: 12px">
+      <div class="bg-grey-2 rounded-borders flex items-center q-pa-xs">
+        <span class="text-caption text-bold q-ml-sm q-mr-sm text-grey-9"
+          >Heading</span
         >
-        <span v-else-if="editor.content.isActive('heading', { level: 2 })"
-          >Heading 2</span
+        <!-- <q-icon
+          name="mdi-format-size"
+          color="grey"
+          style="margin: 8px 4px 8px 10px"
+          size="22px"
+        /> -->
+        <!-- <q-btn
+          unelevated
+          icon="mdi-text"
+          padding="8px"
+          :class="{
+            'is-active': !editor.content.isActive('heading'),
+          }"
+          @click="editor.content.chain().focus().setParagraph().run()"
         >
-        <span v-else-if="editor.content.isActive('heading', { level: 3 })"
-          >Heading 3</span
+          <q-tooltip
+            transition-show="none"
+            transition-hide="none"
+            class="bg-grey-9 text-white"
+            :offset="[0, 4]"
+            >Paragraph</q-tooltip
+          >
+        </q-btn> -->
+        <!-- icon="mdi-numeric-1-box" -->
+        <q-btn
+          unelevated
+          icon="mdi-numeric-1-box"
+          flat
+          dense
+          :class="{
+            'is-active': editor.content.isActive('heading', { level: 1 }),
+          }"
+          @click="setHeading(1)"
         >
-        <span
-          v-else-if="
-            editor.content.isActive('paragraph') ||
-            editor.content.isActive('introduction')
-          "
-          >Paragraph</span
+          <q-tooltip
+            transition-show="none"
+            transition-hide="none"
+            class="bg-grey-9 text-white"
+            :offset="[0, 4]"
+            >Heading 1</q-tooltip
+          >
+        </q-btn>
+        <q-btn
+          flat
+          dense
+          icon="mdi-numeric-2-box"
+          :class="{
+            'is-active': editor.content.isActive('heading', { level: 2 }),
+          }"
+          @click="setHeading(2)"
         >
-        <q-menu auto-close transition-show="none" transition-hide="none">
-          <q-list style="min-width: 100px">
-            <q-item
-              clickable
-              @click="setHeading(1)"
-              :class="{
-                'is-active': editor.content.isActive('heading', {
-                  level: 1,
-                }),
-              }"
-            >
-              <q-item-section>Heading 1</q-item-section>
-            </q-item>
-            <q-item
-              clickable
-              @click="setHeading(2)"
-              :class="{
-                'is-active': editor.content.isActive('heading', {
-                  level: 2,
-                }),
-              }"
-            >
-              <q-item-section>Heading 2</q-item-section>
-            </q-item>
-            <q-item
-              clickable
-              @click="setHeading(3)"
-              :class="{
-                'is-active': editor.content.isActive('heading', {
-                  level: 3,
-                }),
-              }"
-            >
-              <q-item-section>Heading 3</q-item-section>
-            </q-item>
-            <q-item
-              clickable
-              @click="editor.content.chain().focus().setParagraph().run()"
-              :class="{
-                'is-active':
-                  editor.content.isActive('paragraph') ||
-                  editor.content.isActive('introduction'),
-              }"
-            >
-              <q-item-section>Paragraph</q-item-section>
-            </q-item>
-          </q-list>
-        </q-menu>
-      </q-btn>
+          <q-tooltip
+            transition-show="none"
+            transition-hide="none"
+            class="bg-grey-9 text-white"
+            :offset="[0, 4]"
+            >Heading 2</q-tooltip
+          >
+        </q-btn>
+        <q-btn
+          flat
+          icon="mdi-numeric-3-box"
+          dense
+          :class="{
+            'is-active': editor.content.isActive('heading', { level: 3 }),
+          }"
+          @click="setHeading(3)"
+        >
+          <q-tooltip
+            transition-show="none"
+            transition-hide="none"
+            class="bg-grey-9 text-white"
+            :offset="[0, 4]"
+            >Heading 3</q-tooltip
+          >
+        </q-btn>
+      </div>
 
       <q-space />
 
@@ -174,16 +182,16 @@
         icon="mdi-format-quote-open"
         @click="editor.content.chain().focus().toggleBlockquote().run()"
         :class="{ 'is-active': editor.content.isActive('blockquote') }"
-        class="gt-xs"
+        class="gt-sm"
       />
-      <q-btn padding="sm" flat icon="mdi-image" class="gt-xs" />
-      <q-btn padding="sm" flat icon="mdi-youtube" class="gt-xs" />
+      <q-btn padding="sm" flat icon="mdi-image" class="gt-sm" disable />
+      <q-btn padding="sm" flat icon="mdi-youtube" class="gt-sm" disable />
 
       <q-btn
         padding="sm"
         flat
         icon="mdi-dots-horizontal"
-        class="lt-sm q-ml-md"
+        class="lt-md q-ml-md"
       />
     </div>
   </q-card>
@@ -208,11 +216,12 @@ export default defineComponent({
       linkDialog: false,
       title: "",
       currentLink: "",
+      headingMenuOpen: false,
     };
   },
   methods: {
     setHeading(level) {
-      return this.editor.content.commands.setHeading({ level: level });
+      return this.editor.content.commands.toggleHeading({ level: level });
     },
     setLink(link) {
       this.editor.content

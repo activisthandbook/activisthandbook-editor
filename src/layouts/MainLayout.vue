@@ -1,51 +1,38 @@
 <template>
   <q-layout view="hhh lpR fFf">
-    <q-header class="bg-white text-black" bordered>
+    <q-header class="bg-primary text-white" bordered>
       <q-toolbar class="flex">
         <q-toolbar-title>Edit page</q-toolbar-title>
-        <!-- <q-btn
-          v-show="$store.state.auth.data.emailVerified"
-          @click="$store.dispatch('auth/signOut')"
-          label="Sign out"
-          flat
-          no-caps
-        /> -->
 
+        <q-btn icon="mdi-link" label="Share" color="white" outline no-caps />
         <q-btn
-          icon="mdi-link"
-          label="Share"
-          color="secondary"
-          outline
-          no-caps
-        />
-        <q-btn
-          color="secondary"
+          color="white"
+          text-color="black"
           no-caps
           class="q-ml-sm"
           @click="publish()"
-          :disable="requestedPublication"
-          :icon="requestedPublication ? 'mdi-check' : 'mdi-send'"
+          :disable="this.editorStore.syncData.requestedPublication"
+          :icon="
+            this.editorStore.syncData.requestedPublication
+              ? 'mdi-check'
+              : 'mdi-send'
+          "
         >
           <span class="q-ml-sm">
-            <span v-if="!requestedPublication">Publish</span>
+            <span v-if="!this.editorStore.syncData.requestedPublication"
+              >Publish</span
+            >
             <span v-else>Requested</span>
           </span>
         </q-btn>
-        <!-- <q-avatar
-          class="q-ml-sm"
-          size="36px"
-          v-if="$store.state.auth.data.photoURL"
-        >
-          <img :src="$store.state.auth.data.photoURL" />
-        </q-avatar> -->
+
         <q-btn
           icon="mdi-account"
           round
           dense
           class="q-ml-sm"
-          color="grey-2"
-          text-color="black"
-          unelevated
+          text-color="white"
+          flat
         >
           <q-menu :offset="[0, 12]">
             <q-list style="min-width: 100px">
@@ -91,14 +78,6 @@ export default {
     };
   },
 
-  computed: {
-    requestedPublication() {
-      if (this.editorStore.syncData) {
-        console.log(this.editorStore.syncData.get("requestedPublication"));
-        return this.editorStore.syncData.get("requestedPublication");
-      } else return false;
-    },
-  },
   methods: {
     publish() {
       console.log("publish");
@@ -111,7 +90,7 @@ export default {
           merge: true,
         }
       ).then(() => {
-        this.editorStore.syncData.set("requestedPublication", true);
+        this.editorStore.syncYdoc.set("requestedPublication", true);
         console.log("published");
       });
     },

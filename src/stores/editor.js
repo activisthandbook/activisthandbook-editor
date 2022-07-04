@@ -10,8 +10,10 @@ export const useEditorStore = defineStore("editor", {
     contentRendered: false,
     title: null,
     description: null,
+    path: null,
     content: null,
-    syncData: null,
+    syncYdoc: null,
+    syncData: {},
     clientID: null,
   }),
 

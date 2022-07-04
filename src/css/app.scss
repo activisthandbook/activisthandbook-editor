@@ -2,11 +2,17 @@
 body,
 .q-layout {
   font-family: sans-serif;
-  font-size: 18px;
-  background-color: #fafafa;
+  font-size: 16px;
+  background-color: white;
 }
 a {
-  color: #0431ea;
+  color: $secondary;
+  text-decoration: none;
+  border-bottom: 4px solid rgba($secondary, 0.2);
+
+  &:hover {
+    border-bottom-color: rgba($secondary, 0.5);
+  }
 }
 h1,
 h2,
@@ -29,17 +35,22 @@ h6,
 }
 h1,
 .text-h1 {
-  font-size: 2.6em;
+  font-size: 2.4em;
+  color: $primary;
+  margin: 32px 0 24px 0;
 }
 h2,
 .text-h2 {
-  font-size: 1.8em;
+  font-size: 1.6em;
+  margin: 32px 0 24px 0;
   // font-weight: 400;
-  font-style: italic;
 }
 h3,
 .text-h3 {
-  font-size: 1.6em;
+  font-size: 1.2em;
+  margin: 16px 0;
+  color: $primary;
+  font-family: "Noto Sans", sans-serif;
 }
 h4,
 .text-h4 {
@@ -53,6 +64,22 @@ h6,
 .text-h6 {
   font-size: 1em;
 }
+p {
+  margin: 8px 0;
+}
+
+li p {
+  margin: 8px 0;
+}
+
+blockquote {
+  border-left: 8px solid $primary;
+  border-radius: 6px;
+  background-color: $accent;
+  margin: 0;
+  padding: 8px 16px;
+}
+
 .q-btn {
   font-weight: 700;
 
