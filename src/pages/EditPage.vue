@@ -26,13 +26,13 @@
       color="grey-3"
       text-color="grey-8"
       v-if="
-        (lastEditTimestamp && !lastSaveTimestamp) ||
-        lastEditTimestamp > lastSaveTimestamp
+        (editorStore.lastEditTimestamp && !lastSaveTimestamp) ||
+        editorStore.lastEditTimestamp > lastSaveTimestamp
       "
       icon="mdi-sync"
       >Saving...</q-chip
     >
-    <q-chip color="grey-3" text-color="grey-8" v-else icon="mdi-cloud-check"
+    <q-chip color="grey-3" text-color="grey-9" v-else icon="mdi-cloud-check"
       >Saved</q-chip
     >
   </q-page-sticky>
@@ -42,16 +42,7 @@
 import { useEditorStore } from "stores/editor";
 import { useFirebaseStore } from "stores/firebase";
 
-import sanitizeHtml from "sanitize-html";
-
-import {
-  getFirestore,
-  setDoc,
-  getDoc,
-  doc,
-  onSnapshot,
-  serverTimestamp,
-} from "firebase/firestore";
+import { getFirestore, setDoc, doc, serverTimestamp } from "firebase/firestore";
 const db = getFirestore();
 
 import _ from "lodash";
@@ -81,9 +72,9 @@ export default {
         title: "",
         description: "",
         content: "",
+        path: "",
       },
-      numberOfSaves: 0,
-      lastEditTimestamp: null,
+      numberOfSaves: 1,
       dataOrigin: null,
       loadedFromServer: false,
       firstCheckDone: false,
@@ -93,50 +84,47 @@ export default {
 
   computed: {
     nextSaveClaimedBy: function () {
-      if (this.editorStore.syncData) {
-        return null;
-      } else return null;
+      return this.editorStore.syncedData.nextSaveClaimedBy;
     },
     nextSaveTimestamp: function () {
-      if (this.editorStore.syncData) {
-        return null;
-      } else return null;
+      return this.editorStore.syncedData.nextSaveTimestamp;
     },
     lastSaveTimestamp: function () {
-      if (this.editorStore.syncData) {
-        return null;
-      } else return null;
+      return this.editorStore.syncedData.lastSaveTimestamp;
     },
     connectedP2P: function () {
-      return this.editorStore.provider.connected;
+      return this.editorStore.y.provider.connected;
     },
   },
 
   watch: {
     article: {
       handler(newValue) {
-        this.numberOfSaves += 1;
-
         if (
-          this.editorStore.titleRendered &&
-          this.editorStore.descriptionRendered &&
-          this.editorStore.contentRendered
+          this.editorStore.y.titleRendered &&
+          this.editorStore.y.descriptionRendered &&
+          this.editorStore.y.contentRendered &&
+          this.editorStore.y.pathRendered
         ) {
-          if (!this.firstCheckDone) {
-            // console.log("first check");
+          // the document has been edited, so we set saved to false
+
+          if (this.numberOfSaves === 1) {
+            // console.log(this.numberOfSaves, "First check!");
             this.firstCheckDone = true;
             // the first 3 times the article watcher is just updated from initialising the editor, the 4th time is from loading from p2p or server, so we do not have to save anything to the server in those cases
-
-            this.loadFromServer();
-          } else if (!this.secondCheckDone) {
+          } else if (this.numberOfSaves === 2) {
+            // console.log(this.numberOfSaves, "Second check!");
             this.secondCheckDone = true;
             // console.log("second check");
           } else {
+            // console.log(this.numberOfSaves, "Save!");
             // the document has been edited, so we set saved to false
-            this.lastEditTimestamp = Date.now();
+            this.editorStore.lastEditTimestamp = Date.now();
             this.announceSave();
             this.save(newValue);
           }
+
+          this.numberOfSaves += 1;
         }
       },
       deep: true,
@@ -158,69 +146,20 @@ export default {
         });
       }
     },
-    fetch: async function () {
-      setTimeout(() => {
-        // we don't really know when
-        if (
-          this.editorStore.content.storage.collaborationCursor.users.length ===
-          1
-        ) {
-          getDoc(doc(db, "articles", "test"))
-            .then((snapshot) => {
-              if (snapshot.exists()) {
-                this.editorStore.title.commands.setContent(
-                  sanitizeHtml(snapshot.data().title),
-                  true
-                );
-                this.editorStore.description.commands.setContent(
-                  sanitizeHtml(snapshot.data().description),
-                  true
-                );
-                this.editorStore.path.commands.setContent(
-                  sanitizeHtml(snapshot.data().path),
-                  true
-                );
-                this.editorStore.content.commands.setContent(
-                  sanitizeHtml(snapshot.data().content),
-                  true
-                );
-                this.editorStore.syncYdoc.set(
-                  "requestedPublication",
-                  snapshot.data().requestedPublication
-                );
-                this.dataOrigin = "server";
-
-                this.loadedFromServer = true;
-              } else {
-                console.log("No data available");
-              }
-            })
-            .catch((error) => {
-              console.error(error);
-            });
-        }
-      }, 500);
-    },
-    announceSave: _.debounce(function () {
+    announceSave: _.throttle(function () {
       const time = Date.now();
-
-      // console.log(
-      //   "same person",
-      //   this.nextSaveClaimedBy !== this.editorStore.clientID
-      // );
-      // console.log("time", this.nextSaveTimestamp, this.lastEditTimestamp);
 
       if (
         !this.nextSaveTimestamp ||
-        (this.nextSaveClaimedBy !== this.editorStore.clientID && // someone else
-          this.nextSaveTimestamp < this.lastEditTimestamp) // their last save is not up-to-date
+        (this.nextSaveClaimedBy !== this.editorStore.y.clientID && // someone else
+          this.nextSaveTimestamp < this.editorStore.lastEditTimestamp) // their last save is not up-to-date
       ) {
         // console.log("I'm gonna do it");
-        this.editorStore.syncYdoc.set(
+        this.editorStore.y.syncedData.set(
           "nextSaveClaimedBy",
-          this.editorStore.clientID
+          this.editorStore.y.clientID
         );
-        this.editorStore.syncYdoc.set("nextSaveTimestamp", time);
+        this.editorStore.y.syncedData.set("nextSaveTimestamp", time);
       }
 
       // if (
@@ -240,29 +179,28 @@ export default {
       //     this.saved = true;
       //   });
       // }
-    }, 2000),
-    save: _.debounce(function (article) {
-      if (this.editorStore.clientID === this.nextSaveClaimedBy) {
+    }, 3000),
+    save: _.throttle(function (article) {
+      console.log("Save!");
+      if (this.editorStore.y.clientID === this.nextSaveClaimedBy) {
         if (this.article.content !== "<p></p>") {
           setDoc(
-            doc(db, "articles/test"),
+            doc(db, "articles/test2"),
             {
-              title: article.title.slice(3, -4), // removing the <p> and </p> tags
-              description: article.description.slice(3, -4), // removing the <p> and </p> tags
-              path: article.path.slice(3, -4), // removing the <p> and </p> tags
-              content: article.content,
+              ...this.editorStore.article,
+              lastUpdatedServerTimestamp: serverTimestamp(),
             },
             { merge: true }
           ).then(() => {
             // console.log("synced!");
 
             const time = Date.now();
-            this.editorStore.syncYdoc.set("lastSaveTimestamp", time);
+            this.editorStore.y.syncedData.set("lastSaveTimestamp", time);
             this.saved = true;
           });
         }
       }
-    }, 3000),
+    }, 4000),
   },
 };
 </script>

@@ -1,6 +1,6 @@
 <template>
   <q-card
-    v-if="editor && editor.content"
+    v-if="editor && editor.y.content"
     class="bg-white text-black justify-center sticky"
     bordered
     flat
@@ -21,9 +21,9 @@
           icon="mdi-text"
           padding="8px"
           :class="{
-            'is-active': !editor.content.isActive('heading'),
+            'is-active': !editor.y.content.isActive('heading'),
           }"
-          @click="editor.content.chain().focus().setParagraph().run()"
+          @click="editor.y.content.chain().focus().setParagraph().run()"
         >
           <q-tooltip
             transition-show="none"
@@ -40,7 +40,7 @@
           flat
           dense
           :class="{
-            'is-active': editor.content.isActive('heading', { level: 1 }),
+            'is-active': editor.y.content.isActive('heading', { level: 1 }),
           }"
           @click="setHeading(1)"
         >
@@ -57,7 +57,7 @@
           dense
           icon="mdi-numeric-2-box"
           :class="{
-            'is-active': editor.content.isActive('heading', { level: 2 }),
+            'is-active': editor.y.content.isActive('heading', { level: 2 }),
           }"
           @click="setHeading(2)"
         >
@@ -74,7 +74,7 @@
           icon="mdi-numeric-3-box"
           dense
           :class="{
-            'is-active': editor.content.isActive('heading', { level: 3 }),
+            'is-active': editor.y.content.isActive('heading', { level: 3 }),
           }"
           @click="setHeading(3)"
         >
@@ -94,16 +94,16 @@
         padding="sm"
         flat
         icon="mdi-format-bold"
-        @click="editor.content.chain().focus().toggleBold().run()"
-        :class="{ 'is-active': editor.content.isActive('bold') }"
+        @click="editor.y.content.chain().focus().toggleBold().run()"
+        :class="{ 'is-active': editor.y.content.isActive('bold') }"
       />
 
       <q-btn
         padding="sm"
         flat
         icon="mdi-format-italic"
-        @click="editor.content.chain().focus().toggleItalic().run()"
-        :class="{ 'is-active': editor.content.isActive('italic') }"
+        @click="editor.y.content.chain().focus().toggleItalic().run()"
+        :class="{ 'is-active': editor.y.content.isActive('italic') }"
       />
 
       <q-btn
@@ -111,7 +111,7 @@
         flat
         icon="mdi-link"
         @click="openLinkDialog($event)"
-        :class="{ 'is-active': editor.content.isActive('link') }"
+        :class="{ 'is-active': editor.y.content.isActive('link') }"
       >
         <q-dialog v-model="linkDialog">
           <q-card style="min-width: 350px">
@@ -158,8 +158,8 @@
         padding="sm"
         flat
         icon="mdi-format-list-bulleted"
-        @click="editor.content.chain().focus().toggleBulletList().run()"
-        :class="{ 'is-active': editor.content.isActive('bulletList') }"
+        @click="editor.y.content.chain().focus().toggleBulletList().run()"
+        :class="{ 'is-active': editor.y.content.isActive('bulletList') }"
         class="gt-xs"
       />
 
@@ -167,8 +167,8 @@
         padding="sm"
         flat
         icon="mdi-format-list-numbered"
-        @click="editor.content.chain().focus().toggleOrderedList().run()"
-        :class="{ 'is-active': editor.content.isActive('orderedList') }"
+        @click="editor.y.content.chain().focus().toggleOrderedList().run()"
+        :class="{ 'is-active': editor.y.content.isActive('orderedList') }"
         class="gt-xs"
       />
 
@@ -180,8 +180,8 @@
         padding="sm"
         flat
         icon="mdi-format-quote-open"
-        @click="editor.content.chain().focus().toggleBlockquote().run()"
-        :class="{ 'is-active': editor.content.isActive('blockquote') }"
+        @click="editor.y.content.chain().focus().toggleBlockquote().run()"
+        :class="{ 'is-active': editor.y.content.isActive('blockquote') }"
         class="gt-sm"
       />
       <q-btn padding="sm" flat icon="mdi-image" class="gt-sm" disable />
@@ -211,7 +211,6 @@ export default defineComponent({
   },
   data() {
     return {
-      // provider: useEditorStore(),
       link: "",
       linkDialog: false,
       title: "",
@@ -221,10 +220,10 @@ export default defineComponent({
   },
   methods: {
     setHeading(level) {
-      return this.editor.content.commands.toggleHeading({ level: level });
+      return this.editor.y.content.commands.toggleHeading({ level: level });
     },
     setLink(link) {
-      this.editor.content
+      this.editor.y.content
         .chain()
         .focus()
         .extendMarkRange("link")
@@ -233,7 +232,7 @@ export default defineComponent({
     },
     openLinkDialog(event) {
       event.preventDefault();
-      this.currentLink = this.editor.content.getAttributes("link").href;
+      this.currentLink = this.editor.y.content.getAttributes("link").href;
       this.linkDialog = true;
     },
   },

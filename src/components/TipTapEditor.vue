@@ -1,10 +1,26 @@
 <template>
-  <editor-content :editor="editorStore.title" class="text-h1 title" />
-  <editor-content :editor="editorStore.description" class="description" />
-  <editor-content :editor="editorStore.path" class="path text-caption" />
+  <editor-content
+    :editor="editorStore.y.title"
+    class="text-h1 title"
+    :class="{ editable }"
+  />
+  <editor-content
+    :editor="editorStore.y.description"
+    class="description"
+    :class="{ editable }"
+  />
+  <editor-content
+    :editor="editorStore.y.path"
+    class="path text-caption"
+    :class="{ editable }"
+  />
 
   <EditorMenu />
-  <editor-content :editor="editorStore.content" class="content" />
+  <editor-content
+    :editor="editorStore.y.content"
+    class="content"
+    :class="{ editable }"
+  />
   <!-- <editor-content :editor="editorStore.content" /> -->
 
   <!-- <div
@@ -32,16 +48,16 @@
   <q-page-sticky
     position="bottom-right"
     :offset="[8, 8]"
-    v-if="editorStore && editorStore.content"
+    v-if="editorStore && editorStore.y.content"
   >
     <!-- {{ editorStore.content.storage.collaborationCursor.users }} -->
     <!-- <q-chip v-if="!saved">Saving...</q-chip> -->
-    <q-chip color="grey-3" text-color="grey-8">
+    <q-chip color="grey-3" text-color="grey-9">
       <span class="q-gutter-x-xs items-center flex">
-        <q-icon name="mdi-circle" color="teal" style="margin-left: -1px" />
+        <q-icon name="mdi-circle" color="secondary" style="margin-left: -1px" />
         <strong>
           {{
-            editorStore.content.storage.collaborationCursor.users.length
+            editorStore.y.content.storage.collaborationCursor.users.length
           }}</strong
         >
         <span>online</span>
@@ -51,14 +67,14 @@
   <q-page-sticky
     position="bottom"
     :offset="[8, 8]"
-    v-if="editorStore && editorStore.content"
+    v-if="editorStore && editorStore.y.content"
   >
     <!-- {{ editorStore.content.storage.collaborationCursor.users }} -->
     <!-- <q-chip v-if="!saved">Saving...</q-chip> -->
-    <q-chip square color="grey-3" text-color="grey-8">
+    <q-chip square color="grey-3" text-color="grey-9">
       <span class="q-gutter-x-xs">
         <strong>
-          {{ editorStore.content.storage.characterCount.words() }}</strong
+          {{ editorStore.y.content.storage.characterCount.words() }}</strong
         >
         <span>words</span>
       </span>
@@ -68,8 +84,6 @@
 
 <script>
 import EditorMenu from "components/EditorMenu.vue";
-
-import { getCssVar } from "quasar";
 
 import { useEditorStore } from "stores/editor";
 import { useFirebaseStore } from "stores/firebase";
@@ -124,7 +138,6 @@ export default {
 
   data() {
     return {
-      // provider: useEditorStore(),
       link: "",
       linkDialog: false,
       title: "",
@@ -132,7 +145,8 @@ export default {
       currentLink: "",
       backgroundColor: "",
       textColor: "",
-      syncData: null,
+      syncedData: null,
+      editable: false,
     };
   },
 
@@ -141,45 +155,58 @@ export default {
       handler(value) {
         // console.log("modelValue watcher triggered");
         if (
-          this.editorStore.title.getHTML() === value.title ||
-          this.editorStore.description.getHTML() === value.description ||
-          this.editorStore.content.getHTML() === value.content
+          this.editorStore.y.title.getHTML() === value.title ||
+          this.editorStore.y.description.getHTML() === value.description ||
+          this.editorStore.y.content.getHTML() === value.content ||
+          this.editorStore.y.path.getHTML() === value.path
         ) {
           return;
         } else {
-          this.editorStore.title.commands.setContent(value.title, false);
-          this.editorStore.description.commands.setContent(
+          this.editorStore.y.title.commands.setContent(value.title, false);
+          this.editorStore.y.description.commands.setContent(
             value.description,
             false
           );
-          this.editorStore.content.commands.setContent(value.content, false);
+          this.editorStore.y.content.commands.setContent(value.content, false);
+          this.editorStore.y.path.commands.setContent(value.path, false);
         }
       },
       deep: true,
     },
+    editable() {
+      this.editorStore.y.title.setEditable(this.editable);
+      this.editorStore.y.description.setEditable(this.editable);
+      this.editorStore.y.path.setEditable(this.editable);
+      this.editorStore.y.content.setEditable(this.editable);
+    },
   },
-
   mounted() {
-    this.$nextTick(() => {
+    this.$nextTick(async () => {
+      this.editorStore.fetchFromServer();
       this.setUserColor();
       this.setupEditors();
+      setTimeout(() => {
+        this.editable = true;
+      }, 1200);
     });
   },
 
   methods: {
-    // test() {
-    //   this.editorStore.syncYdoc.set("test", Math.random());
-    //   // console.log(this.editorStore.syncYdoc.get("test"));
-    // },
     setupEditors() {
-      console.log("setting up editors");
-
-      this.editorStore.clientID = ydoc.clientID;
+      this.editorStore.y.clientID = ydoc.clientID;
       // Registered with a WebRTC provider
-      this.editorStore.provider = new WebrtcProvider(
+      this.editorStore.y.provider = new WebrtcProvider(
         "activisthandbook-edit",
         ydoc
       );
+
+      this.editorStore.y.provider.on("peers", (event) => {
+        this.editorStore.hasPeers = true;
+
+        console.log("peers");
+        const time = Date.now();
+        this.editorStore.y.syncedData.set("lastPeerChangeTimestamp", time);
+      });
 
       const user = {
         firebaseID: this.firebaseStore.auth.currentUser.uid,
@@ -188,37 +215,22 @@ export default {
         avatar: this.firebaseStore.auth.currentUser.photoURL,
       };
 
-      // this.editorStore.syncData
-      this.editorStore.syncYdoc = ydoc.getMap("syncData");
-      this.editorStore.syncYdoc.observe((ymapEvent) => {
-        console.log(ymapEvent.target === this.editorStore.syncData); // => true
+      this.editorStore.y.syncedData = ydoc.getMap("syncedData");
 
-        // sample code.
+      // Observe the remote syncedData and update the local values every time they change
+      this.editorStore.y.syncedData.observe((ymapEvent) => {
         ymapEvent.changes.keys.forEach((change, key) => {
           if (change.action === "add" || change.action === "update") {
-            this.editorStore.syncData[key] = this.editorStore.syncYdoc.get(key);
-
-            // console.log(
-            // `Property "${key}" was added. Initial value: "${this.editorStore.syncYdoc.get(
-            //   key
-            // )}".`
-            // );
+            this.editorStore.syncedData[key] =
+              this.editorStore.y.syncedData.get(key);
           } else if (change.action === "delete") {
-            this.editorStore.syncData[key] = null;
-            // console.log(
-            //   `Property "${key}" was deleted. New value: undefined. Previous value: "${change.oldValue}".`
-            // );
+            this.editorStore.syncedData[key] = null;
           }
         });
       });
-      // console.log(this.editorStore.syncData);
-      // this.editorStore.syncData
-      //   .observe("requestedPublication")
-      //   .then((value) => {
-      //     console.log(value);
-      //   });
 
-      this.editorStore.title = new Editor({
+      this.editorStore.y.title = new Editor({
+        editable: this.editable,
         extensions: [
           SingleParagraphDocument,
           Paragraph,
@@ -228,31 +240,21 @@ export default {
             field: "title",
           }),
           CollaborationCursor.configure({
-            provider: this.editorStore.provider,
+            provider: this.editorStore.y.provider,
             user,
           }),
           Placeholder.configure({
-            // Use a placeholder:
-            // Use different placeholders depending on the node type:
             placeholder: "Title",
           }),
         ],
         onUpdate: () => {
-          // console.log("emitting title update");
-          // HTML
-          this.editorStore.titleRendered = true;
-          this.$emit("update:modelValue", {
-            title: this.editorStore.title.getHTML(),
-            description: this.editorStore.description.getHTML(),
-            content: this.editorStore.content.getHTML(),
-            path: this.editorStore.path.getHTML(),
-          });
-          // JSON
-          // this.$emit("update:modelValue", this.editor.getJSON());
+          this.editorStore.y.titleRendered = true;
+          this.emitChanges();
         },
       });
 
-      this.editorStore.description = new Editor({
+      this.editorStore.y.description = new Editor({
+        editable: this.editable,
         extensions: [
           SingleParagraphDocument,
           Paragraph,
@@ -262,7 +264,7 @@ export default {
             field: "description",
           }),
           CollaborationCursor.configure({
-            provider: this.editorStore.provider,
+            provider: this.editorStore.y.provider,
             user,
           }),
           Placeholder.configure({
@@ -272,21 +274,13 @@ export default {
           }),
         ],
         onUpdate: () => {
-          // console.log("emitting description update");
-          this.editorStore.descriptionRendered = true;
-          // HTML
-          this.$emit("update:modelValue", {
-            title: this.editorStore.title.getHTML(),
-            description: this.editorStore.description.getHTML(),
-            content: this.editorStore.content.getHTML(),
-            path: this.editorStore.path.getHTML(),
-          });
-          // JSON
-          // this.$emit("update:modelValue", this.editor.getJSON());
+          this.editorStore.y.descriptionRendered = true;
+          this.emitChanges();
         },
       });
 
-      this.editorStore.path = new Editor({
+      this.editorStore.y.path = new Editor({
+        editable: this.editable,
         extensions: [
           SingleParagraphDocument,
           Paragraph,
@@ -296,32 +290,20 @@ export default {
             field: "path",
           }),
           CollaborationCursor.configure({
-            provider: this.editorStore.provider,
+            provider: this.editorStore.y.provider,
             user,
           }),
-          // Placeholder.configure({
-          //   // Use a placeholder:
-          //   // Use different placeholders depending on the node type:
-          //   placeholder: "Path",
-          // }),
         ],
         onUpdate: () => {
-          // console.log("emitting description update");
-          this.editorStore.descriptionRendered = true;
-          // HTML
-          this.$emit("update:modelValue", {
-            title: this.editorStore.title.getHTML(),
-            description: this.editorStore.description.getHTML(),
-            content: this.editorStore.content.getHTML(),
-            path: this.editorStore.path.getHTML(),
-          });
-          // JSON
-          // this.$emit("update:modelValue", this.editor.getJSON());
+          this.editorStore.y.pathRendered = true;
+          this.emitChanges();
         },
       });
 
-      this.editorStore.content = new Editor({
-        // content: "<p>I’m running Tiptap with Vue.js. 🎉</p>",
+      let nthTime = 1;
+      let lastContent = null;
+      this.editorStore.y.content = new Editor({
+        editable: this.editable,
         extensions: [
           StarterKit.configure({
             // The Collaboration extension comes with its own history handling
@@ -332,7 +314,7 @@ export default {
             field: "content",
           }),
           CollaborationCursor.configure({
-            provider: this.editorStore.provider,
+            provider: this.editorStore.y.provider,
             user,
           }),
           Link.configure({
@@ -356,19 +338,66 @@ export default {
           }),
         ],
         onUpdate: () => {
-          this.editorStore.contentRendered = true;
-          // console.log("emitting content update");
-          // HTML
-          this.$emit("update:modelValue", {
-            title: this.editorStore.title.getHTML(),
-            description: this.editorStore.description.getHTML(),
-            content: this.editorStore.content.getHTML(),
-            path: this.editorStore.path.getHTML(),
-          });
-          // JSON
-          // this.$emit("update:modelValue", this.editor.getJSON());
+          // console.log(nthTime, this.editorStore.y.content.getHTML());
+          // console.log("onUpdate content", this.editorStore.y.content.getHTML());
+          // console.log(nthTime, this.editorStore.hasPeers);
+          if (nthTime === 3 && this.editorStore.hasPeers) {
+            // console.log("Trying undo...");
+            // console.log(
+            //   "onUpdate content 1",
+            //   this.editorStore.y.content.getHTML()
+            // );
+            // this.editorStore.y.content.commands.undo();
+            // console.log("real 1", this.editorStore.y.content.getHTML());
+            lastContent = this.editorStore.y.content.getHTML();
+            this.editorStore.y.content.commands.undo();
+            // console.log("real 2", this.editorStore.y.content.getHTML());
+            // if (tryoutUndo.getHTML() !== "<p></p>") {
+            //   console.log("Undo!");
+            //   this.editorStore.y.content.commands.undo();
+            // } else {
+            //   console.log("Nevermind!");
+            // }
+          } else if (nthTime === 4 && this.editorStore.hasPeers) {
+            // console.log("real 3", this.editorStore.y.content.getHTML());
+            if (this.editorStore.y.content.getHTML() === "<p></p>") {
+              // console.log("Redo!");
+
+              if (lastContent !== "<p></p>") {
+                this.editorStore.y.content.commands.insertContent(
+                  lastContent,
+                  true
+                );
+              }
+
+              this.editorStore.y.content.commands.insertContent(
+                lastContent,
+                true
+              );
+              // this.editorStore.y.content.commands.redo();
+            }
+          }
+
+          this.editorStore.y.contentRendered = true;
+          this.emitChanges();
+          //           if 2nd && peers has happened
+
+          // then clear everything before saving peer data
+          // or undo last edit editor.commands.undo()
+          // console.log(nthTime, "b", this.editorStore.y.content.getHTML());
+          nthTime += 1;
         },
       });
+    },
+    emitChanges() {
+      const newArticle = {
+        title: this.editorStore.y.title.getHTML().slice(3, -4),
+        description: this.editorStore.y.description.getHTML().slice(3, -4),
+        content: this.editorStore.y.content.getHTML(),
+        path: this.editorStore.y.path.getHTML().slice(3, -4),
+      };
+      this.$emit("update:modelValue", newArticle);
+      this.editorStore.article = newArticle;
     },
     setUserColor() {
       // https://quasar.dev/style/sass-scss-variables
@@ -396,10 +425,11 @@ export default {
   },
 
   beforeUnmount() {
-    this.editorStore.title.destroy();
-    this.editorStore.description.destroy();
-    this.editorStore.content.destroy();
-    this.editorStore.provider.destroy();
+    this.editorStore.y.title.destroy();
+    this.editorStore.y.description.destroy();
+    this.editorStore.y.content.destroy();
+    this.editorStore.y.path.destroy();
+    this.editorStore.y.provider.destroy();
   },
 };
 </script>
@@ -440,10 +470,6 @@ export default {
 }
 .title {
   color: black;
-}
-.description {
-  font-size: 1.2em;
-  font-style: italic;
 }
 .path {
   font-size: 0.8em;
@@ -517,5 +543,14 @@ export default {
   &:hover {
     opacity: 1;
   }
+}
+
+// Still loading
+.ProseMirror {
+  opacity: 0.6;
+}
+.editable .ProseMirror {
+  transition: 0.3s opacity;
+  opacity: 1;
 }
 </style>

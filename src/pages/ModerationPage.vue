@@ -1,21 +1,74 @@
 <template>
-  <q-btn label="Publish" @click="publishArticles()" />
-  <q-card v-if="articles.dataLoaded">
-    <q-list>
-      <q-expansion-item
-        expand-separator
-        label="Article"
-        v-for="(article, index) in articles.data"
-        :key="index"
-      >
-        <q-card>
-          <q-card-section v-html="sanitize(article.content)"> </q-card-section>
-        </q-card>
-      </q-expansion-item>
-    </q-list>
+  <div class="flex justify-between items-center">
+    <h2 class="q-my-none">Review edits</h2>
+    <q-toggle
+      v-model="quickReview"
+      label="Quick view"
+      icon="mdi-lightning-bolt"
+    />
+  </div>
+
+  <q-tabs v-model="tab" inline-label class="bg-grey-3 rounded-borders">
+    <q-tab
+      name="review-requests"
+      icon="mdi-eye"
+      label="Review requests"
+      no-caps
+    />
+    <q-tab name="all" icon="mdi-playlist-edit" label="All edits" no-caps />
+  </q-tabs>
+
+  <div style="min-height: 256px">
+    <div v-if="articles.dataLoaded">
+      <q-card v-if="!articles.data[0]">
+        <q-card-section>No new edits.</q-card-section>
+      </q-card>
+      <q-card :flat="quickReview" v-else>
+        <q-list
+          :padding="!quickReview"
+          :class="{ 'q-gutter-y-md q-mt-md': quickReview }"
+          bordered
+        >
+          <ModerationItem
+            v-for="article in articles.data"
+            :article="article"
+            :key="article.id"
+            :quickReview="quickReview"
+          />
+        </q-list>
+      </q-card>
+    </div>
+  </div>
+
+  <q-separator class="q-my-xl" />
+
+  <q-card flat class="q-mt-xl bg-grey-2">
+    <q-card-section class="text-center">
+      <q-icon name="mdi-alert" size="64px" color="grey" />
+      <div class="text-bold">Danger zone</div>
+      <div>Warning! The buttons below are dangerous. Proceed with caution.</div>
+      <div class="q-gutter-sm q-mt-sm">
+        <q-btn
+          label="Accept all changes"
+          icon="mdi-check-all"
+          no-caps
+          outline
+          disable
+        />
+        <q-btn
+          label="Revert all changes"
+          icon="mdi-delete"
+          no-caps
+          outline
+          disable
+        />
+      </div>
+    </q-card-section>
   </q-card>
 </template>
 <script>
+import ModerationItem from "src/components/moderate/ModerationItem.vue";
+
 import { useFirebaseStore } from "stores/firebase";
 
 import {
@@ -27,12 +80,11 @@ import {
 } from "firebase/firestore";
 const db = getFirestore();
 
-import sanitizeHtml from "sanitize-html";
-
 import { httpsCallable } from "firebase/functions";
 
 export default {
   name: "ModerationPage",
+  components: { ModerationItem },
   setup() {
     const firebaseStore = useFirebaseStore();
 
@@ -43,6 +95,9 @@ export default {
   },
   data() {
     return {
+      tab: "review-requests",
+      version: 3,
+      quickReview: false,
       articles: {
         data: null,
         dataLoaded: false,
@@ -54,22 +109,21 @@ export default {
   mounted: function () {
     const q = query(
       collection(db, "articles"),
-      where("requestPublication", "==", true)
+      where("requestedPublication", "==", true)
     );
     this.articles.unsubscribe = onSnapshot(q, (querySnapshot) => {
       const articles = [];
       querySnapshot.forEach((doc) => {
-        articles.push(doc.data());
+        articles.push({
+          ...doc.data(),
+          id: doc.id,
+        });
       });
-      console.log(articles);
       this.articles.data = articles;
       this.articles.dataLoaded = true;
     });
   },
   methods: {
-    sanitize: function (inputHTML) {
-      return sanitizeHtml(inputHTML);
-    },
     publishArticles: function () {
       const publishArticles = httpsCallable(
         this.firebaseStore.functions,

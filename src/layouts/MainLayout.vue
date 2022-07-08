@@ -11,17 +11,11 @@
           no-caps
           class="q-ml-sm"
           @click="publish()"
-          :disable="this.editorStore.syncData.requestedPublication"
-          :icon="
-            this.editorStore.syncData.requestedPublication
-              ? 'mdi-check'
-              : 'mdi-send'
-          "
+          :disable="!allowedToPublish"
+          :icon="!allowedToPublish ? 'mdi-check' : 'mdi-send'"
         >
           <span class="q-ml-sm">
-            <span v-if="!this.editorStore.syncData.requestedPublication"
-              >Publish</span
-            >
+            <span v-if="allowedToPublish">Publish</span>
             <span v-else>Requested</span>
           </span>
         </q-btn>
@@ -60,7 +54,14 @@ import { useEditorStore } from "stores/editor";
 import { useFirebaseStore } from "stores/firebase";
 
 import { getAuth, signOut } from "firebase/auth";
-import { getFirestore, doc, setDoc } from "firebase/firestore";
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  addDoc,
+  collection,
+  serverTimestamp,
+} from "firebase/firestore";
 const db = getFirestore();
 
 const auth = getAuth();
@@ -77,21 +78,83 @@ export default {
       firebaseStore,
     };
   },
+  data: function () {
+    return {
+      allowedToPublish: false,
+    };
+  },
+
+  mounted: function () {
+    this.updateWhileAgo();
+    setInterval(() => {
+      this.updateWhileAgo();
+    }, 3000);
+  },
 
   methods: {
+    updateWhileAgo() {
+      const whileAgo = Date.now() - 1000 * 10;
+
+      if (!this.editorStore.syncedData.requestedPublication) {
+        this.allowedToPublish = true;
+      } else if (
+        whileAgo > this.editorStore.syncedData.requestedPublicationTimestamp &&
+        this.editorStore.lastEditTimestamp >
+          this.editorStore.syncedData.requestedPublicationTimestamp
+      ) {
+        this.allowedToPublish = true;
+      } else this.allowedToPublish = false;
+
+      // this.allowedToPublish =
+      //   whileAgo > this.editorStore.syncedData.requestedPublicationTimestamp;
+
+      //   this.editorStore.syncedData.requestedPublication && !whileAgo
+    },
+    openPublishingDialog() {},
     publish() {
       console.log("publish");
-      setDoc(
-        doc(db, "articles", "test"),
+      const time = Date.now();
+      addDoc(
+        collection(db, "articles", "test2", "versions"),
         {
-          requestPublication: true,
+          ...this.editorStore.article,
+          lastUpdatedServerTimestamp: serverTimestamp(),
+          status: "review",
         },
         {
           merge: true,
         }
       ).then(() => {
-        this.editorStore.syncYdoc.set("requestedPublication", true);
+        this.editorStore.y.syncedData.set("requestedPublication", true);
         console.log("published");
+      });
+
+      setDoc(
+        doc(db, "articles", "test2"),
+        {
+          requestedPublication: true,
+          requestedPublicationTimestamp: time,
+        },
+        {
+          merge: true,
+        }
+      ).then(() => {
+        this.editorStore.y.syncedData.set("requestedPublication", true);
+        this.editorStore.y.syncedData.set(
+          "requestedPublicationTimestamp",
+          time
+        );
+        this.updateWhileAgo();
+        console.log("published");
+        this.$q.dialog({
+          title: "Sent for review ✅",
+          message:
+            "Our moderators will review the edits you made. Thank you for contributing to Activist Handbook.",
+          ok: {
+            color: "secondary",
+            flat: true,
+          },
+        });
       });
     },
     signOut() {

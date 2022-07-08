@@ -1,0 +1,64 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+
+    	function signedIn() {
+        return request.auth.uid != null;
+      }
+
+      function isModerator() {
+        return
+          request.auth != null &&
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isModerator == true;
+      }
+
+    	match /articles/{articleID} {
+        allow read, write: if signedIn()
+
+        match /versions/{versionID} {
+        	allow read, create: if signedIn();
+          allow write, delete: if isModerator();
+        }
+      }
+
+      match /publishingQueue/{articleID} {
+        allow write, read: if isModerator()
+      }
+
+      match /articleSync/{articleSyncID} {
+        allow read, write: if signedIn()
+      }
+
+      match /results/{resultID} {
+        allow get: if signedIn()
+      }
+
+      match /customers/{uid} {
+        allow read: if request.auth.uid == uid;
+
+        match /checkout_sessions/{id} {
+          allow read, write: if request.auth.uid == uid;
+        }
+        match /subscriptions/{id} {
+          allow read: if request.auth.uid == uid;
+        }
+        match /payments/{id} {
+          allow read: if request.auth.uid == uid;
+        }
+      }
+
+      match /products/{id} {
+        allow read: if signedIn();
+
+        match /prices/{id} {
+          allow read: if signedIn();
+        }
+
+        match /tax_rates/{id} {
+          allow read: if signedIn();
+        }
+      }
+    }
+  }
+}
