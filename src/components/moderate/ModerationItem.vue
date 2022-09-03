@@ -12,7 +12,17 @@
               <div>
                 <span class="text-bold q-mr-xs">Latest version</span>
                 <q-chip
-                  v-if="isNewArticle"
+                  v-if="
+                    articleVersions.data[articleVersionSelected - 1]
+                      .deleteArticle
+                  "
+                  icon="mdi-delete"
+                  label="Delete"
+                  color="warning"
+                  class="q-ma-none"
+                />
+                <q-chip
+                  v-else-if="isNewArticle"
                   label="New article"
                   class="q-ma-none"
                 />
@@ -62,11 +72,21 @@
       <template v-slot:header>
         <q-item-section class="q-py-sm">
           <q-item-label class="text-bold">
-            {{ articleVersions.data[articleVersionSelected - 1].title }}
+            <div v-if="articleVersions.data[articleVersionSelected - 1].title">
+              {{ articleVersions.data[articleVersionSelected - 1].title }}
+            </div>
+            <div v-else class="text-grey">No title</div>
           </q-item-label>
-          <q-item-label>{{
-            articleVersions.data[articleVersionSelected - 1].description
-          }}</q-item-label>
+          <q-item-label>
+            <div
+              v-if="
+                articleVersions.data[articleVersionSelected - 1].description
+              "
+            >
+              {{ articleVersions.data[articleVersionSelected - 1].description }}
+            </div>
+            <div v-else class="text-grey">No description</div>
+          </q-item-label>
           <q-item-label caption
             >activisthandbook.org/{{
               articleVersions.data[articleVersionSelected - 1].path
@@ -74,7 +94,16 @@
           >
         </q-item-section>
         <q-item-section side>
-          <q-chip v-if="isNewArticle" label="New" class="q-ma-none" />
+          <q-chip
+            v-if="
+              articleVersions.data[articleVersionSelected - 1].deleteArticle
+            "
+            label="Delete"
+            icon="mdi-delete"
+            color="warning"
+            class="q-ma-none"
+          />
+          <q-chip v-else-if="isNewArticle" label="New" class="q-ma-none" />
           <q-chip v-else label="Update" class="q-ma-none" />
         </q-item-section>
       </template>
@@ -184,6 +213,7 @@ import {
   doc,
   serverTimestamp,
   where,
+  increment,
 } from "firebase/firestore";
 const db = getFirestore();
 
@@ -258,6 +288,10 @@ export default {
       // Get a new write batch
       const batch = writeBatch(db);
 
+      /* TODO: Add check for duplicate path lorem ipsum... asdf asdf sadf sadfa sdfad fds asdf f asdf a s */
+      // - Change to transaction
+      // - Check the publishingQueue for an identical path
+
       const acceptedArticle =
         this.articleVersions.data[this.articleVersionSelected - 1];
 
@@ -292,12 +326,17 @@ export default {
         "articles",
         this.article.id,
         "versions",
-        this.randomID()
+        this.mixin_randomID()
       );
       batch.set(currentArticleRef, {
         ...acceptedArticle,
         lastUpdatedServerTimestamp: serverTimestamp(),
         status: "published",
+      });
+
+      const moderatorRef = doc(db, "app", "moderator");
+      batch.set(moderatorRef, {
+        publishingQueueCount: increment(1),
       });
 
       // Commit the batch
@@ -358,16 +397,6 @@ export default {
       } else {
         return date;
       }
-    },
-    randomID: function () {
-      var text = "";
-      var possible =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-
-      for (var i = 0; i < 20; i++)
-        text += possible.charAt(Math.floor(Math.random() * possible.length));
-
-      return text;
     },
   },
   unmounted() {

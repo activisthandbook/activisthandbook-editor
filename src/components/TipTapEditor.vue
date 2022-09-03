@@ -9,6 +9,16 @@
     class="description"
     :class="{ editable }"
   />
+
+  <q-select
+    v-model="language"
+    :options="languages"
+    label="Language"
+    dense
+    outlined
+    color="secondary"
+  />
+
   <editor-content
     :editor="editorStore.y.path"
     class="path text-caption"
@@ -16,13 +26,14 @@
   />
 
   <EditorMenu />
+
   <editor-content
     :editor="editorStore.y.content"
     class="content"
     :class="{ editable }"
   />
-  <!-- <editor-content :editor="editorStore.content" /> -->
 
+  <!-- 👉 TO-DO: AI-generate text -->
   <!-- <div
     class="text-center generator"
     v-if="
@@ -45,13 +56,14 @@
       text-color="white"
     />
   </div> -->
-  <q-page-sticky
+
+  <!-- 👉 TO-DO: Tags -->
+
+  <!-- <q-page-sticky
     position="bottom-right"
     :offset="[8, 8]"
     v-if="editorStore && editorStore.y.content"
   >
-    <!-- {{ editorStore.content.storage.collaborationCursor.users }} -->
-    <!-- <q-chip v-if="!saved">Saving...</q-chip> -->
     <q-chip color="grey-3" text-color="grey-9">
       <span class="q-gutter-x-xs items-center flex">
         <q-icon name="mdi-circle" color="secondary" style="margin-left: -1px" />
@@ -63,20 +75,32 @@
         <span>online</span>
       </span>
     </q-chip>
-  </q-page-sticky>
+  </q-page-sticky> -->
   <q-page-sticky
-    position="bottom"
-    :offset="[8, 8]"
+    position="bottom-left"
+    :offset="[12, 12]"
     v-if="editorStore && editorStore.y.content"
   >
-    <!-- {{ editorStore.content.storage.collaborationCursor.users }} -->
-    <!-- <q-chip v-if="!saved">Saving...</q-chip> -->
     <q-chip square color="grey-3" text-color="grey-9">
       <span class="q-gutter-x-xs">
         <strong>
           {{ editorStore.y.content.storage.characterCount.words() }}</strong
         >
         <span>words</span>
+      </span>
+      <q-separator vertical class="q-mx-sm" />
+      <span
+        v-if="
+          (editorStore.lastEditTimestamp && !lastSaveTimestamp) ||
+          editorStore.lastEditTimestamp > lastSaveTimestamp
+        "
+      >
+        <q-icon name="mdi-sync" />
+        Saving...
+      </span>
+      <span v-else icon="">
+        <q-icon name="mdi-cloud-check" />
+        Saved
       </span>
     </q-chip>
   </q-page-sticky>
@@ -114,13 +138,6 @@ const SingleParagraphDocument = Document.extend({
 });
 
 export default {
-  props: {
-    modelValue: {
-      default: { title: "", description: "", content: "" },
-    },
-  },
-
-  emits: ["update:modelValue"],
   setup() {
     const editorStore = useEditorStore();
     const firebaseStore = useFirebaseStore();
@@ -138,41 +155,14 @@ export default {
 
   data() {
     return {
-      link: "",
-      linkDialog: false,
-      title: "",
-      description: "",
-      currentLink: "",
       backgroundColor: "",
-      textColor: "",
-      syncedData: null,
       editable: false,
+      language: "English",
+      languages: ["English", "Nederlands"],
     };
   },
 
   watch: {
-    modelValue: {
-      handler(value) {
-        // console.log("modelValue watcher triggered");
-        if (
-          this.editorStore.y.title.getHTML() === value.title ||
-          this.editorStore.y.description.getHTML() === value.description ||
-          this.editorStore.y.content.getHTML() === value.content ||
-          this.editorStore.y.path.getHTML() === value.path
-        ) {
-          return;
-        } else {
-          this.editorStore.y.title.commands.setContent(value.title, false);
-          this.editorStore.y.description.commands.setContent(
-            value.description,
-            false
-          );
-          this.editorStore.y.content.commands.setContent(value.content, false);
-          this.editorStore.y.path.commands.setContent(value.path, false);
-        }
-      },
-      deep: true,
-    },
     editable() {
       this.editorStore.y.title.setEditable(this.editable);
       this.editorStore.y.description.setEditable(this.editable);
@@ -182,7 +172,7 @@ export default {
   },
   mounted() {
     this.$nextTick(async () => {
-      this.editorStore.fetchFromServer();
+      // this.editorStore.fetchFromServer();
       this.setUserColor();
       this.setupEditors();
       setTimeout(() => {
@@ -196,17 +186,17 @@ export default {
       this.editorStore.y.clientID = ydoc.clientID;
       // Registered with a WebRTC provider
       this.editorStore.y.provider = new WebrtcProvider(
-        "activisthandbook-edit",
+        "activisthandbook-edit" + this.$route.params.articleID,
         ydoc
       );
 
-      this.editorStore.y.provider.on("peers", (event) => {
-        this.editorStore.hasPeers = true;
+      // this.editorStore.y.provider.on("peers", (event) => {
+      //   this.editorStore.hasPeers = true;
 
-        console.log("peers");
-        const time = Date.now();
-        this.editorStore.y.syncedData.set("lastPeerChangeTimestamp", time);
-      });
+      //   console.log("peers");
+      //   const time = Date.now();
+      //   this.editorStore.y.syncedData.set("lastPeerChangeTimestamp", time);
+      // });
 
       const user = {
         firebaseID: this.firebaseStore.auth.currentUser.uid,
@@ -215,19 +205,19 @@ export default {
         avatar: this.firebaseStore.auth.currentUser.photoURL,
       };
 
-      this.editorStore.y.syncedData = ydoc.getMap("syncedData");
+      // this.editorStore.y.syncedData = ydoc.getMap("syncedData");
 
       // Observe the remote syncedData and update the local values every time they change
-      this.editorStore.y.syncedData.observe((ymapEvent) => {
-        ymapEvent.changes.keys.forEach((change, key) => {
-          if (change.action === "add" || change.action === "update") {
-            this.editorStore.syncedData[key] =
-              this.editorStore.y.syncedData.get(key);
-          } else if (change.action === "delete") {
-            this.editorStore.syncedData[key] = null;
-          }
-        });
-      });
+      // this.editorStore.y.syncedData.observe((ymapEvent) => {
+      //   ymapEvent.changes.keys.forEach((change, key) => {
+      //     if (change.action === "add" || change.action === "update") {
+      //       this.editorStore.syncedData[key] =
+      //         this.editorStore.y.syncedData.get(key);
+      //     } else if (change.action === "delete") {
+      //       this.editorStore.syncedData[key] = null;
+      //     }
+      //   });
+      // });
 
       this.editorStore.y.title = new Editor({
         editable: this.editable,
@@ -235,21 +225,21 @@ export default {
           SingleParagraphDocument,
           Paragraph,
           Text,
-          Collaboration.configure({
-            document: ydoc,
-            field: "title",
-          }),
-          CollaborationCursor.configure({
-            provider: this.editorStore.y.provider,
-            user,
-          }),
+          // Collaboration.configure({
+          //   document: ydoc,
+          //   field: "title",
+          // }),
+          // CollaborationCursor.configure({
+          //   provider: this.editorStore.y.provider,
+          //   user,
+          // }),
           Placeholder.configure({
             placeholder: "Title",
           }),
         ],
         onUpdate: () => {
           this.editorStore.y.titleRendered = true;
-          this.emitChanges();
+          this.editorStore.save();
         },
       });
 
@@ -259,14 +249,14 @@ export default {
           SingleParagraphDocument,
           Paragraph,
           Text,
-          Collaboration.configure({
-            document: ydoc,
-            field: "description",
-          }),
-          CollaborationCursor.configure({
-            provider: this.editorStore.y.provider,
-            user,
-          }),
+          // Collaboration.configure({
+          //   document: ydoc,
+          //   field: "description",
+          // }),
+          // CollaborationCursor.configure({
+          //   provider: this.editorStore.y.provider,
+          //   user,
+          // }),
           Placeholder.configure({
             // Use a placeholder:
             // Use different placeholders depending on the node type:
@@ -275,7 +265,7 @@ export default {
         ],
         onUpdate: () => {
           this.editorStore.y.descriptionRendered = true;
-          this.emitChanges();
+          this.editorStore.save();
         },
       });
 
@@ -285,18 +275,18 @@ export default {
           SingleParagraphDocument,
           Paragraph,
           Text,
-          Collaboration.configure({
-            document: ydoc,
-            field: "path",
-          }),
-          CollaborationCursor.configure({
-            provider: this.editorStore.y.provider,
-            user,
-          }),
+          // Collaboration.configure({
+          //   document: ydoc,
+          //   field: "path",
+          // }),
+          // CollaborationCursor.configure({
+          //   provider: this.editorStore.y.provider,
+          //   user,
+          // }),
         ],
         onUpdate: () => {
           this.editorStore.y.pathRendered = true;
-          this.emitChanges();
+          this.editorStore.save();
         },
       });
 
@@ -307,16 +297,16 @@ export default {
         extensions: [
           StarterKit.configure({
             // The Collaboration extension comes with its own history handling
-            history: false,
+            // history: false,
           }),
-          Collaboration.configure({
-            document: ydoc,
-            field: "content",
-          }),
-          CollaborationCursor.configure({
-            provider: this.editorStore.y.provider,
-            user,
-          }),
+          // Collaboration.configure({
+          //   document: ydoc,
+          //   field: "content",
+          // }),
+          // CollaborationCursor.configure({
+          //   provider: this.editorStore.y.provider,
+          //   user,
+          // }),
           Link.configure({
             openOnClick: false,
             protocols: ["mailto"],
@@ -338,31 +328,11 @@ export default {
           }),
         ],
         onUpdate: () => {
-          // console.log(nthTime, this.editorStore.y.content.getHTML());
-          // console.log("onUpdate content", this.editorStore.y.content.getHTML());
-          // console.log(nthTime, this.editorStore.hasPeers);
           if (nthTime === 3 && this.editorStore.hasPeers) {
-            // console.log("Trying undo...");
-            // console.log(
-            //   "onUpdate content 1",
-            //   this.editorStore.y.content.getHTML()
-            // );
-            // this.editorStore.y.content.commands.undo();
-            // console.log("real 1", this.editorStore.y.content.getHTML());
             lastContent = this.editorStore.y.content.getHTML();
             this.editorStore.y.content.commands.undo();
-            // console.log("real 2", this.editorStore.y.content.getHTML());
-            // if (tryoutUndo.getHTML() !== "<p></p>") {
-            //   console.log("Undo!");
-            //   this.editorStore.y.content.commands.undo();
-            // } else {
-            //   console.log("Nevermind!");
-            // }
           } else if (nthTime === 4 && this.editorStore.hasPeers) {
-            // console.log("real 3", this.editorStore.y.content.getHTML());
             if (this.editorStore.y.content.getHTML() === "<p></p>") {
-              // console.log("Redo!");
-
               if (lastContent !== "<p></p>") {
                 this.editorStore.y.content.commands.insertContent(
                   lastContent,
@@ -374,30 +344,15 @@ export default {
                 lastContent,
                 true
               );
-              // this.editorStore.y.content.commands.redo();
             }
           }
 
           this.editorStore.y.contentRendered = true;
-          this.emitChanges();
-          //           if 2nd && peers has happened
+          this.editorStore.save();
 
-          // then clear everything before saving peer data
-          // or undo last edit editor.commands.undo()
-          // console.log(nthTime, "b", this.editorStore.y.content.getHTML());
           nthTime += 1;
         },
       });
-    },
-    emitChanges() {
-      const newArticle = {
-        title: this.editorStore.y.title.getHTML().slice(3, -4),
-        description: this.editorStore.y.description.getHTML().slice(3, -4),
-        content: this.editorStore.y.content.getHTML(),
-        path: this.editorStore.y.path.getHTML().slice(3, -4),
-      };
-      this.$emit("update:modelValue", newArticle);
-      this.editorStore.article = newArticle;
     },
     setUserColor() {
       // https://quasar.dev/style/sass-scss-variables
@@ -440,6 +395,16 @@ export default {
 }
 .ProseMirror {
   outline: none;
+
+  a {
+    color: $secondary;
+    text-decoration: none;
+    border-bottom: 4px solid rgba($secondary, 0.2);
+
+    &:hover {
+      border-bottom-color: rgba($secondary, 0.5);
+    }
+  }
 }
 .content .ProseMirror {
   outline: none;
@@ -475,11 +440,11 @@ export default {
   font-size: 0.8em;
   .ProseMirror {
     padding: 8px 8px;
-    border: 1px solid $grey-3;
-    background: $grey-3;
+    // border: 1px solid $grey-2;
+    // background: $grey-2;
 
     &::before {
-      content: "activisthandbook.org/";
+      content: "activisthandbook.org/en/";
       color: $grey-8;
     }
     * {
@@ -546,11 +511,11 @@ export default {
 }
 
 // Still loading
-.ProseMirror {
-  opacity: 0.6;
-}
-.editable .ProseMirror {
-  transition: 0.3s opacity;
-  opacity: 1;
-}
+// .ProseMirror {
+//   opacity: 0.6;
+// }
+// .editable .ProseMirror {
+//   transition: 0.3s opacity;
+//   opacity: 1;
+// }
 </style>

@@ -12,11 +12,11 @@ exports.publishArticles = functions
   .region("europe-west1")
   .runWith({ secrets: ["GITHUB_API"] })
   .https.onCall(async (data, context) => {
-    const publishingQueue = await fetchPublishingQueue();
+    const publishingQueueArticles = await fetchPublishingQueue();
 
-    functions.logger.log("Articles (from main function):", publishingQueue);
+    await syncWithGithub(process.env.GITHUB_API, publishingQueueArticles);
 
-    await syncWithGithub(process.env.GITHUB_API, publishingQueue);
+    await clearPublishingQueue(publishingQueueArticles);
 
     return {
       success: true,
@@ -39,8 +39,6 @@ async function fetchPublishingQueue() {
       articles.push(doc.data());
     });
 
-    functions.logger.log("Articles (from fetchPublishingQueue):", articles);
-
     return articles;
   }
 }
@@ -58,21 +56,13 @@ async function syncWithGithub(token, articles) {
   let files = {};
   let filesToDelete = [];
 
-  functions.logger.log("Articles (from syncWithGithub):", articles);
-
   for (const article of articles) {
-    functions.logger.log("For loop, article:", article);
     if (article.delete) {
       filesToDelete.push(article.path);
-      functions.logger.log("Delete, filesToDelete is now:", filesToDelete);
     } else {
       files[article.path + ".md"] = article.content;
-      functions.logger.log("Else, files is now:", files);
     }
   }
-
-  functions.logger.log("Files:", files);
-  functions.logger.log("Files to delete:", filesToDelete);
 
   const commits = await octokit.rest.repos.createOrUpdateFiles({
     owner,
@@ -87,4 +77,19 @@ async function syncWithGithub(token, articles) {
       },
     ],
   });
+}
+
+async function clearPublishingQueue(articles) {
+  for (const article of articles) {
+    await db.collection("publishingQueue").doc(article.id).delete();
+  }
+
+  const moderatorRef = db.collection("app").doc("moderator");
+
+  await moderatorRef.set(
+    {
+      publishingQueueCount: 0,
+    },
+    { merge: true }
+  );
 }

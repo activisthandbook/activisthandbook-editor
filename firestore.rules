@@ -13,6 +13,10 @@ service cloud.firestore {
           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isModerator == true;
       }
 
+      match /app/{settingID} {
+        allow read, write: if isModerator()
+      }
+
     	match /articles/{articleID} {
         allow read, write: if signedIn()
 

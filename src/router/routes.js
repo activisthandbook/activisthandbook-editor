@@ -1,11 +1,11 @@
 const routes = [
   {
     path: "/",
-    component: () => import("layouts/MainLayout.vue"),
+    component: () => import("src/layouts/EditLayout.vue"),
     children: [
       { path: "", component: () => import("pages/IndexPage.vue") },
       {
-        path: "edit",
+        path: "edit/:articleID",
         component: () => import("pages/EditPage.vue"),
         name: "Edit",
       },
@@ -15,7 +15,11 @@ const routes = [
     path: "/moderate",
     component: () => import("layouts/ModerationLayout.vue"),
     children: [
-      { path: "", component: () => import("pages/ModerationPage.vue") },
+      {
+        path: "",
+        component: () => import("pages/ModerationPage.vue"),
+        name: "Moderate",
+      },
     ],
   },
 

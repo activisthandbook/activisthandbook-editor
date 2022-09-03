@@ -1,10 +1,22 @@
 <template>
   <q-card-section class="q-p-none">
+    <q-card flat class="bg-warning q-mb-md" v-if="article.deleteArticle">
+      <q-card-section
+        >If you accept, this article will be deleted</q-card-section
+      >
+    </q-card>
     <h1 class="q-my-none">
-      {{ article.title }}
+      <div v-if="article.title">
+        {{ article.title }}
+      </div>
+      <div v-else class="text-grey">No title</div>
     </h1>
+
     <p class="description">
-      {{ article.description }}
+      <span v-if="article.description">
+        {{ article.description }}
+      </span>
+      <span v-else class="text-grey"> No description </span>
     </p>
 
     <div class="text-caption">
@@ -35,12 +47,15 @@
     />
   </q-card-section>
 
-  <q-card-section
-    v-html="sanitize(article.content)"
-    class="q-pt-none"
-    v-show="!quickReview || showContent"
-  >
-  </q-card-section>
+  <div v-show="!quickReview || showContent">
+    <q-card-section
+      v-if="article.content !== '<p></p>'"
+      v-html="sanitize(article.content)"
+      class="q-pt-none"
+    >
+    </q-card-section>
+    <q-card-section v-else class="text-grey"> Empty document </q-card-section>
+  </div>
 </template>
 <script>
 import sanitizeHtml from "sanitize-html";

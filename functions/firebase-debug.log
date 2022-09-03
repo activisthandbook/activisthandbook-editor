@@ -1,0 +1,72 @@
+[debug] [2022-07-14T10:19:38.050Z] ----------------------------------------------------------------------
+[debug] [2022-07-14T10:19:38.052Z] Command:       /usr/local/bin/node /usr/local/bin/firebase functions:shell
+[debug] [2022-07-14T10:19:38.052Z] CLI Version:   11.2.1
+[debug] [2022-07-14T10:19:38.052Z] Platform:      darwin
+[debug] [2022-07-14T10:19:38.052Z] Node Version:  v16.14.2
+[debug] [2022-07-14T10:19:38.064Z] Time:          Thu Jul 14 2022 12:19:38 GMT+0200 (Central European Summer Time)
+[debug] [2022-07-14T10:19:38.064Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2022-07-14T10:19:38.067Z] >>> [apiv2][query] GET https://firebase-public.firebaseio.com/cli.json [none]
+[debug] [2022-07-14T10:19:38.138Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2022-07-14T10:19:38.139Z] > authorizing via signed-in user (joppehoekstra@gmail.com)
+[debug] [2022-07-14T10:19:38.139Z] [iam] checking project rebeltools-write for permissions ["firebase.projects.get"]
+[debug] [2022-07-14T10:19:38.139Z] > refreshing access token with scopes: []
+[debug] [2022-07-14T10:19:38.140Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2022-07-14T10:19:38.140Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2022-07-14T10:19:38.290Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2022-07-14T10:19:38.291Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2022-07-14T10:19:38.341Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/rebeltools-write:testIamPermissions [none]
+[debug] [2022-07-14T10:19:38.342Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/rebeltools-write:testIamPermissions {"permissions":["firebase.projects.get"]}
+[debug] [2022-07-14T10:19:38.470Z] <<< [apiv2][status] GET https://firebase-public.firebaseio.com/cli.json 200
+[debug] [2022-07-14T10:19:38.471Z] <<< [apiv2][body] GET https://firebase-public.firebaseio.com/cli.json {"cloudBuildErrorAfter":1594252800000,"cloudBuildWarnAfter":1590019200000,"defaultNode10After":1594252800000,"minVersion":"3.0.5","node8DeploysDisabledAfter":1613390400000,"node8RuntimeDisabledAfter":1615809600000,"node8WarnAfter":1600128000000}
+[debug] [2022-07-14T10:19:39.096Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/rebeltools-write:testIamPermissions 200
+[debug] [2022-07-14T10:19:39.097Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/rebeltools-write:testIamPermissions {"permissions":["firebase.projects.get"]}
+[debug] [2022-07-14T10:19:39.125Z] [functions] Using node@16 from host.
+[debug] [2022-07-14T10:19:39.130Z] defaultcredentials: writing to file /Users/joppehoekstra/.config/firebase/joppehoekstra_gmail_com_application_default_credentials.json
+[debug] [2022-07-14T10:19:39.137Z] DEBUG: Setting GAC to /Users/joppehoekstra/.config/firebase/joppehoekstra_gmail_com_application_default_credentials.json
+[debug] [2022-07-14T10:19:39.138Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/rebeltools-write/adminSdkConfig [none]
+[debug] [2022-07-14T10:19:39.416Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/rebeltools-write/adminSdkConfig 200
+[debug] [2022-07-14T10:19:39.416Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/rebeltools-write/adminSdkConfig {"projectId":"rebeltools-write","databaseURL":"https://rebeltools-write-default-rtdb.europe-west1.firebasedatabase.app","storageBucket":"rebeltools-write.appspot.com","locationId":"europe-west"}
+[debug] [2022-07-14T10:19:39.429Z] [functions] Watching "/Users/joppehoekstra/GitHub/activisthandbook-edit/functions" for Cloud Functions...
+[debug] [2022-07-14T10:19:39.436Z] Validating nodejs source
+[warn] ⚠  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-functions@latest in your functions directory. 
+[debug] [2022-07-14T10:19:40.970Z] > [functions] package.json contents: {
+  "name": "functions",
+  "description": "Cloud Functions for Firebase",
+  "scripts": {
+    "serve": "firebase emulators:start --only functions",
+    "shell": "firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "engines": {
+    "node": "16"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "@octokit/rest": "^18.12.0",
+    "@tiptap/extension-focus": "^2.0.0-beta.44",
+    "firebase-admin": "^10.0.2",
+    "firebase-functions": "^3.18.0",
+    "js-base64": "^3.7.2",
+    "octokit-commit-multiple-files": "^4.1.0",
+    "openai": "^3.0.0"
+  },
+  "devDependencies": {
+    "firebase-functions-test": "^0.2.0"
+  },
+  "private": true
+}
+[debug] [2022-07-14T10:19:40.970Z] Building nodejs source
+[debug] [2022-07-14T10:19:40.971Z] Analyzing nodejs backend spec
+[debug] [2022-07-14T10:19:40.974Z] Could not find functions.yaml. Must use http discovery
+[debug] [2022-07-14T10:19:41.240Z] Serving at port 9005
+
+[debug] [2022-07-14T10:19:41.527Z] Got response from /__/functions.yaml {"endpoints":{"generateArticle":{"platform":"gcfv1","labels":{},"region":["europe-west1"],"secretEnvironmentVariables":[{"key":"OPENAI_SECRET"}],"callableTrigger":{},"entryPoint":"generateArticle"},"publishArticles":{"platform":"gcfv1","labels":{},"region":["europe-west1"],"secretEnvironmentVariables":[{"key":"GITHUB_API"}],"callableTrigger":{},"entryPoint":"publishArticles"}},"specVersion":"v1alpha1","requiredAPIs":[]}
+[debug] [2022-07-14T10:19:41.533Z] shutdown requested via /__/quitquitquit
+
+[debug] [2022-07-14T10:19:41.548Z] [functions[europe-west1-generateArticle]] http function initialized (http://localhost:5001/rebeltools-write/europe-west1/generateArticle).
+[debug] [2022-07-14T10:19:41.548Z] [functions[europe-west1-publishArticles]] http function initialized (http://localhost:5001/rebeltools-write/europe-west1/publishArticles).
+[info] i  functions: Loaded functions: generateArticle, publishArticles 
+[warn] ⚠  functions: The following emulators are not running, calls to these services will affect production: firestore, database, pubsub, storage 

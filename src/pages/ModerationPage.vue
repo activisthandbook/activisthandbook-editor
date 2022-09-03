@@ -98,6 +98,7 @@ export default {
       tab: "review-requests",
       version: 3,
       quickReview: false,
+
       articles: {
         data: null,
         dataLoaded: false,
@@ -107,6 +108,7 @@ export default {
     };
   },
   mounted: function () {
+    // Fetch articles
     const q = query(
       collection(db, "articles"),
       where("requestedPublication", "==", true)
@@ -133,6 +135,10 @@ export default {
         console.log(result.data);
       });
     },
+  },
+  unmounted() {
+    this.articles.unsubscribe();
+    // this.moderator.unsubscribe();
   },
 };
 </script>

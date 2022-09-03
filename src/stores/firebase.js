@@ -108,5 +108,14 @@ export const useFirebaseStore = defineStore("firebase", {
        */
       getPerformance(firebaseApp);
     },
+    async signOut() {
+      await signOut(auth)
+        .then(() => {
+          // Sign-out successful.
+        })
+        .catch((error) => {
+          // An error happened.
+        });
+    },
   },
 });

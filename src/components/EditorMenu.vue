@@ -1,13 +1,13 @@
 <template>
   <q-card
     v-if="editor && editor.y.content"
-    class="bg-white text-black justify-center sticky"
+    class="bg-grey-2 justify-center sticky"
     bordered
     flat
   >
     <div class="q-gutter-xs flex" style="padding: 12px">
-      <div class="bg-grey-2 rounded-borders flex items-center q-pa-xs">
-        <span class="text-caption text-bold q-ml-sm q-mr-sm text-grey-9"
+      <div class="bg-grey-4 rounded-borders flex items-center q-pa-xs">
+        <span class="text-caption text-bold q-ml-sm q-mr-sm text-black"
           >Heading</span
         >
         <!-- <q-icon
@@ -40,9 +40,9 @@
           flat
           dense
           :class="{
-            'is-active': editor.y.content.isActive('heading', { level: 1 }),
+            'is-active': editor.y.content.isActive('heading', { level: 2 }),
           }"
-          @click="setHeading(1)"
+          @click="setHeading(2)"
         >
           <q-tooltip
             transition-show="none"
@@ -57,9 +57,9 @@
           dense
           icon="mdi-numeric-2-box"
           :class="{
-            'is-active': editor.y.content.isActive('heading', { level: 2 }),
+            'is-active': editor.y.content.isActive('heading', { level: 3 }),
           }"
-          @click="setHeading(2)"
+          @click="setHeading(3)"
         >
           <q-tooltip
             transition-show="none"
@@ -74,9 +74,9 @@
           icon="mdi-numeric-3-box"
           dense
           :class="{
-            'is-active': editor.y.content.isActive('heading', { level: 3 }),
+            'is-active': editor.y.content.isActive('heading', { level: 4 }),
           }"
-          @click="setHeading(3)"
+          @click="setHeading(4)"
         >
           <q-tooltip
             transition-show="none"
@@ -124,7 +124,7 @@
                 dense
                 v-model="currentLink"
                 autofocus
-                @keyup.enter="prompt = false"
+                @keyup.enter="setLink(currentLink)"
                 color="secondary"
               />
             </q-card-section>
@@ -137,7 +137,7 @@
                 v-close-popup
                 color="secondary"
                 no-caps
-                @click="editor.chain().focus().unsetLink().run()"
+                @click="removeLink()"
               />
               <q-btn
                 label="Add link"
@@ -229,6 +229,10 @@ export default defineComponent({
         .extendMarkRange("link")
         .setLink({ href: link })
         .run();
+      this.linkDialog = false;
+    },
+    removeLink() {
+      this.editor.y.content.chain().focus().unsetLink().run();
     },
     openLinkDialog(event) {
       event.preventDefault();
