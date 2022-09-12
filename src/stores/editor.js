@@ -5,7 +5,10 @@ import _ from "lodash";
 
 import sanitizeHtml from "sanitize-html";
 
-import { Notify } from "quasar";
+import { Notify, LoadingBar } from "quasar";
+
+import { useLanguagesStore } from "stores/languages";
+const languagesStore = useLanguagesStore();
 
 import {
   getFirestore,
@@ -18,142 +21,145 @@ const db = getFirestore();
 
 export const useEditorStore = defineStore("editor", {
   state: () => ({
-    y: {
-      provider: null,
-      clientID: null,
-
-      // y documents:
-      title: null, // tiptap doc
-      description: null, // tiptap doc
-      path: null, // tiptap doc
-      content: null, // tiptap doc
-      // syncedData: null, // ymap
-
-      // helper variables:
-      titleRendered: false,
-      descriptionRendered: false,
-      contentRendered: false,
-      pathRendered: false,
+    editorsInitialised: false,
+    local: {
+      lastSaveTimestamp: null,
+      lastEditTimestamp: null,
     },
-    hasPeers: false,
-    // syncedData: {
-    //   nextSaveClaimedBy: null,
-    //   nextSaveTimestamp: null,
-    //   lastSaveTimestamp: null,
-    //   lastPersonJoinedTimestamp: null,
-    //   requestedPublication: null,
-    //   requestedPublicationTimestamp: null,
-    //   deleteArticle: null,
-    // },
+    tiptap: {
+      // tiptap docs
+      title: null,
+      description: null,
+      content: null,
+    },
+
     article: {
+      id: null,
       title: null,
       description: null,
       path: null,
       content: null,
       deleteArticle: null,
       requestedPublication: null,
+      requestedPublicationTimestamp: null,
+      langCode: null,
     },
-    lastEditTimestamp: null,
-    numberOfSaves: 1,
+    articleDataLoaded: false,
   }),
   actions: {
     // any amount of arguments, return a promise or not
     async fetchFromServer(articleID) {
-      this.article.id = articleID;
-      await getDoc(doc(db, "articles", articleID))
-        .then((snapshot) => {
-          if (snapshot.exists()) {
-            if (this.y.content.getHTML() === "<p></p>") {
-              // We only want to set the content if it is currently empty
-              this.y.title.commands.setContent(
-                sanitizeHtml(snapshot.data().title),
+      if (this.editorsInitialised) {
+        this.tiptap.title.destroy();
+        this.tiptap.description.destroy();
+        this.tiptap.content.destroy();
+      }
+      this.$reset();
+
+      if (articleID) {
+        this.article.id = articleID;
+        LoadingBar.start();
+
+        await getDoc(doc(db, "articles", articleID))
+          .then(async (snapshot) => {
+            if (snapshot.exists()) {
+              // Find language info from local store, using the language code that is saved with the article
+              const lang = languagesStore.languages.find(
+                (x) => x.code === snapshot.data().langCode
+              );
+
+              this.article = { ...this.article, ...snapshot.data(), lang };
+
+              // Load the language collection data
+              const languageCollectionID = snapshot.data().languageCollectionID;
+              await getDoc(
+                doc(db, "languageCollections", languageCollectionID)
+              ).then(async (snapshot) => {
+                if (snapshot.exists()) {
+                  const languageCollection = snapshot.data().articles;
+                  this.local.languageCollection = [];
+                  languageCollection.forEach((article) => {
+                    const languageDetails = languagesStore.languages.find(
+                      (x) => x.code === article.langCode
+                    );
+                    this.local.languageCollection.push({
+                      ...article,
+                      ...languageDetails,
+                    });
+                  });
+                } else {
+                  Notify.create("Language collection not found.");
+                }
+              });
+
+              // Add data to tiptap views
+              this.tiptap.title.commands.setContent(
+                sanitizeHtml(this.article.title),
                 true
               );
-              this.y.description.commands.setContent(
-                sanitizeHtml(snapshot.data().description),
+              this.tiptap.description.commands.setContent(
+                sanitizeHtml(this.article.description),
                 true
               );
-              this.y.path.commands.setContent(
-                sanitizeHtml(snapshot.data().path),
+
+              this.tiptap.path.commands.setContent(
+                sanitizeHtml(this.article.path),
                 true
               );
-              this.y.content.commands.setContent(
-                sanitizeHtml(snapshot.data().content),
+              this.tiptap.content.commands.setContent(
+                // IMPORTANT: this sanitisation must match the one in the cloud functions!
+                sanitizeHtml(this.article.content, {
+                  allowedTags: sanitizeHtml.defaults.allowedTags.concat([
+                    "iframe",
+                    "img",
+                  ]),
+                  allowedAttributes: {
+                    ...sanitizeHtml.defaults.allowedAttributes,
+                    iframe: [
+                      "src",
+                      "allowfullscreen",
+                      "start",
+                      "width",
+                      "height",
+                    ],
+                    div: ["data-youtube-video"],
+                    img: ["src", "alt"],
+                  },
+
+                  allowedIframeHostnames: ["www.youtube-nocookie.com"],
+                }),
+
                 true
               );
-              // this.y.syncedData.set(
-              //   "requestedPublication",
-              //   snapshot.data().requestedPublication
-              // );
-              // this.y.syncedData.set(
-              //   "deleteArticle",
-              //   snapshot.data().deleteArticle
-              // );
-              // this.y.syncedData.set(
-              //   "requestedPublicationTimestamp",
-              //   snapshot.data().requestedPublicationTimestamp
-              // );
-              // console.log(
-              //   snapshot.data().requestedPublicationTimestamp.toDate()
-              // );
+
+              this.articleDataLoaded = true;
+              LoadingBar.stop();
+            } else {
+              Notify.create("Article not found.");
+              this.router.push({ name: "404" });
+              LoadingBar.stop();
             }
+          })
+          .catch((error) => {
+            console.error(error);
+          });
 
-            this.dataOrigin = "server";
-
-            this.loadedFromServer = true;
-          } else {
-            console.log("No data available");
-          }
-        })
-        .catch((error) => {
-          console.error(error);
-        });
+        this.editorsInitialised = true;
+      }
     },
-    async save() {
-      // if (
-      //   this.y.titleRendered &&
-      //   this.y.descriptionRendered &&
-      //   this.y.contentRendered &&
-      //   this.y.pathRendered
-      // ) {
-      // the document has been edited, so we set saved to false
-
-      // if (this.numberOfSaves >= 3) {
-      // the first 3 times the article watcher is just updated from initialising the editor, the 4th time is from loading from p2p or server, so we do not have to save anything to the server in those cases
-
-      // console.log(this.numberOfSaves, "Save!");
-      // the document has been edited, so we set saved to false
-
-      this.article.title = this.y.title.getHTML().slice(3, -4);
-      this.article.description = this.y.description.getHTML().slice(3, -4);
-      this.article.content = this.y.content.getHTML();
-      this.article.path = this.y.path.getHTML().slice(3, -4);
-
-      this.lastEditTimestamp = Date.now();
-      // await this.announcePushToServer();
-      await this.pushToServer();
-      // }
-
-      // this.numberOfSaves += 1;
-      // }
+    async renderAndSave() {
+      this.render();
+      await this.save();
     },
-    // announcePushToServer: _.throttle(async function () {
-    //   const time = Date.now();
-
-    //   if (
-    //     !this.syncedData.nextSaveTimestamp ||
-    //     (this.syncedData.nextSaveClaimedBy !== this.y.clientID && // someone else
-    //       this.syncedData.nextSaveTimestamp < this.lastEditTimestamp) // their last save is not up-to-date
-    //   ) {
-    //   console.log("I'm gonna do it");
-    //   await this.y.syncedData.set("nextSaveClaimedBy", this.y.clientID);
-    //   await this.y.syncedData.set("nextSaveTimestamp", time);
-    //   }
-    // }, 3000),
-    pushToServer: _.throttle(async function () {
-      console.log("Saving...");
-      // if (this.y.clientID === this.syncedData.nextSaveClaimedBy) {
-      // if (this.article.content !== "<p></p>") {
+    render() {
+      this.article.title = this.tiptap.title.getHTML().slice(3, -4);
+      this.article.description = this.tiptap.description.getHTML().slice(3, -4);
+      this.article.content = this.tiptap.content.getHTML();
+      this.local.lastEditTimestamp = Date.now();
+      this.article.wordCount =
+        this.tiptap.content.storage.characterCount.words();
+    },
+    save: _.throttle(async function () {
       await setDoc(
         doc(db, "articles", this.article.id),
         {
@@ -163,16 +169,11 @@ export const useEditorStore = defineStore("editor", {
         { merge: true }
       )
         .then(() => {
-          // console.log("synced!");
-
-          const time = Date.now();
-          // this.y.syncedData.set("lastSaveTimestamp", time);
-          this.saved = true;
-          console.log("Saved!");
+          this.local.lastSaveTimestamp = Date.now();
         })
         .catch((error) => {
           Notify.create("Saving failed");
-          console.log(error);
+          console.error(error);
         });
       // }
       // }
@@ -180,16 +181,16 @@ export const useEditorStore = defineStore("editor", {
     validateArticle() {
       let errorList = [];
       let hasErrors = false;
-      if (this.y.content.getHTML() === "<p></p>") {
+      if (this.tiptap.content.getHTML() === "<p></p>") {
         errorList.push("Write some article content.");
       }
-      if (this.y.title.getHTML() === "<p></p>") {
+      if (this.tiptap.title.getHTML() === "<p></p>") {
         errorList.push("Make sure to add a title.");
       }
-      if (this.y.description.getHTML() === "<p></p>") {
+      if (this.tiptap.description.getHTML() === "<p></p>") {
         errorList.push("Don't forget the description.");
       }
-      if (this.y.path.getHTML() === "<p></p>") {
+      if (!this.article.path) {
         // TO-DO: Add check to see if path already exists.
         errorList.push("Add a url path.");
       }

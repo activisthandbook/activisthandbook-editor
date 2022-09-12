@@ -23,7 +23,7 @@
           text-color="primary"
           unelevated
         >
-          <q-menu :offset="[0, 12]" class="shadow-8">
+          <q-menu :offset="[0, 12]" class="shadow-8 bg-accent">
             <q-list style="min-width: 100px">
               <!-- 👉 TODO: Switch between versions -->
               <q-item clickable v-close-popup disable>
@@ -33,29 +33,29 @@
                 </q-item-section>
               </q-item>
 
-              <!-- 👉 TODO: Open article in different language -->
-              <q-item clickable v-close-popup disable>
-                <q-item-section>Translate</q-item-section>
-                <q-item-section side>
-                  <q-icon name="mdi-translate" />
-                </q-item-section>
-              </q-item>
-
               <q-item clickable v-close-popup @click="deleteAndPublish()">
                 <q-item-section>Delete</q-item-section>
                 <q-item-section side>
-                  <q-icon name="mdi-delete" />
+                  <q-icon name="mdi-delete-outline" />
                 </q-item-section>
               </q-item>
               <q-separator />
-              <q-item
-                clickable
-                v-close-popup
-                :to="{ name: 'Edit', params: { articleID: mixin_randomID() } }"
-              >
+              <q-item clickable v-close-popup :to="{ name: 'New' }">
                 <q-item-section>New article</q-item-section>
                 <q-item-section side>
                   <q-icon name="mdi-text-box-plus-outline" />
+                </q-item-section>
+              </q-item>
+              <q-item clickable v-close-popup :to="{ name: 'Moderate' }">
+                <q-item-section>Moderate</q-item-section>
+                <q-item-section side>
+                  <q-icon name="mdi-shield-outline" />
+                </q-item-section>
+              </q-item>
+              <q-item clickable v-close-popup :to="{ name: 'Home' }" exact>
+                <q-item-section>Home</q-item-section>
+                <q-item-section side>
+                  <q-icon name="mdi-home-outline" />
                 </q-item-section>
               </q-item>
               <q-separator />
@@ -83,66 +83,43 @@
             <span v-else>Done</span>
           </span>
         </q-btn>
-
-        <q-dialog v-model="errorDialogOpen">
-          <q-card style="min-width: 300px">
-            <q-card-section>
-              <div class="text-bold q-mb-sm">Almost ready to publish... 🤩</div>
-              <div>But first:</div>
-              <div v-for="(error, index) in validation.errorList" :key="index">
-                👉 {{ error }}
-              </div>
-            </q-card-section>
-
-            <q-card-actions align="right">
-              <q-btn flat label="OK" color="primary" v-close-popup />
-            </q-card-actions>
-          </q-card>
-        </q-dialog>
       </q-toolbar>
     </q-header>
 
     <q-page-container>
-      <q-page padding style="max-width: 700px; margin: auto">
+      <q-page padding style="max-width: 720px; margin: auto">
         <div class="q-gutter-y-md q-mt-md q-mb-xl">
-          <q-card class="bg-secondary text-accent" flat>
+          <!-- GUIDE -->
+          <q-card class="bg-secondary text-accent q-mb-lg" flat>
             <q-card-section>
               <div class="q-gutter-y-sm">
-                <h1 class="q-my-sm text-accent">New to writing?</h1>
-                <div>Read our guide for Activist Handbook writers:</div>
+                <div>
+                  <strong
+                    >Thank you for making Activist Handbook better.</strong
+                  >
+                  All your edits are automatically saved and publicly shared
+                  with others under a
+                  <a
+                    href="https://creativecommons.org/licenses/by-nc-sa/4.0/"
+                    target="_blank"
+                    class="text-accent"
+                    >Creative Commons BY-NC-SA 4.0 licence</a
+                  >.
+                </div>
                 <q-btn
                   label="Writing guide"
                   no-caps
                   color="accent"
                   text-color="black"
                   icon-right="mdi-arrow-right"
+                  href="https://activisthandbook.org/en/support/writers"
+                  target="_blank"
                 />
               </div>
             </q-card-section>
           </q-card>
-          <!-- <TipTapEditor v-model="article" /> -->
-          <q-card class="text-center bg-primary text-accent" flat v-if="false">
-            <q-card-section class="q-py-xl">
-              <div>
-                <q-icon name="mdi-delete" size="64px" />
-              </div>
-              <h1 class="text-accent q-mt-md q-mb-sm">Article is in bin!</h1>
-              <div>
-                Our moderators will review your request to delete this page
-                soon.
-              </div>
-              <div class="q-mt-md">
-                <q-btn
-                  label="Restore"
-                  no-caps
-                  color="accent"
-                  text-color="black"
-                  icon="mdi-restore"
-                  @click="restoreAndPublish()"
-                />
-              </div>
-            </q-card-section>
-          </q-card>
+
+          <!-- EDITOR -->
           <TipTapEditor />
         </div>
         <q-page-sticky position="bottom-right" :offset="[12, 12]">
@@ -160,10 +137,94 @@
         </q-page-sticky>
       </q-page>
     </q-page-container>
+
+    <!-- DIALOGS -->
+    <!-- Deletion notice dialog -->
+    <q-dialog flat v-model="this.editorStore.article.deleteArticle" persistent>
+      <q-card class="text-center bg-accent">
+        <q-card-section class="q-pa-xl">
+          <div>
+            <q-icon name="mdi-delete" size="64px" color="primary" />
+          </div>
+          <h2 class="q-mt-md q-mb-sm">Article is in bin</h2>
+          <div>
+            Our moderators will review your request to delete this page soon.
+          </div>
+          <div class="q-mt-md q-gutter-sm">
+            <q-btn
+              label="Restore"
+              no-caps
+              color="secondary"
+              icon="mdi-restore"
+              @click="restoreAndPublish()"
+              outline
+            />
+            <q-btn
+              label="Home"
+              no-caps
+              color="secondary"
+              icon="mdi-home"
+              :to="{ name: 'Home' }"
+              autofocus
+            />
+          </div>
+        </q-card-section>
+      </q-card>
+    </q-dialog>
+
+    <q-dialog flat v-model="this.publishedSuccesfullyDialog">
+      <q-card class="text-center bg-accent">
+        <q-card-section class="q-pa-xl">
+          <div>
+            <q-icon name="mdi-heart" size="64px" color="primary" />
+          </div>
+          <h2 class="q-mt-md q-mb-sm">Thank you for contributing</h2>
+          <div>
+            Our moderators will have a look at your edits. Thank you for making
+            Activist Handbook better.
+          </div>
+          <div class="q-mt-md q-gutter-sm">
+            <q-btn
+              label="Home"
+              no-caps
+              color="secondary"
+              icon="mdi-home"
+              :to="{ name: 'Home' }"
+              outline
+            />
+            <q-btn
+              label="Continue editing"
+              no-caps
+              color="secondary"
+              @click="this.publishedSuccesfullyDialog = false"
+              autofocus
+            />
+          </div>
+        </q-card-section>
+      </q-card>
+    </q-dialog>
+
+    <!-- Publishing error dialog -->
+    <q-dialog v-model="errorDialogOpen">
+      <q-card style="min-width: 300px">
+        <q-card-section>
+          <div class="text-bold q-mb-sm">Almost ready to publish... 🤩</div>
+          <div>But first:</div>
+          <div v-for="(error, index) in validation.errorList" :key="index">
+            👉 {{ error }}
+          </div>
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn flat label="OK" color="primary" v-close-popup />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-layout>
 </template>
 
 <script>
+import { mapStores } from "pinia";
 import { useEditorStore } from "stores/editor";
 import { useFirebaseStore } from "stores/firebase";
 
@@ -172,8 +233,7 @@ import {
   setDoc,
   doc,
   serverTimestamp,
-  addDoc,
-  collection,
+  writeBatch,
 } from "firebase/firestore";
 const db = getFirestore();
 
@@ -181,44 +241,29 @@ const db = getFirestore();
 import TipTapEditor from "components/TipTapEditor.vue";
 
 export default {
-  setup() {
-    const editorStore = useEditorStore();
-    const firebaseStore = useFirebaseStore();
-
-    return {
-      // you can return the whole store instance to use it in the template
-      editorStore,
-      firebaseStore,
-    };
-  },
   components: {
     TipTapEditor,
   },
 
   data() {
     return {
-      // article: {
-      //   title: "",
-      //   description: "",
-      //   content: "",
-      //   path: "",
-      // },
-      allowedToPublish: false,
       errorDialogOpen: false,
       validation: null,
+      publishedSuccesfullyDialog: false,
     };
   },
 
-  mounted: function () {
-    this.updateWhileAgo();
-    setInterval(() => {
-      this.updateWhileAgo();
-    }, 1000);
-  },
-
   computed: {
-    lastSaveTimestamp: function () {
-      return 0;
+    ...mapStores(useEditorStore, useFirebaseStore),
+    allowedToPublish: function () {
+      return false;
+      if (
+        this.editorStore.article.requestedPublication &&
+        this.editorStore.article.requestedPublicationTimestamp >
+          this.editorStore.local.lastEditTimestamp
+      ) {
+        return false;
+      } else return true;
     },
   },
 
@@ -226,8 +271,8 @@ export default {
     // watch the params of the route to fetch the data again
     this.$watch(
       () => this.$route.params,
-      () => {
-        this.editorStore.fetchFromServer(this.$route.params.articleID);
+      async () => {
+        await this.fetchAndRender();
       },
       // fetch the data when the view is created and the data is
       // already being observed
@@ -236,6 +281,9 @@ export default {
   },
 
   methods: {
+    async fetchAndRender() {
+      await this.editorStore.fetchFromServer(this.$route.params.articleID);
+    },
     share() {
       this.mixin_copyText(window.location.href);
       this.$q.dialog({
@@ -249,26 +297,6 @@ export default {
         },
       });
     },
-    updateWhileAgo() {
-      const whileAgo = Date.now() - 1000 * 10;
-
-      let requestedPublication = false;
-      let requestedPublicationTimestamp = 0;
-
-      if (!requestedPublication) {
-        this.allowedToPublish = true;
-      } else if (
-        whileAgo > requestedPublicationTimestamp &&
-        this.editorStore.lastEditTimestamp > requestedPublicationTimestamp
-      ) {
-        this.allowedToPublish = true;
-      } else this.allowedToPublish = false;
-
-      // this.allowedToPublish =
-      //   whileAgo > this.editorStore.syncedData.requestedPublicationTimestamp;
-
-      //   this.editorStore.syncedData.requestedPublication && !whileAgo
-    },
     validateThenPublish() {
       this.validation = this.editorStore.validateArticle();
       if (this.validation.hasErrors) {
@@ -277,25 +305,42 @@ export default {
         this.publish();
       }
     },
-    publish() {
-      console.log("publish");
+    async publish() {
       const time = Date.now();
-      addDoc(
-        collection(db, "articles", this.$route.params.articleID, "versions"),
-        {
-          ...this.editorStore.article,
-          lastUpdatedServerTimestamp: serverTimestamp(),
-          status: "review",
-        },
-        {
-          merge: true,
-        }
-      ).then(() => {
-        this.editorStore.y.syncedData.set("requestedPublication", true);
-        console.log("published");
+
+      const batch = writeBatch(db);
+
+      // 1. Create new version
+      const versionID = this.mixin_randomID();
+      const versionRef = doc(
+        db,
+        "articles",
+        this.$route.params.articleID,
+        "versions",
+        versionID
+      );
+
+      const versionContent = {
+        title: this.editorStore.article.title,
+        description: this.editorStore.article.description,
+        path: this.editorStore.article.path,
+        content: this.editorStore.article.content,
+        articleID: this.editorStore.article.id,
+        id: versionID,
+        languageCollectionID: this.editorStore.article.languageCollectionID,
+        deleteArticle: this.editorStore.article.deleteArticle,
+        langCode: this.editorStore.article.langCode,
+        wordCount: this.editorStore.article.wordCount,
+
+        lastUpdatedServerTimestamp: serverTimestamp(),
+        status: "review",
+      };
+      batch.set(versionRef, versionContent, {
+        merge: true,
       });
 
-      setDoc(
+      // 2. Update live draft
+      batch.set(
         doc(db, "articles", this.$route.params.articleID),
         {
           requestedPublication: true,
@@ -304,36 +349,14 @@ export default {
         {
           merge: true,
         }
-      ).then(() => {
-        this.editorStore.y.syncedData.set("requestedPublication", true);
-        this.editorStore.y.syncedData.set(
-          "requestedPublicationTimestamp",
-          time
-        );
-        this.updateWhileAgo();
-        console.log("published");
-        if (this.editorStore.syncedData.deleteArticle) {
-          this.$q.dialog({
-            title: "Article put in bin 🗑",
-            message:
-              "Our moderators will review your request to delete this page soon.",
-            ok: {
-              color: "secondary",
-              flat: true,
-              noCaps: true,
-            },
-          });
-        } else {
-          this.$q.dialog({
-            title: "Thank you for contributing ❤️",
-            message:
-              "Our moderators will have a look at your edits. Thank you for making Activist Handbook better.",
-            ok: {
-              color: "secondary",
-              flat: true,
-              noCaps: true,
-            },
-          });
+      );
+
+      await batch.commit().then(() => {
+        this.editorStore.article.requestedPublication = true;
+        this.editorStore.article.requestedPublicationTimestamp = time;
+
+        if (!this.editorStore.article.deleteArticle) {
+          this.publishedSuccesfullyDialog = true;
         }
       });
     },
@@ -347,7 +370,6 @@ export default {
           merge: true,
         }
       ).then(() => {
-        this.editorStore.y.syncedData.set("deleteArticle", true);
         this.editorStore.article.deleteArticle = true;
         this.publish();
       });
@@ -362,7 +384,6 @@ export default {
           merge: true,
         }
       ).then(() => {
-        this.editorStore.y.syncedData.set("deleteArticle", false);
         this.editorStore.article.deleteArticle = false;
 
         this.publish();

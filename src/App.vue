@@ -23,6 +23,8 @@
 </template>
 
 <script>
+import { useQuasar } from "quasar";
+
 import { defineComponent } from "vue";
 import { useFirebaseStore } from "stores/firebase";
 
@@ -35,6 +37,12 @@ export default defineComponent({
     const firebaseStore = useFirebaseStore();
     // call the action as a method of the store
     firebaseStore.initialize();
+
+    const $q = useQuasar();
+
+    $q.loadingBar.setDefaults({
+      color: "grey",
+    });
 
     return {
       firebaseStore,

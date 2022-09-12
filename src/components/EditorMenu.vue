@@ -1,6 +1,6 @@
 <template>
   <q-card
-    v-if="editor && editor.y.content"
+    v-if="editor && editor.tiptap.content"
     class="bg-grey-2 justify-center sticky"
     bordered
     flat
@@ -21,9 +21,9 @@
           icon="mdi-text"
           padding="8px"
           :class="{
-            'is-active': !editor.y.content.isActive('heading'),
+            'is-active': !editor.tiptap.content.isActive('heading'),
           }"
-          @click="editor.y.content.chain().focus().setParagraph().run()"
+          @click="editor.tiptap.content.chain().focus().setParagraph().run()"
         >
           <q-tooltip
             transition-show="none"
@@ -40,7 +40,9 @@
           flat
           dense
           :class="{
-            'is-active': editor.y.content.isActive('heading', { level: 2 }),
+            'is-active': editor.tiptap.content.isActive('heading', {
+              level: 2,
+            }),
           }"
           @click="setHeading(2)"
         >
@@ -57,7 +59,9 @@
           dense
           icon="mdi-numeric-2-box"
           :class="{
-            'is-active': editor.y.content.isActive('heading', { level: 3 }),
+            'is-active': editor.tiptap.content.isActive('heading', {
+              level: 3,
+            }),
           }"
           @click="setHeading(3)"
         >
@@ -74,7 +78,9 @@
           icon="mdi-numeric-3-box"
           dense
           :class="{
-            'is-active': editor.y.content.isActive('heading', { level: 4 }),
+            'is-active': editor.tiptap.content.isActive('heading', {
+              level: 4,
+            }),
           }"
           @click="setHeading(4)"
         >
@@ -94,16 +100,16 @@
         padding="sm"
         flat
         icon="mdi-format-bold"
-        @click="editor.y.content.chain().focus().toggleBold().run()"
-        :class="{ 'is-active': editor.y.content.isActive('bold') }"
+        @click="editor.tiptap.content.chain().focus().toggleBold().run()"
+        :class="{ 'is-active': editor.tiptap.content.isActive('bold') }"
       />
 
       <q-btn
         padding="sm"
         flat
         icon="mdi-format-italic"
-        @click="editor.y.content.chain().focus().toggleItalic().run()"
-        :class="{ 'is-active': editor.y.content.isActive('italic') }"
+        @click="editor.tiptap.content.chain().focus().toggleItalic().run()"
+        :class="{ 'is-active': editor.tiptap.content.isActive('italic') }"
       />
 
       <q-btn
@@ -111,10 +117,10 @@
         flat
         icon="mdi-link"
         @click="openLinkDialog($event)"
-        :class="{ 'is-active': editor.y.content.isActive('link') }"
+        :class="{ 'is-active': editor.tiptap.content.isActive('link') }"
       >
         <q-dialog v-model="linkDialog">
-          <q-card style="min-width: 350px">
+          <q-card style="min-width: 350px" class="bg-accent">
             <q-card-section>
               <div class="text-bold">Add link</div>
             </q-card-section>
@@ -158,8 +164,8 @@
         padding="sm"
         flat
         icon="mdi-format-list-bulleted"
-        @click="editor.y.content.chain().focus().toggleBulletList().run()"
-        :class="{ 'is-active': editor.y.content.isActive('bulletList') }"
+        @click="editor.tiptap.content.chain().focus().toggleBulletList().run()"
+        :class="{ 'is-active': editor.tiptap.content.isActive('bulletList') }"
         class="gt-xs"
       />
 
@@ -167,8 +173,8 @@
         padding="sm"
         flat
         icon="mdi-format-list-numbered"
-        @click="editor.y.content.chain().focus().toggleOrderedList().run()"
-        :class="{ 'is-active': editor.y.content.isActive('orderedList') }"
+        @click="editor.tiptap.content.chain().focus().toggleOrderedList().run()"
+        :class="{ 'is-active': editor.tiptap.content.isActive('orderedList') }"
         class="gt-xs"
       />
 
@@ -180,12 +186,57 @@
         padding="sm"
         flat
         icon="mdi-format-quote-open"
-        @click="editor.y.content.chain().focus().toggleBlockquote().run()"
-        :class="{ 'is-active': editor.y.content.isActive('blockquote') }"
+        @click="editor.tiptap.content.chain().focus().toggleBlockquote().run()"
+        :class="{ 'is-active': editor.tiptap.content.isActive('blockquote') }"
         class="gt-sm"
       />
-      <q-btn padding="sm" flat icon="mdi-image" class="gt-sm" disable />
-      <q-btn padding="sm" flat icon="mdi-youtube" class="gt-sm" disable />
+      <q-btn
+        padding="sm"
+        flat
+        icon="mdi-image"
+        class="gt-sm"
+        @click="imageDialogOpen = true"
+        :class="{ 'is-active': editor.tiptap.content.isActive('image') }"
+      />
+      <ImageSelector v-model="imageDialogOpen" />
+
+      <q-btn
+        padding="sm"
+        flat
+        icon="mdi-youtube"
+        class="gt-sm"
+        @click="openYoutubeDialog()"
+        :class="{ 'is-active': editor.tiptap.content.isActive('youtube') }"
+      />
+
+      <q-dialog v-model="youtubeDialog">
+        <q-card style="min-width: 350px" class="bg-accent">
+          <q-card-section>
+            <div class="text-bold">Add YouTube video</div>
+          </q-card-section>
+
+          <q-card-section class="q-pt-none">
+            <q-input
+              placeholder="https://www.youtube.com/..."
+              dense
+              v-model="videoLink"
+              autofocus
+              @keyup.enter="addYoutubeVideo()"
+              color="secondary"
+            />
+          </q-card-section>
+
+          <q-card-actions align="right">
+            <q-btn
+              label="Add video"
+              no-caps
+              v-close-popup
+              color="secondary"
+              @click="addYoutubeVideo()"
+            />
+          </q-card-actions>
+        </q-card>
+      </q-dialog>
 
       <q-btn
         padding="sm"
@@ -199,9 +250,14 @@
 <script>
 import { defineComponent } from "vue";
 
+import ImageSelector from "src/dialogs/ImageSelector.vue";
+
 import { useEditorStore } from "stores/editor";
 
 export default defineComponent({
+  components: {
+    ImageSelector,
+  },
   setup() {
     const editor = useEditorStore();
     return {
@@ -211,8 +267,16 @@ export default defineComponent({
   },
   data() {
     return {
+      // Link
       link: "",
       linkDialog: false,
+      // video
+      videoLink: "",
+      youtubeDialog: false,
+
+      // image
+      imageDialogOpen: false,
+
       title: "",
       currentLink: "",
       headingMenuOpen: false,
@@ -220,10 +284,12 @@ export default defineComponent({
   },
   methods: {
     setHeading(level) {
-      return this.editor.y.content.commands.toggleHeading({ level: level });
+      return this.editor.tiptap.content.commands.toggleHeading({
+        level: level,
+      });
     },
     setLink(link) {
-      this.editor.y.content
+      this.editor.tiptap.content
         .chain()
         .focus()
         .extendMarkRange("link")
@@ -232,12 +298,24 @@ export default defineComponent({
       this.linkDialog = false;
     },
     removeLink() {
-      this.editor.y.content.chain().focus().unsetLink().run();
+      this.editor.tiptap.content.chain().focus().unsetLink().run();
     },
     openLinkDialog(event) {
       event.preventDefault();
-      this.currentLink = this.editor.y.content.getAttributes("link").href;
+      this.currentLink = this.editor.tiptap.content.getAttributes("link").href;
       this.linkDialog = true;
+    },
+    openYoutubeDialog(event) {
+      // this.currentYoutubeLink = this.editor.tiptap.content.getAttributes("link").href;
+      this.youtubeDialog = true;
+    },
+    addYoutubeVideo() {
+      this.editor.tiptap.content.commands.setYoutubeVideo({
+        src: this.videoLink,
+        width: 100,
+        height: 100,
+      });
+      this.youtubeDialog = false;
     },
   },
 });

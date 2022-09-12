@@ -1,100 +1,74 @@
 <template>
+  <editor-content :editor="editorStore.tiptap.title" class="title" />
   <editor-content
-    :editor="editorStore.y.title"
-    class="text-h1 title"
-    :class="{ editable }"
-  />
-  <editor-content
-    :editor="editorStore.y.description"
+    :editor="editorStore.tiptap.description"
     class="description"
-    :class="{ editable }"
   />
 
-  <q-select
-    v-model="language"
-    :options="languages"
-    label="Language"
+  <LanguageSelector
+    v-model="editorStore.article.lang"
+    :options="editorStore.local.languageCollection"
+    :languageCollectionID="editorStore.article.languageCollectionID"
+  />
+
+  <q-input
     dense
+    v-model="editorStore.article.path"
     outlined
     color="secondary"
-  />
+    placeholder="my-path"
+    @update:model-value="editorStore.renderAndSave()"
+  >
+    <template v-slot:prepend>
+      <q-icon name="mdi-link" />
+      <span class="text-caption text-grey-9 text-bold q-ml-sm">
+        activisthandbook.org/<span v-if="editorStore.article.lang"
+          >{{ editorStore.article.lang.code }}/</span
+        >
+      </span>
+    </template>
+  </q-input>
 
-  <editor-content
-    :editor="editorStore.y.path"
+  <!-- <editor-content
+    :editor="editorStore.tiptap.path"
     class="path text-caption"
-    :class="{ editable }"
-  />
+    :data-prepend="'activisthandbook.org/' + editorStore.article.langCode + '/'"
+  /> -->
 
   <EditorMenu />
 
-  <editor-content
-    :editor="editorStore.y.content"
-    class="content"
-    :class="{ editable }"
-  />
-
-  <!-- 👉 TO-DO: AI-generate text -->
-  <!-- <div
-    class="text-center generator"
-    v-if="
-      editorStore &&
-      editorStore.content &&
-      editorStore.content.storage.characterCount.words() < 60
-    "
-    :class="{
-      'less-visible': editorStore.content.storage.characterCount.words() > 30,
-    }"
-  >
-    <q-separator class="q-my-lg" />
-    <div class="text-caption q-mb-sm">
-      Don't feel like starting with an empty page?
-    </div>
-    <q-btn
-      label="Generate outline"
-      no-caps
-      class="gradient"
-      text-color="white"
-    />
-  </div> -->
+  <editor-content :editor="editorStore.tiptap.content" class="article" />
 
   <!-- 👉 TO-DO: Tags -->
 
-  <!-- <q-page-sticky
-    position="bottom-right"
-    :offset="[8, 8]"
-    v-if="editorStore && editorStore.y.content"
-  >
-    <q-chip color="grey-3" text-color="grey-9">
-      <span class="q-gutter-x-xs items-center flex">
-        <q-icon name="mdi-circle" color="secondary" style="margin-left: -1px" />
-        <strong>
-          {{
-            editorStore.y.content.storage.collaborationCursor.users.length
-          }}</strong
-        >
-        <span>online</span>
-      </span>
-    </q-chip>
-  </q-page-sticky> -->
   <q-page-sticky
     position="bottom-left"
     :offset="[12, 12]"
-    v-if="editorStore && editorStore.y.content"
+    v-if="editorStore && editorStore.tiptap.content"
+    style="z-index: 1"
   >
-    <q-chip square color="grey-3" text-color="grey-9">
-      <span class="q-gutter-x-xs">
+    <q-chip
+      square
+      color="grey-3"
+      text-color="grey-9"
+      @click="showReadingTime = !showReadingTime"
+      clickable
+      class="shadow-0"
+    >
+      <span class="q-gutter-x-xs" v-if="!showReadingTime">
         <strong>
-          {{ editorStore.y.content.storage.characterCount.words() }}</strong
+          {{
+            editorStore.tiptap.content.storage.characterCount.words()
+          }}</strong
         >
         <span>words</span>
       </span>
+      <span class="q-gutter-x-xs" v-else>
+        <strong> {{ readingTime }}</strong>
+        <span>minutes</span>
+      </span>
       <q-separator vertical class="q-mx-sm" />
-      <span
-        v-if="
-          (editorStore.lastEditTimestamp && !lastSaveTimestamp) ||
-          editorStore.lastEditTimestamp > lastSaveTimestamp
-        "
-      >
+      <span v-if="unsaved">
         <q-icon name="mdi-sync" />
         Saving...
       </span>
@@ -108,9 +82,12 @@
 
 <script>
 import EditorMenu from "components/EditorMenu.vue";
+import LanguageSelector from "components/LanguageSelector.vue";
 
+import { mapStores } from "pinia";
 import { useEditorStore } from "stores/editor";
 import { useFirebaseStore } from "stores/firebase";
+import { useLanguagesStore } from "stores/languages";
 
 import _ from "lodash";
 
@@ -121,142 +98,105 @@ import Text from "@tiptap/extension-text";
 import StarterKit from "@tiptap/starter-kit";
 import Paragraph from "@tiptap/extension-paragraph";
 import Link from "@tiptap/extension-link";
+import Image from "@tiptap/extension-image";
+import Youtube from "@tiptap/extension-youtube";
 import Focus from "@tiptap/extension-focus";
 import Placeholder from "@tiptap/extension-placeholder";
 import CharacterCount from "@tiptap/extension-character-count";
-
-import Collaboration from "@tiptap/extension-collaboration";
-import CollaborationCursor from "@tiptap/extension-collaboration-cursor";
-
-import * as Y from "yjs";
-import { WebrtcProvider } from "y-webrtc";
-// A new Y document
-const ydoc = new Y.Doc();
 
 const SingleParagraphDocument = Document.extend({
   content: "paragraph",
 });
 
 export default {
-  setup() {
-    const editorStore = useEditorStore();
-    const firebaseStore = useFirebaseStore();
-
-    return {
-      // you can return the whole store instance to use it in the template
-      editorStore,
-      firebaseStore,
-    };
-  },
   components: {
     EditorContent,
     EditorMenu,
+    LanguageSelector,
   },
 
   data() {
     return {
+      editorsInitialised: false,
+      showReadingTime: false,
       backgroundColor: "",
-      editable: false,
       language: "English",
       languages: ["English", "Nederlands"],
     };
   },
-
-  watch: {
-    editable() {
-      this.editorStore.y.title.setEditable(this.editable);
-      this.editorStore.y.description.setEditable(this.editable);
-      this.editorStore.y.path.setEditable(this.editable);
-      this.editorStore.y.content.setEditable(this.editable);
+  computed: {
+    ...mapStores(useLanguagesStore, useEditorStore, useFirebaseStore),
+    unsaved: function () {
+      if (
+        this.editorStore.local.lastEditTimestamp >
+        this.editorStore.local.lastSaveTimestamp
+      )
+        return true;
+      else return false;
+    },
+    readingTime: function () {
+      return Math.round(
+        this.editorStore.tiptap.content.storage.characterCount.words() / 250
+      );
     },
   },
+
+  created() {
+    // watch the params of the route to fetch the data again
+    this.$watch(
+      () => this.$route.params,
+      () => {
+        this.setupEditors();
+      },
+      // fetch the data when the view is created and the data is
+      // already being observed
+      { immediate: true }
+    );
+  },
+
   mounted() {
     this.$nextTick(async () => {
-      // this.editorStore.fetchFromServer();
-      this.setUserColor();
-      this.setupEditors();
-      setTimeout(() => {
-        this.editable = true;
-      }, 1200);
+      window.addEventListener("beforeunload", (e) => {
+        if (this.unsaved) {
+          const confirmationMessage =
+            "It looks like you have been editing something. " +
+            "If you leave before saving, your changes will be lost.";
+          (e || window.event).returnValue = confirmationMessage; //Gecko + IE
+          return confirmationMessage; //Gecko + Webkit, Safari, Chrome etc.
+        } else {
+          return undefined;
+        }
+      });
     });
   },
 
   methods: {
     setupEditors() {
-      this.editorStore.y.clientID = ydoc.clientID;
-      // Registered with a WebRTC provider
-      this.editorStore.y.provider = new WebrtcProvider(
-        "activisthandbook-edit" + this.$route.params.articleID,
-        ydoc
-      );
-
-      // this.editorStore.y.provider.on("peers", (event) => {
-      //   this.editorStore.hasPeers = true;
-
-      //   console.log("peers");
-      //   const time = Date.now();
-      //   this.editorStore.y.syncedData.set("lastPeerChangeTimestamp", time);
-      // });
-
-      const user = {
-        firebaseID: this.firebaseStore.auth.currentUser.uid,
-        name: this.firebaseStore.auth.currentUser.displayName,
-        color: this.backgroundColor,
-        avatar: this.firebaseStore.auth.currentUser.photoURL,
-      };
-
-      // this.editorStore.y.syncedData = ydoc.getMap("syncedData");
-
-      // Observe the remote syncedData and update the local values every time they change
-      // this.editorStore.y.syncedData.observe((ymapEvent) => {
-      //   ymapEvent.changes.keys.forEach((change, key) => {
-      //     if (change.action === "add" || change.action === "update") {
-      //       this.editorStore.syncedData[key] =
-      //         this.editorStore.y.syncedData.get(key);
-      //     } else if (change.action === "delete") {
-      //       this.editorStore.syncedData[key] = null;
-      //     }
-      //   });
-      // });
-
-      this.editorStore.y.title = new Editor({
-        editable: this.editable,
+      let titleInitialised = false;
+      this.editorStore.tiptap.title = new Editor({
         extensions: [
           SingleParagraphDocument,
           Paragraph,
           Text,
-          // Collaboration.configure({
-          //   document: ydoc,
-          //   field: "title",
-          // }),
-          // CollaborationCursor.configure({
-          //   provider: this.editorStore.y.provider,
-          //   user,
-          // }),
           Placeholder.configure({
             placeholder: "Title",
           }),
         ],
         onUpdate: () => {
-          this.editorStore.y.titleRendered = true;
-          this.editorStore.save();
+          if (!titleInitialised) {
+            titleInitialised = true;
+          } else {
+            this.editorStore.renderAndSave();
+          }
         },
       });
 
-      this.editorStore.y.description = new Editor({
-        editable: this.editable,
+      let descriptionInitialised = false;
+      this.editorStore.tiptap.description = new Editor({
         extensions: [
           SingleParagraphDocument,
           Paragraph,
           Text,
-          // Collaboration.configure({
-          //   document: ydoc,
-          //   field: "description",
-          // }),
-          // CollaborationCursor.configure({
-          //   provider: this.editorStore.y.provider,
-          //   user,
-          // }),
           Placeholder.configure({
             // Use a placeholder:
             // Use different placeholders depending on the node type:
@@ -264,52 +204,37 @@ export default {
           }),
         ],
         onUpdate: () => {
-          this.editorStore.y.descriptionRendered = true;
-          this.editorStore.save();
+          if (!descriptionInitialised) {
+            descriptionInitialised = true;
+          } else {
+            this.editorStore.renderAndSave();
+          }
         },
       });
 
-      this.editorStore.y.path = new Editor({
-        editable: this.editable,
-        extensions: [
-          SingleParagraphDocument,
-          Paragraph,
-          Text,
-          // Collaboration.configure({
-          //   document: ydoc,
-          //   field: "path",
-          // }),
-          // CollaborationCursor.configure({
-          //   provider: this.editorStore.y.provider,
-          //   user,
-          // }),
-        ],
+      let pathInitialised = false;
+      this.editorStore.tiptap.path = new Editor({
+        extensions: [SingleParagraphDocument, Paragraph, Text],
         onUpdate: () => {
-          this.editorStore.y.pathRendered = true;
-          this.editorStore.save();
+          if (!pathInitialised) {
+            pathInitialised = true;
+          } else {
+            this.editorStore.renderAndSave();
+          }
         },
       });
 
-      let nthTime = 1;
-      let lastContent = null;
-      this.editorStore.y.content = new Editor({
-        editable: this.editable,
+      let contentInitialised = false;
+      this.editorStore.tiptap.content = new Editor({
         extensions: [
-          StarterKit.configure({
-            // The Collaboration extension comes with its own history handling
-            // history: false,
-          }),
-          // Collaboration.configure({
-          //   document: ydoc,
-          //   field: "content",
-          // }),
-          // CollaborationCursor.configure({
-          //   provider: this.editorStore.y.provider,
-          //   user,
-          // }),
+          StarterKit,
           Link.configure({
             openOnClick: false,
             protocols: ["mailto"],
+          }),
+          Image,
+          Youtube.configure({
+            nocookie: true,
           }),
           Focus.configure({
             mode: "deepest",
@@ -328,64 +253,22 @@ export default {
           }),
         ],
         onUpdate: () => {
-          if (nthTime === 3 && this.editorStore.hasPeers) {
-            lastContent = this.editorStore.y.content.getHTML();
-            this.editorStore.y.content.commands.undo();
-          } else if (nthTime === 4 && this.editorStore.hasPeers) {
-            if (this.editorStore.y.content.getHTML() === "<p></p>") {
-              if (lastContent !== "<p></p>") {
-                this.editorStore.y.content.commands.insertContent(
-                  lastContent,
-                  true
-                );
-              }
-
-              this.editorStore.y.content.commands.insertContent(
-                lastContent,
-                true
-              );
-            }
+          if (!contentInitialised) {
+            contentInitialised = true;
+          } else {
+            this.editorStore.renderAndSave();
           }
-
-          this.editorStore.y.contentRendered = true;
-          this.editorStore.save();
-
-          nthTime += 1;
         },
       });
     },
-    setUserColor() {
-      // https://quasar.dev/style/sass-scss-variables
-      const colors = [
-        "#f44336",
-        "#e91e63",
-        "#9c27b0",
-        "#673ab7",
-        "#3f51b5",
-        "#2196f3",
-        "#03a9f4",
-        "#00bcd4",
-        "#009688",
-        "#4caf50",
-        "#8bc34a",
-        "#cddc39",
-        "#ffeb3b",
-        "#ffc107",
-        "#ff9800",
-        "#ff5722",
-        "#795548",
-      ];
-      this.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-    },
   },
 
-  beforeUnmount() {
-    this.editorStore.y.title.destroy();
-    this.editorStore.y.description.destroy();
-    this.editorStore.y.content.destroy();
-    this.editorStore.y.path.destroy();
-    this.editorStore.y.provider.destroy();
-  },
+  // beforeUnmount() {
+  //   this.editorStore.tiptap.title.destroy();
+  //   this.editorStore.tiptap.description.destroy();
+  //   this.editorStore.tiptap.content.destroy();
+  //   this.editorStore.tiptap.path.destroy();
+  // },
 };
 </script>
 <style lang="scss">
@@ -395,30 +278,21 @@ export default {
 }
 .ProseMirror {
   outline: none;
-
-  a {
-    color: $secondary;
-    text-decoration: none;
-    border-bottom: 4px solid rgba($secondary, 0.2);
-
-    &:hover {
-      border-bottom-color: rgba($secondary, 0.5);
-    }
-  }
 }
 .content .ProseMirror {
   outline: none;
-  min-height: 180px;
+  min-height: 128px;
 }
 
 .title .ProseMirror,
-.description .ProseMirror,
-.path .ProseMirror {
+.description .ProseMirror {
   border: 1px solid $grey-5;
   line-height: 1;
   border-radius: 4px;
-  padding: 12px 8px;
-  transition: 0.2s border-color;
+  padding: 16px;
+  transition: 0.3s border-color;
+  font-family: $font-secondary;
+  font-weight: 700;
 
   &:hover {
     border-color: $grey-9;
@@ -433,9 +307,14 @@ export default {
     margin: 0;
   }
 }
+
 .title {
-  color: black;
+  font-size: 64px;
 }
+.description {
+  font-size: 24px;
+}
+
 .path {
   font-size: 0.8em;
   .ProseMirror {
@@ -444,7 +323,7 @@ export default {
     // background: $grey-2;
 
     &::before {
-      content: "activisthandbook.org/en/";
+      content: attr(data-prepend);
       color: $grey-8;
     }
     * {
@@ -453,10 +332,18 @@ export default {
   }
 }
 // Placeholder
-.ProseMirror .is-empty::before {
+// .ProseMirror .is-empty::before {
+//   content: attr(data-placeholder);
+//   float: left;
+//   color: $grey;
+//   pointer-events: none;
+//   height: 0;
+// }
+
+.ProseMirror .is-empty:first-child:before {
   content: attr(data-placeholder);
   float: left;
-  color: $grey;
+  color: $grey-9;
   pointer-events: none;
   height: 0;
 }
@@ -510,12 +397,28 @@ export default {
   }
 }
 
-// Still loading
-// .ProseMirror {
-//   opacity: 0.6;
-// }
-// .editable .ProseMirror {
-//   transition: 0.3s opacity;
-//   opacity: 1;
-// }
+// EMBED
+img,
+div[data-youtube-video] {
+  outline-offset: 2px;
+  cursor: move;
+
+  &:hover {
+    outline: 4px solid rgba($secondary, 0.2);
+  }
+
+  &.ProseMirror-selectednode {
+    outline: 4px solid rgba($secondary, 0.6);
+    animation: focusVideo 0.6s infinite alternate;
+  }
+}
+
+@keyframes focusVideo {
+  from {
+    outline: 4px solid rgba($secondary, 0.4);
+  }
+  to {
+    outline: 4px solid rgba($secondary, 0.7);
+  }
+}
 </style>

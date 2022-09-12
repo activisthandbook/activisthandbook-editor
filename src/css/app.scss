@@ -1,11 +1,14 @@
+@import "article.scss";
+
 // app global css in SCSS form
 body,
 .q-layout {
-  font-family: Arial, sans-serif;
+  font-family: $font-primary;
   font-size: 16px;
   background-color: $accent;
 }
 
+// HEADINGS
 h1,
 h2,
 h3,
@@ -19,70 +22,30 @@ h6,
 .text-h5,
 .text-h6,
 .q-toolbar__title {
-  font-family: "Noto Sans Mono", serif;
-  font-weight: 700;
-  line-height: 1em;
   margin: 0;
-  overflow: visible;
+  line-height: 1;
+  font-family: $font-secondary;
 }
-.q-btn {
-  font-family: "Noto Sans Mono", serif;
-  font-weight: 700;
-  line-height: 1em;
+.q-toolbar__title {
+  line-height: 1.5;
 }
+
 h1,
 .text-h1 {
-  font-size: 2.4em;
-  color: $primary;
-  margin: 32px 0 24px 0;
+  font-size: 3em;
 }
 h2,
 .text-h2 {
-  font-size: 1.6em;
-  margin: 32px 0 24px 0;
-  // font-weight: 400;
+  font-size: 2.5em;
 }
 h3,
 .text-h3 {
-  font-size: 1.2em;
-  margin: 16px 0;
-  color: $primary;
-  font-family: "Noto Sans", sans-serif;
-}
-h4,
-.text-h4 {
-  font-size: 1.4em;
-}
-h5,
-.text-h5 {
-  font-size: 1.2em;
-}
-h6,
-.text-h6 {
-  font-size: 1em;
-}
-.description {
-  font-size: 1.2em;
-  font-style: italic;
-}
-p {
-  margin: 8px 0;
-}
-
-li p {
-  margin: 8px 0;
-}
-
-blockquote {
-  border-left: 8px solid $primary;
-  border-radius: 6px;
-  background-color: $grey-2;
-  margin: 0;
-  padding: 8px 16px;
+  font-size: 2em;
 }
 
 .q-btn {
   font-weight: 700;
+  font-family: $font-secondary;
 
   &:not(.q-btn--round, .q-btn--fab, .q-btn--rounded) {
     border-radius: 6px;

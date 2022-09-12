@@ -10,6 +10,7 @@
             no-caps
             color="secondary"
             icon="mdi-plus"
+            :to="{ name: 'New' }"
           />
           <q-btn
             label="Moderate"

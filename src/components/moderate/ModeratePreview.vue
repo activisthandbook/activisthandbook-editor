@@ -1,30 +1,12 @@
 <template>
-  <q-card-section class="q-p-none">
-    <q-card flat class="bg-warning q-mb-md" v-if="article.deleteArticle">
+  <q-card-section class="q-pt-none">
+    <q-card flat class="bg-warning q-mt-md" v-if="article.deleteArticle">
       <q-card-section
-        >If you accept, this article will be deleted</q-card-section
+        >If you accept, this article and all its version history will be
+        permanently deleted!</q-card-section
       >
     </q-card>
-    <h1 class="q-my-none">
-      <div v-if="article.title">
-        {{ article.title }}
-      </div>
-      <div v-else class="text-grey">No title</div>
-    </h1>
 
-    <p class="description">
-      <span v-if="article.description">
-        {{ article.description }}
-      </span>
-      <span v-else class="text-grey"> No description </span>
-    </p>
-
-    <div class="text-caption">
-      <q-icon name="mdi-link" />
-      activisthandbook.org/<span class="text-bold">{{ article.path }}</span>
-    </div>
-  </q-card-section>
-  <q-card-section class="q-pt-none">
     <q-btn
       label="Show content"
       v-show="quickReview && !showContent"
@@ -51,7 +33,7 @@
     <q-card-section
       v-if="article.content !== '<p></p>'"
       v-html="sanitize(article.content)"
-      class="q-pt-none"
+      class="article q-pt-none"
     >
     </q-card-section>
     <q-card-section v-else class="text-grey"> Empty document </q-card-section>

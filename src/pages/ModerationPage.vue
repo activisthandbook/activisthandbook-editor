@@ -1,13 +1,4 @@
 <template>
-  <div class="flex justify-between items-center">
-    <h2 class="q-my-none">Review edits</h2>
-    <q-toggle
-      v-model="quickReview"
-      label="Quick view"
-      icon="mdi-lightning-bolt"
-    />
-  </div>
-
   <q-tabs v-model="tab" inline-label class="bg-grey-3 rounded-borders">
     <q-tab
       name="review-requests"
@@ -20,23 +11,27 @@
 
   <div style="min-height: 256px">
     <div v-if="articles.dataLoaded">
-      <q-card v-if="!articles.data[0]">
+      <q-card v-if="!articles.data[0]" class="bg-accent">
         <q-card-section>No new edits.</q-card-section>
       </q-card>
-      <q-card :flat="quickReview" v-else>
+      <!-- <q-card :flat="quickReview" v-else class="bg-accent">
         <q-list
           :padding="!quickReview"
           :class="{ 'q-gutter-y-md q-mt-md': quickReview }"
           bordered
-        >
-          <ModerationItem
-            v-for="article in articles.data"
-            :article="article"
-            :key="article.id"
-            :quickReview="quickReview"
-          />
-        </q-list>
-      </q-card>
+        > -->
+
+      <transition-group name="list" class="q-gutter-y-md q-my-md" tag="div">
+        <ModerationItem
+          v-for="article in articles.data"
+          :liveDraftArticle="article"
+          :key="article.id"
+          :quickReview="quickReview"
+        />
+      </transition-group>
+
+      <!-- </q-list>
+      </q-card> -->
     </div>
   </div>
 
@@ -142,3 +137,14 @@ export default {
   },
 };
 </script>
+<style lang="scss" scoped>
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+  transform: translateY(8px);
+}
+</style>

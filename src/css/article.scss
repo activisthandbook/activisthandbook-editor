@@ -1,0 +1,129 @@
+.article {
+  line-height: 28px;
+
+  // LINK
+  a {
+    color: $secondary;
+    text-decoration: none;
+    border-bottom: 4px solid rgba($secondary, 0.2);
+
+    &:hover {
+      border-bottom-color: rgba($secondary, 0.5);
+    }
+  }
+
+  // HEADINGS
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: $font-secondary;
+    font-weight: 700;
+    line-height: 1em;
+    margin: 0;
+    overflow: visible;
+  }
+
+  h2,
+  h4 {
+    color: $primary;
+  }
+
+  h1,
+  h5,
+  h6 {
+    // We only use heading 2, 3 and 4 in articles. Heading 1 is reserved for the title. And 5 or 6 make an article too complex to read.
+    background: $yellow;
+    color: black !important;
+
+    &::after {
+      content: "⚠️ Incorrect formatting! Select Heading 1, 2 or 3 to fix it.";
+      line-height: 14px;
+      font-size: 14px;
+      padding: 8px;
+      display: block;
+      position: absolute;
+      background: $red;
+      color: white;
+      box-shadow: $shadow-3;
+    }
+  }
+
+  h2 {
+    margin-top: 24px;
+    font-size: 48px;
+  }
+
+  h3 {
+    font-size: 32px;
+  }
+
+  h4 {
+    margin-top: 24px;
+    font-size: 18px;
+  }
+
+  .ProseMirror > p:first-child {
+    font-size: 22px;
+    line-height: 32px;
+    font-weight: 700;
+  }
+
+  & > p:first-child {
+    font-weight: 700;
+  }
+
+  .description {
+    font-size: 1.2em;
+    font-style: italic;
+  }
+  p {
+    margin: 8px 0;
+  }
+
+  li p {
+    margin: 8px 0;
+  }
+
+  ul,
+  ol {
+    padding-left: 1.25rem;
+    margin: 16px 0;
+  }
+
+  blockquote {
+    border-left: 8px solid $primary;
+    border-radius: 6px;
+    background-color: $grey-2;
+    margin: 0;
+    padding: 8px 16px;
+  }
+
+  img,
+  div[data-youtube-video] {
+    max-width: 100%;
+    border-radius: 6px;
+  }
+
+  // VIDEO
+  div[data-youtube-video] {
+    padding-right: 24px;
+    position: relative;
+    padding-bottom: 56.25%;
+    height: 0;
+    background: $grey-9;
+
+    // outline: 6px solid $secondary;
+
+    iframe {
+      width: 100% !important;
+      height: 100% !important;
+      position: absolute;
+      border: none;
+      pointer-events: none;
+      border-radius: 6px;
+    }
+  }
+}

@@ -5,11 +5,23 @@ Octokit = Octokit.plugin(require("octokit-commit-multiple-files"));
 
 const { Base64 } = require("js-base64");
 
+const sanitizeHtml = require("sanitize-html");
+
 const { getFirestore } = require("firebase-admin/firestore");
 const db = getFirestore();
 
+// Convert HTML into markdown
+// Yeah, I know, it's a bit stupid, because vitepress will convert the markdown back to HTML. But we need it to be markdown first so vitepress can process everything correctly, e.g. adding a table of contents and heading anchors)
+// https://github.com/valeriangalliat/markdown-it-anchor
+// https://github.com/mdit-vue/mdit-vue/tree/main/packages/plugin-toc
+var TurndownService = require("turndown");
+var turndownService = new TurndownService();
+
 exports.publishArticles = functions
   .region("europe-west1")
+  // Not working (eg. getting branch error)? Make sure to check that the API token is still valid:
+  // https://github.com/settings/tokens
+  // https://firebase.google.com/docs/functions/config-env
   .runWith({ secrets: ["GITHUB_API"] })
   .https.onCall(async (data, context) => {
     const publishingQueueArticles = await fetchPublishingQueue();
@@ -60,7 +72,14 @@ async function syncWithGithub(token, articles) {
     if (article.delete) {
       filesToDelete.push(article.path);
     } else {
-      files[article.path + ".md"] = article.content;
+      let githubPath = "";
+      if (article.langCode == "en") {
+        githubPath = "articles/" + article.path + ".md";
+      } else {
+        githubPath =
+          "articles/" + article.langCode + "/" + article.path + ".md";
+      }
+      files[githubPath] = generateFileContent(article);
     }
   }
 
@@ -92,4 +111,43 @@ async function clearPublishingQueue(articles) {
     },
     { merge: true }
   );
+}
+
+function generateFileContent(article) {
+  // Prevent undefined errors
+  if (!article.title) article.title = "";
+  if (!article.description) article.description = "";
+  if (!article.id) article.id = "";
+  if (!article.languageCollectionID) article.languageCollectionID = "";
+  if (!article.content) article.content = "";
+  if (!article.wordCount) article.wordCount = "";
+
+  // IMPORTANT: this sanitisation must match the one locally!
+  // The ugly identation is to avoid everything being interpeted as markdown quote...
+  const fileContents = `---
+title: ${sanitizeHtml(article.title)}
+description: ${sanitizeHtml(article.description)}
+langCode: ${sanitizeHtml(article.langCode)}
+articleID: ${sanitizeHtml(article.id)}
+languageCollectionID: ${sanitizeHtml(article.languageCollectionID)}
+wordCount: ${sanitizeHtml(article.wordCount)}
+lastUpdated: ${article.lastUpdatedServerTimestamp.toMillis()}
+---
+
+${turndownService.turndown(
+  sanitizeHtml(article.content, {
+    allowedTags: sanitizeHtml.defaults.allowedTags.concat(["iframe", "img"]),
+    allowedAttributes: {
+      ...sanitizeHtml.defaults.allowedAttributes,
+      iframe: ["src", "allowfullscreen", "start", "width", "height"],
+      div: ["data-youtube-video"],
+      img: ["src", "alt"],
+    },
+
+    allowedIframeHostnames: ["www.youtube-nocookie.com"],
+  })
+)}
+`;
+
+  return fileContents;
 }
