@@ -1,5 +1,23 @@
+/* ARTICLE */
+
+// CONSISTENT WITH WEBSITE
 .article {
-  line-height: 28px;
+  font-size: 18px;
+  line-height: 1.8;
+
+  p {
+    line-height: 1.8;
+    margin: 16px 0;
+  }
+
+  @media only screen and (max-width: 600px) {
+    font-size: 16px;
+    line-height: 1.7;
+
+    p {
+      line-height: 1.7;
+    }
+  }
 
   // LINK
   a {
@@ -23,6 +41,7 @@
     font-weight: 700;
     line-height: 1em;
     margin: 0;
+    padding: 0;
     overflow: visible;
   }
 
@@ -31,6 +50,98 @@
     color: $primary;
   }
 
+  h2 {
+    margin: calc(24px + 1vw) 0 12px 0;
+    font-size: calc(24px + 2vw);
+  }
+
+  h3 {
+    margin-top: 3vw;
+    font-size: calc(16px + 1vw);
+  }
+
+  h4 {
+    margin-top: 26px;
+    font-size: 16px;
+  }
+
+  // Highlighting the first paragraph of the article
+  .ProseMirror > p:first-child {
+    font-size: calc(16px + 0.5vw);
+    line-height: 1.4em;
+    font-weight: 700;
+  }
+
+  ul,
+  ol {
+    padding-left: 1.25rem;
+    margin: 16px 0;
+  }
+
+  li {
+    margin: 8px 0;
+
+    p {
+      margin: 8px 0;
+    }
+  }
+
+  blockquote {
+    border-left: 8px solid $primary;
+    border-radius: 6px;
+    background-color: $grey-2;
+    margin: 0;
+    padding: 8px 16px;
+    font-style: italic;
+
+    p {
+      margin: 8px 0;
+      color: black;
+    }
+  }
+
+  // IMAGE
+  img,
+  div[data-youtube-video] {
+    max-width: 100%;
+    border-radius: 2px;
+  }
+
+  figure {
+    margin: 8px 0;
+
+    figcaption {
+      background: $grey-2;
+      padding: 6px 8px;
+      border-radius: 4px;
+      text-align: center;
+      font-size: 0.8em;
+      color: $grey-8;
+    }
+  }
+
+  // VIDEO
+  div[data-youtube-video] {
+    padding-right: 24px;
+    position: relative;
+    padding-bottom: 56.25%;
+    height: 0;
+    background: $grey-9;
+    margin: 8px 0;
+
+    iframe {
+      width: 100% !important;
+      height: 100% !important;
+      position: absolute;
+      border: none;
+      pointer-events: none;
+      border-radius: 6px;
+    }
+  }
+}
+
+// EDITOR SPECIFIC CSS
+.article {
   h1,
   h5,
   h6 {
@@ -50,80 +161,8 @@
       box-shadow: $shadow-3;
     }
   }
-
-  h2 {
-    margin-top: 24px;
-    font-size: 48px;
-  }
-
-  h3 {
-    font-size: 32px;
-  }
-
-  h4 {
-    margin-top: 24px;
-    font-size: 18px;
-  }
-
-  .ProseMirror > p:first-child {
-    font-size: 22px;
-    line-height: 32px;
-    font-weight: 700;
-  }
-
-  & > p:first-child {
-    font-weight: 700;
-  }
-
-  .description {
-    font-size: 1.2em;
-    font-style: italic;
-  }
-  p {
-    margin: 8px 0;
-  }
-
-  li p {
-    margin: 8px 0;
-  }
-
-  ul,
-  ol {
-    padding-left: 1.25rem;
-    margin: 16px 0;
-  }
-
-  blockquote {
-    border-left: 8px solid $primary;
-    border-radius: 6px;
-    background-color: $grey-2;
-    margin: 0;
-    padding: 8px 16px;
-  }
-
-  img,
-  div[data-youtube-video] {
-    max-width: 100%;
-    border-radius: 6px;
-  }
-
-  // VIDEO
-  div[data-youtube-video] {
-    padding-right: 24px;
-    position: relative;
-    padding-bottom: 56.25%;
-    height: 0;
-    background: $grey-9;
-
-    // outline: 6px solid $secondary;
-
-    iframe {
-      width: 100% !important;
-      height: 100% !important;
-      position: absolute;
-      border: none;
-      pointer-events: none;
-      border-radius: 6px;
-    }
-  }
 }
+
+// p {
+//     margin: 8px 0;
+//   }

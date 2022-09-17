@@ -11,7 +11,7 @@ const { getFirestore } = require("firebase-admin/firestore");
 const db = getFirestore();
 
 // Convert HTML into markdown
-// Yeah, I know, it's a bit stupid, because vitepress will convert the markdown back to HTML. But we need it to be markdown first so vitepress can process everything correctly, e.g. adding a table of contents and heading anchors)
+// Yeah, I know, it's a bit stupid, because vitepress will convert the markdown back to HTML. But we need it to be markdown first so vitepress can process everything correctly, e.g. adding a table of contents and heading anchors). And the TipTap editor doesn't support markdown.
 // https://github.com/valeriangalliat/markdown-it-anchor
 // https://github.com/mdit-vue/mdit-vue/tree/main/packages/plugin-toc
 var TurndownService = require("turndown");
@@ -24,15 +24,24 @@ exports.publishArticles = functions
   // https://firebase.google.com/docs/functions/config-env
   .runWith({ secrets: ["GITHUB_API"] })
   .https.onCall(async (data, context) => {
-    const publishingQueueArticles = await fetchPublishingQueue();
+    // Checking that the user is authenticated.
+    if (!context.auth.token.email_verified) {
+      // Throwing an HttpsError so that the client gets the error details.
+      throw new functions.https.HttpsError(
+        "failed-precondition",
+        "The function must be called while authenticated with a verified email."
+      );
+    } else {
+      const publishingQueueArticles = await fetchPublishingQueue();
 
-    await syncWithGithub(process.env.GITHUB_API, publishingQueueArticles);
+      await syncWithGithub(process.env.GITHUB_API, publishingQueueArticles);
 
-    await clearPublishingQueue(publishingQueueArticles);
+      await clearPublishingQueue(publishingQueueArticles);
 
-    return {
-      success: true,
-    };
+      return {
+        success: true,
+      };
+    }
   });
 
 async function fetchPublishingQueue() {

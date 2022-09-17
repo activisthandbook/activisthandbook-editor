@@ -3,20 +3,24 @@
     <q-spinner class="fixed-center" color="grey" size="3em" />
   </div>
   <router-view v-else-if="firebaseStore.userAuthenticated" />
-  <div style="max-width: 700px; margin: auto" v-else>
-    <q-card class="q-ma-md">
-      <q-card-section class="q-gutter-y-sm">
-        <h1>Start contributing</h1>
-        <div>
-          You can make Activist Handbook better. Just sign in and start editing.
+  <div v-else class="absolute-center full-width" style="max-width: 512px">
+    <q-card class="bg-accent q-ma-md">
+      <q-card-section>
+        <div class="q-gutter-y-sm">
+          <h1>Start editing</h1>
+          <div>
+            Everyone can edit Activist Handbook. Just sign in to start
+            contributing.
+          </div>
+          <div id="firebaseui-auth-container"></div>
+          <q-btn
+            label="Sign in with Google"
+            color="secondary"
+            @click="signin"
+            no-caps
+            icon="mdi-account"
+          />
         </div>
-        <q-btn
-          color="secondary"
-          label="Sign in with Google"
-          @click="signin"
-          no-caps
-          icon="mdi-account"
-        />
       </q-card-section>
     </q-card>
   </div>
@@ -29,6 +33,7 @@ import { defineComponent } from "vue";
 import { useFirebaseStore } from "stores/firebase";
 
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+
 const provider = new GoogleAuthProvider();
 
 export default defineComponent({

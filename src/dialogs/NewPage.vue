@@ -33,7 +33,12 @@
   </q-dialog>
 </template>
 <script>
-import { doc, writeBatch, getFirestore } from "firebase/firestore";
+import {
+  doc,
+  writeBatch,
+  getFirestore,
+  serverTimestamp,
+} from "firebase/firestore";
 const db = getFirestore();
 
 import { mapStores } from "pinia";
@@ -71,10 +76,17 @@ export default {
         langCode: this.lang.code,
         title: this.title,
         languageCollectionID: newLanguageCollectionID,
+        lastUpdatedServerTimestamp: serverTimestamp(),
+        id: newArticleID,
       });
 
       batch.set(doc(db, "languageCollections", newLanguageCollectionID), {
-        articles: [{ articleID: newArticleID, langCode: this.lang.code }],
+        articles: [
+          {
+            articleID: newArticleID,
+            langCode: this.lang.code,
+          },
+        ],
       });
 
       await batch.commit().then(() => {

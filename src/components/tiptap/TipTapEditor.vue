@@ -98,11 +98,13 @@ import Text from "@tiptap/extension-text";
 import StarterKit from "@tiptap/starter-kit";
 import Paragraph from "@tiptap/extension-paragraph";
 import Link from "@tiptap/extension-link";
-import Image from "@tiptap/extension-image";
+// import Image from "@tiptap/extension-image";
 import Youtube from "@tiptap/extension-youtube";
 import Focus from "@tiptap/extension-focus";
 import Placeholder from "@tiptap/extension-placeholder";
 import CharacterCount from "@tiptap/extension-character-count";
+
+import { ImageWithCaption } from "./ImageWithCaption";
 
 const SingleParagraphDocument = Document.extend({
   content: "paragraph",
@@ -233,6 +235,7 @@ export default {
             protocols: ["mailto"],
           }),
           Image,
+          ImageWithCaption,
           Youtube.configure({
             nocookie: true,
           }),
@@ -309,10 +312,10 @@ export default {
 }
 
 .title {
-  font-size: 64px;
+  font-size: calc(24px + 2vw);
 }
 .description {
-  font-size: 24px;
+  font-size: calc(14px + 0.5vw);
 }
 
 .path {
@@ -398,19 +401,32 @@ export default {
 }
 
 // EMBED
-img,
-div[data-youtube-video] {
+.ProseMirror img,
+.ProseMirror div[data-youtube-video] {
   outline-offset: 2px;
+
+  // &.ProseMirror-focussed {
+  //   outline: 4px solid rgba($secondary, 0.6);
+  //   animation: focusVideo 0.6s infinite alternate;
+  // }
+}
+figure,
+.ProseMirror div[data-youtube-video] {
   cursor: move;
+  border-radius: 2px;
+}
+.ProseMirror div[data-youtube-video]:hover,
+figure:hover {
+  outline: 4px solid rgba($secondary, 0.2);
+}
 
-  &:hover {
-    outline: 4px solid rgba($secondary, 0.2);
-  }
-
-  &.ProseMirror-selectednode {
-    outline: 4px solid rgba($secondary, 0.6);
-    animation: focusVideo 0.6s infinite alternate;
-  }
+figure.has-focus,
+div[data-youtube-video].ProseMirror-selectednode {
+  //   outline: 4px solid rgba($secondary, 0.6);
+  //   animation: focusVideo 0.6s infinite alternate;
+  // } {
+  outline: 4px solid rgba($secondary, 0.6);
+  animation: focusVideo 0.6s infinite alternate;
 }
 
 @keyframes focusVideo {

@@ -96,7 +96,7 @@
                     outline
                     class="full-width"
                     no-caps
-                    @click="deleteUnpublishedArticle()"
+                    @click="deleteArticle()"
                   />
                 </div>
 
@@ -249,88 +249,92 @@ export default {
       );
     },
     acceptVersion: async function () {
-      // Get a new write batch
-      const batch = writeBatch(db);
-
-      /* TODO: Add check for duplicate path lorem ipsum... asdf asdf sadf sadfa sdfad fds asdf f asdf a s */
+      /* TODO: Add check for duplicate path  */
       // - Change to transaction
       // - Check the publishingQueue for an identical path
 
       const acceptedVersion =
         this.articleVersions.data[this.articleVersionSelected];
 
-      // 1. Copy the currently selected version to the publishingQueue collection
-      const publishingQueueRef = doc(
-        db,
-        "publishingQueue",
-        this.liveDraftArticle.id
-      );
-      batch.set(publishingQueueRef, {
-        title: acceptedVersion.title,
-        description: acceptedVersion.description,
-        path: acceptedVersion.path,
-        content: acceptedVersion.content,
-        id: acceptedVersion.articleID,
-        languageCollectionID: acceptedVersion.languageCollectionID,
-        deleteArticle: acceptedVersion.deleteArticle,
-        langCode: acceptedVersion.langCode,
-        wordCount: acceptedVersion.wordCount,
-        lastUpdatedServerTimestamp: serverTimestamp(),
-      });
+      if (acceptedVersion.deleteArticle) {
+        this.deleteArticle();
+      } else {
+        // Get a new write batch
+        const batch = writeBatch(db);
 
-      // 2. Delete all review versions
-      this.articleVersions.data.forEach((article) => {
-        if (article.status === "review") {
-          const reviewVersionRef = doc(
-            db,
-            "articles",
-            this.liveDraftArticle.id,
-            "versions",
-            article.id
-          );
-          batch.delete(reviewVersionRef);
-        }
-      });
+        // 1. Copy the currently selected version to the publishingQueue collection
+        const publishingQueueRef = doc(
+          db,
+          "publishingQueue",
+          this.liveDraftArticle.id
+        );
+        batch.set(publishingQueueRef, {
+          title: acceptedVersion.title,
+          description: acceptedVersion.description,
+          path: acceptedVersion.path,
+          content: acceptedVersion.content,
+          id: acceptedVersion.articleID,
+          languageCollectionID: acceptedVersion.languageCollectionID,
+          deleteArticle: acceptedVersion.deleteArticle,
+          langCode: acceptedVersion.langCode,
+          wordCount: acceptedVersion.wordCount,
+          lastUpdatedServerTimestamp: serverTimestamp(),
+        });
 
-      // 3. Set requestedReview to false for the live edit version
-      const liveArticleRef = doc(db, "articles", this.liveDraftArticle.id);
-      batch.update(liveArticleRef, {
-        requestedPublication: false,
-        lastPublishedServerTimestamp: serverTimestamp(),
-      });
+        // 2. Delete all review versions
+        this.articleVersions.data.forEach((article) => {
+          if (article.status === "review") {
+            const reviewVersionRef = doc(
+              db,
+              "articles",
+              this.liveDraftArticle.id,
+              "versions",
+              article.id
+            );
+            batch.delete(reviewVersionRef);
+          }
+        });
 
-      // 4. Create a new version with the status "published"
-      const versionID = this.mixin_randomID();
-      const versionRef = doc(
-        db,
-        "articles",
-        this.liveDraftArticle.id,
-        "versions",
-        versionID
-      );
-      batch.set(versionRef, {
-        title: acceptedVersion.title,
-        description: acceptedVersion.description,
-        path: acceptedVersion.path,
-        content: acceptedVersion.content,
-        articleID: acceptedVersion.articleID,
-        id: versionID,
-        languageCollectionID: acceptedVersion.languageCollectionID,
-        deleteArticle: acceptedVersion.deleteArticle,
-        langCode: acceptedVersion.langCode,
-        wordCount: acceptedVersion.wordCount,
+        // 3. Set requestedReview to false for the live edit version
+        const liveArticleRef = doc(db, "articles", this.liveDraftArticle.id);
+        batch.update(liveArticleRef, {
+          requestedPublication: false,
+          lastPublishedServerTimestamp: serverTimestamp(),
+        });
 
-        lastUpdatedServerTimestamp: serverTimestamp(),
-        status: "published",
-      });
+        // 4. Create a new version with the status "published"
+        const versionID = this.mixin_randomID();
+        const versionRef = doc(
+          db,
+          "articles",
+          this.liveDraftArticle.id,
+          "versions",
+          versionID
+        );
+        batch.set(versionRef, {
+          title: acceptedVersion.title,
+          description: acceptedVersion.description,
+          path: acceptedVersion.path,
+          content: acceptedVersion.content,
+          articleID: acceptedVersion.articleID,
+          id: versionID,
+          languageCollectionID: acceptedVersion.languageCollectionID,
+          deleteArticle: acceptedVersion.deleteArticle,
+          langCode: acceptedVersion.langCode,
+          wordCount: acceptedVersion.wordCount,
 
-      const moderatorRef = doc(db, "app", "moderator");
-      batch.set(moderatorRef, {
-        publishingQueueCount: increment(1),
-      });
+          lastUpdatedServerTimestamp: serverTimestamp(),
+          status: "published",
+        });
 
-      // Commit the batch
-      await batch.commit();
+        const moderatorRef = doc(db, "app", "moderator");
+        batch.set(moderatorRef, {
+          publishingQueueCount: increment(1),
+        });
+
+        // Commit the batch
+        await batch.commit();
+      }
     },
     revertToLastPublished: async function () {
       // Get a new write batch
@@ -373,8 +377,7 @@ export default {
       // Commit the batch
       await batch.commit();
     },
-    deleteUnpublishedArticle: async function () {
-      // If someone creates a draft (an article that has never been published) and sends several versions for review, we want to delete all that data.
+    deleteArticle: async function () {
       try {
         await runTransaction(db, async (transaction) => {
           // 1. Read the language collection that this article is member of (To see if it is only child. If so, we delete the entire collection.)

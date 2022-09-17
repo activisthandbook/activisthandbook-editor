@@ -7,8 +7,10 @@ if (admin.apps.length === 0) {
 
 const generateArticle = require("./openAI/generateArticle");
 const publishArticles = require("./publishArticles");
-const getImageUploadURL = require("./getImageUploadURL");
+const getImageUploadURL = require("./images/getImageUploadURL");
+const processImageUpload = require("./images/processImageUpload");
 
 exports.generateArticle = generateArticle.generateArticle;
 exports.publishArticles = publishArticles.publishArticles;
 exports.getImageUploadURL = getImageUploadURL.getImageUploadURL;
+exports.processImageUpload = processImageUpload.processImageUpload;

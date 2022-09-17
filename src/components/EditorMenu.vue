@@ -196,9 +196,19 @@
         icon="mdi-image"
         class="gt-sm"
         @click="imageDialogOpen = true"
-        :class="{ 'is-active': editor.tiptap.content.isActive('image') }"
+        v-show="!editor.tiptap.content.isActive('figure')"
       />
       <ImageSelector v-model="imageDialogOpen" />
+
+      <q-btn
+        v-show="editor.tiptap.content.isActive('figure')"
+        padding="sm"
+        flat
+        icon="mdi-image-edit"
+        class="gt-sm is-active"
+        @click="imageTitleEditorDialogOpen = true"
+      />
+      <ImageTitleEditor v-model="imageTitleEditorDialogOpen" />
 
       <q-btn
         padding="sm"
@@ -251,12 +261,14 @@
 import { defineComponent } from "vue";
 
 import ImageSelector from "src/dialogs/ImageSelector.vue";
+import ImageTitleEditor from "src/dialogs/ImageTitleEditor.vue";
 
 import { useEditorStore } from "stores/editor";
 
 export default defineComponent({
   components: {
     ImageSelector,
+    ImageTitleEditor,
   },
   setup() {
     const editor = useEditorStore();
@@ -276,6 +288,7 @@ export default defineComponent({
 
       // image
       imageDialogOpen: false,
+      imageTitleEditorDialogOpen: false,
 
       title: "",
       currentLink: "",

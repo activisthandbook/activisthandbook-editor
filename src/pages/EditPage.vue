@@ -238,7 +238,7 @@ import {
 const db = getFirestore();
 
 // VUE COMPONENTS
-import TipTapEditor from "components/TipTapEditor.vue";
+import TipTapEditor from "src/components/tiptap/TipTapEditor.vue";
 
 export default {
   components: {
@@ -256,7 +256,6 @@ export default {
   computed: {
     ...mapStores(useEditorStore, useFirebaseStore),
     allowedToPublish: function () {
-      return false;
       if (
         this.editorStore.article.requestedPublication &&
         this.editorStore.article.requestedPublicationTimestamp >

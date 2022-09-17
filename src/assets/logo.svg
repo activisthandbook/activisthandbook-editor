@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Activist Handbook</title>
+    <desc>Campaigning guides for social activists.</desc>
+    <defs>
+        <circle id="path-1" cx="12" cy="12" r="12"></circle>
+    </defs>
+    <g id="logo" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="A">
+            <mask id="mask-2" fill="white">
+                <use xlink:href="#path-1"></use>
+            </mask>
+            <use id="Oval" fill="#D70057" xlink:href="#path-1"></use>
+            <rect id="Rectangle-Copy-9" fill="#FFF8DB" fill-rule="nonzero" mask="url(#mask-2)" transform="translate(14.990625, 11.456250) rotate(70.000000) translate(-14.990625, -11.456250) " x="7.790625" y="9.65625" width="14.4" height="3.6"></rect>
+            <rect id="Rectangle-Copy-10" fill="#FFF8DB" fill-rule="nonzero" mask="url(#mask-2)" transform="translate(9.136789, 12.820290) scale(-1, 1) rotate(70.000000) translate(-9.136789, -12.820290) " x="2.71491407" y="11.0202904" width="12.84375" height="3.6"></rect>
+            <rect id="Rectangle-Copy-11" fill="#FFF8DB" fill-rule="nonzero" mask="url(#mask-2)" transform="translate(11.053992, 13.906423) scale(-1, 1) rotate(-8.000000) translate(-11.053992, -13.906423) " x="5.65399174" y="12.1064231" width="10.8" height="3.6"></rect>
+        </g>
+    </g>
+</svg>

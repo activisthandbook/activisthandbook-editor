@@ -112,6 +112,8 @@ export const useEditorStore = defineStore("editor", {
                   allowedTags: sanitizeHtml.defaults.allowedTags.concat([
                     "iframe",
                     "img",
+                    "figure",
+                    "figcaption",
                   ]),
                   allowedAttributes: {
                     ...sanitizeHtml.defaults.allowedAttributes,
