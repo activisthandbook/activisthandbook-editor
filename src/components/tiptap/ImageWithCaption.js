@@ -9,7 +9,7 @@ import {
 export const inputRegex = /!\[(.+|:?)]\((\S+)(?:(?:\s+)["'](\S+)["'])?\)/;
 
 export const ImageWithCaption = Node.create({
-  name: "figure",
+  name: "imageWithCaption",
 
   addOptions() {
     return {
@@ -34,16 +34,28 @@ export const ImageWithCaption = Node.create({
           element.querySelector("img")?.getAttribute("src"),
       },
 
+      imageID: {
+        default: null,
+        parseHTML: (element) =>
+          element.querySelector("img")?.getAttribute("imageID"),
+      },
+
+      imageSource: {
+        default: null,
+        parseHTML: (element) =>
+          element.querySelector("img")?.getAttribute("imageSource"),
+      },
+
       alt: {
         default: null,
         parseHTML: (element) =>
           element.querySelector("img")?.getAttribute("alt"),
       },
 
-      title: {
+      imageCaption: {
         default: null,
         parseHTML: (element) =>
-          element.querySelector("img")?.getAttribute("title"),
+          element.querySelector("img")?.getAttribute("imageCaption"),
       },
     };
   },
@@ -85,7 +97,7 @@ export const ImageWithCaption = Node.create({
   addCommands() {
     return {
       setImageWithCaption:
-        ({ caption, ...attrs }) =>
+        ({ ...attrs }) =>
         ({ chain }) => {
           return chain()
             .insertContent({
@@ -98,11 +110,11 @@ export const ImageWithCaption = Node.create({
                     {
                       type: "link",
                       attrs: {
-                        href: "https://tiptap.dev/guide/output#option-1-json",
+                        href: attrs.imageSource,
                       },
                     },
                   ],
-                  text: caption ? caption : "",
+                  text: attrs.imageCaption ? attrs.imageCaption : "",
                 },
               ],
             })
@@ -110,81 +122,81 @@ export const ImageWithCaption = Node.create({
             .run();
         },
 
-      imageToFigure:
-        () =>
-        ({ tr, commands }) => {
-          const { doc, selection } = tr;
-          const { from, to } = selection;
-          const images = findChildrenInRange(
-            doc,
-            { from, to },
-            (node) => node.type.name === "image"
-          );
+      //   imageToFigure:
+      //     () =>
+      //     ({ tr, commands }) => {
+      //       const { doc, selection } = tr;
+      //       const { from, to } = selection;
+      //       const images = findChildrenInRange(
+      //         doc,
+      //         { from, to },
+      //         (node) => node.type.name === "image"
+      //       );
 
-          if (!images.length) {
-            return false;
-          }
+      //       if (!images.length) {
+      //         return false;
+      //       }
 
-          const tracker = new Tracker(tr);
+      //       const tracker = new Tracker(tr);
 
-          return commands.forEach(images, ({ node, pos }) => {
-            const mapResult = tracker.map(pos);
+      //       return commands.forEach(images, ({ node, pos }) => {
+      //         const mapResult = tracker.map(pos);
 
-            if (mapResult.deleted) {
-              return false;
-            }
+      //         if (mapResult.deleted) {
+      //           return false;
+      //         }
 
-            const range = {
-              from: mapResult.position,
-              to: mapResult.position + node.nodeSize,
-            };
+      //         const range = {
+      //           from: mapResult.position,
+      //           to: mapResult.position + node.nodeSize,
+      //         };
 
-            return commands.insertContentAt(range, {
-              type: this.name,
-              attrs: {
-                src: node.attrs.src,
-              },
-            });
-          });
-        },
+      //         return commands.insertContentAt(range, {
+      //           type: this.name,
+      //           attrs: {
+      //             src: node.attrs.src,
+      //           },
+      //         });
+      //       });
+      //     },
 
-      figureToImage:
-        () =>
-        ({ tr, commands }) => {
-          const { doc, selection } = tr;
-          const { from, to } = selection;
-          const figures = findChildrenInRange(
-            doc,
-            { from, to },
-            (node) => node.type.name === this.name
-          );
+      //   figureToImage:
+      //     () =>
+      //     ({ tr, commands }) => {
+      //       const { doc, selection } = tr;
+      //       const { from, to } = selection;
+      //       const figures = findChildrenInRange(
+      //         doc,
+      //         { from, to },
+      //         (node) => node.type.name === this.name
+      //       );
 
-          if (!figures.length) {
-            return false;
-          }
+      //       if (!figures.length) {
+      //         return false;
+      //       }
 
-          const tracker = new Tracker(tr);
+      //       const tracker = new Tracker(tr);
 
-          return commands.forEach(figures, ({ node, pos }) => {
-            const mapResult = tracker.map(pos);
+      //       return commands.forEach(figures, ({ node, pos }) => {
+      //         const mapResult = tracker.map(pos);
 
-            if (mapResult.deleted) {
-              return false;
-            }
+      //         if (mapResult.deleted) {
+      //           return false;
+      //         }
 
-            const range = {
-              from: mapResult.position,
-              to: mapResult.position + node.nodeSize,
-            };
+      //         const range = {
+      //           from: mapResult.position,
+      //           to: mapResult.position + node.nodeSize,
+      //         };
 
-            return commands.insertContentAt(range, {
-              type: "image",
-              attrs: {
-                src: node.attrs.src,
-              },
-            });
-          });
-        },
+      //         return commands.insertContentAt(range, {
+      //           type: "image",
+      //           attrs: {
+      //             src: node.attrs.src,
+      //           },
+      //         });
+      //       });
+      //     },
     };
   },
 
@@ -194,9 +206,9 @@ export const ImageWithCaption = Node.create({
         find: inputRegex,
         type: this.type,
         getAttributes: (match) => {
-          const [, src, alt, title] = match;
+          const [, src, alt, imageID, imageSource, imageCaption] = match;
 
-          return { src, alt, title };
+          return { src, alt, imageID, imageSource, imageCaption };
         },
       }),
     ];

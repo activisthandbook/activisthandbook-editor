@@ -86,8 +86,38 @@
       </q-toolbar>
     </q-header>
 
-    <q-page-container>
-      <q-page padding style="max-width: 720px; margin: auto">
+    <!-- <q-drawer
+      show-if-above
+      v-model="rightDrawerOpen"
+      side="right"
+      bordered
+      class="bg-accent"
+      :width="400"
+    >
+      <div class="q-ma-md table-of-contents">
+        <div
+          v-for="(header, index) in editorStore.article.contentHeaders"
+          :key="index"
+          :class="{ 'q-ml-lg': header.level === 3 }"
+        >
+          <q-btn
+            @click="mixin_scrollToID(header.id)"
+            no-caps
+            square
+            flat
+            class="full-width"
+            align="left"
+            :class="{ 'text-bold': header.level === 2 }"
+            :dense="header.level > 2"
+          >
+            <div class="ellipsis">{{ header.text }}</div>
+          </q-btn>
+        </div>
+      </div>
+    </q-drawer> -->
+
+    <q-page-container class="flex items-start">
+      <q-page padding style="max-width: 720px; margin: auto; width: 100%">
         <div class="q-gutter-y-md q-mt-md q-mb-xl">
           <!-- GUIDE -->
           <q-card class="bg-secondary text-accent q-mb-lg" flat>
@@ -122,7 +152,11 @@
           <!-- EDITOR -->
           <TipTapEditor />
         </div>
-        <q-page-sticky position="bottom-right" :offset="[12, 12]">
+        <q-page-sticky
+          position="bottom-right"
+          :offset="[12, 12]"
+          style="z-index: 10"
+        >
           <q-fab
             icon="mdi-auto-fix"
             label="AI Writer"
@@ -136,6 +170,29 @@
           </q-fab>
         </q-page-sticky>
       </q-page>
+      <aside>
+        <div class="table-of-contents">
+          <div class="text-caption q-mb-sm text-grey-9">Contents</div>
+          <div
+            v-for="(header, index) in editorStore.article.contentHeaders"
+            :key="index"
+            :class="{ 'q-ml-lg': header.level === 3 }"
+          >
+            <q-btn
+              @click="mixin_scrollToID(header.id)"
+              no-caps
+              square
+              flat
+              class="full-width"
+              align="left"
+              :class="{ 'text-bold': header.level === 2 }"
+              dense
+            >
+              <div class="ellipsis">{{ header.text }}</div>
+            </q-btn>
+          </div>
+        </div>
+      </aside>
     </q-page-container>
 
     <!-- DIALOGS -->
@@ -247,6 +304,7 @@ export default {
 
   data() {
     return {
+      rightDrawerOpen: false,
       errorDialogOpen: false,
       validation: null,
       publishedSuccesfullyDialog: false,
@@ -270,8 +328,9 @@ export default {
     // watch the params of the route to fetch the data again
     this.$watch(
       () => this.$route.params,
-      async () => {
-        await this.fetchAndRender();
+      async (toParams, previousParams) => {
+        if (!previousParams || toParams.articleID !== previousParams.articleID)
+          await this.fetchAndRender();
       },
       // fetch the data when the view is created and the data is
       // already being observed
@@ -391,3 +450,45 @@ export default {
   },
 };
 </script>
+<style lang="scss">
+.q-drawer {
+  background: $accent;
+}
+.no-touch {
+  aside {
+    opacity: 0.5;
+    transition: 0.5s opacity;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+}
+aside {
+  border-left: 1px solid rgba(0, 0, 0, 0.12);
+  // border-radius: 6px;
+  margin: 32px;
+  position: sticky;
+  top: 32px;
+  width: 300px;
+  max-height: calc(100vh - 64px);
+  overflow: scroll;
+  padding: 8px 16px;
+
+  @media only screen and (max-width: 1100px) {
+    display: none;
+  }
+}
+.table-of-contents .q-btn:not(.text-bold) {
+  font-family: $font-primary;
+  font-weight: 400;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  scroll-margin-top: 100px;
+}
+</style>

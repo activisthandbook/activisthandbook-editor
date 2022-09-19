@@ -45,7 +45,10 @@ async function detectImageLabels(imageData) {
   const [result] = await client.labelDetection(
     `${imageDomain}/${accountHash}/${imageData.id}/${variantName}`
   );
-  const labels = result.labelAnnotations;
+
+  let labels = [];
+
+  result.labelAnnotations.forEach((label) => labels.push(label.description));
 
   functions.logger.log("🔵 result:", result);
   functions.logger.log("🔵 labels:", labels);

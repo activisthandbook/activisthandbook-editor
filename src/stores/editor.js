@@ -38,7 +38,11 @@ export const useEditorStore = defineStore("editor", {
       title: null,
       description: null,
       path: null,
+
       content: null,
+      contentHeaders: null,
+      contentImages: null,
+
       deleteArticle: null,
       requestedPublication: null,
       requestedPublicationTimestamp: null,
@@ -125,7 +129,13 @@ export const useEditorStore = defineStore("editor", {
                       "height",
                     ],
                     div: ["data-youtube-video"],
-                    img: ["src", "alt"],
+                    img: [
+                      "src",
+                      "alt",
+                      "imageid",
+                      "imagesource",
+                      "imagecaption",
+                    ],
                   },
 
                   allowedIframeHostnames: ["www.youtube-nocookie.com"],
@@ -150,17 +160,20 @@ export const useEditorStore = defineStore("editor", {
       }
     },
     async renderAndSave() {
-      this.render();
+      await this.render();
       await this.save();
     },
-    render() {
+    render: _.throttle(async function () {
       this.article.title = this.tiptap.title.getHTML().slice(3, -4);
       this.article.description = this.tiptap.description.getHTML().slice(3, -4);
       this.article.content = this.tiptap.content.getHTML();
       this.local.lastEditTimestamp = Date.now();
       this.article.wordCount =
         this.tiptap.content.storage.characterCount.words();
-    },
+
+      await this.updateHeadings();
+      await this.updateImages();
+    }, 4000),
     save: _.throttle(async function () {
       await setDoc(
         doc(db, "articles", this.article.id),
@@ -177,9 +190,50 @@ export const useEditorStore = defineStore("editor", {
           Notify.create("Saving failed");
           console.error(error);
         });
-      // }
-      // }
     }, 4000),
+    async updateHeadings() {
+      const headings = [];
+      const transaction = this.tiptap.content.state.tr;
+
+      console.log("test!");
+
+      this.tiptap.content.state.doc.descendants(async (node, pos) => {
+        if (node.type.name === "heading") {
+          const id = `heading-${headings.length + 1}`;
+
+          if (node.attrs.id !== id) {
+            transaction.setNodeMarkup(pos, undefined, {
+              ...node.attrs,
+              id,
+            });
+          }
+
+          headings.push({
+            level: node.attrs.level,
+            text: node.textContent,
+            id,
+          });
+        }
+      });
+
+      transaction.setMeta("addToHistory", false);
+      transaction.setMeta("preventUpdate", true);
+
+      await this.tiptap.content.view.dispatch(transaction);
+
+      this.article.contentHeaders = headings;
+    },
+    async updateImages() {
+      const images = [];
+
+      await this.tiptap.content.state.doc.descendants(async (node, pos) => {
+        if (node.type.name === "imageWithCaption") {
+          images.push(node.attrs.imageID);
+        }
+      });
+
+      this.article.contentImages = images;
+    },
     validateArticle() {
       let errorList = [];
       let hasErrors = false;

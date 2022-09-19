@@ -35,7 +35,7 @@
     :data-prepend="'activisthandbook.org/' + editorStore.article.langCode + '/'"
   /> -->
 
-  <EditorMenu />
+  <MenuBar />
 
   <editor-content :editor="editorStore.tiptap.content" class="article" />
 
@@ -81,7 +81,7 @@
 </template>
 
 <script>
-import EditorMenu from "components/EditorMenu.vue";
+import MenuBar from "src/components/MenuBar.vue";
 import LanguageSelector from "components/LanguageSelector.vue";
 
 import { mapStores } from "pinia";
@@ -93,18 +93,50 @@ import _ from "lodash";
 
 import { Editor, EditorContent } from "@tiptap/vue-3";
 import Document from "@tiptap/extension-document";
+import History from "@tiptap/extension-history";
 import Text from "@tiptap/extension-text";
 
-import StarterKit from "@tiptap/starter-kit";
+// import StarterKit from "@tiptap/starter-kit";
 import Paragraph from "@tiptap/extension-paragraph";
+import Heading from "@tiptap/extension-heading";
 import Link from "@tiptap/extension-link";
-// import Image from "@tiptap/extension-image";
+
+import Blockquote from "@tiptap/extension-blockquote";
+import BulletList from "@tiptap/extension-bullet-list";
+import CodeBlock from "@tiptap/extension-code-block";
+import HardBreak from "@tiptap/extension-hard-break";
+import HorizontalRule from "@tiptap/extension-horizontal-rule";
+import ListItem from "@tiptap/extension-list-item";
+import OrderedList from "@tiptap/extension-ordered-list";
+
 import Youtube from "@tiptap/extension-youtube";
 import Focus from "@tiptap/extension-focus";
 import Placeholder from "@tiptap/extension-placeholder";
 import CharacterCount from "@tiptap/extension-character-count";
 
+// Table
+import Table from "@tiptap/extension-table";
+import TableCell from "@tiptap/extension-table-cell";
+import TableHeader from "@tiptap/extension-table-header";
+import TableRow from "@tiptap/extension-table-row";
+
 import { ImageWithCaption } from "./ImageWithCaption";
+const CustomHeading = Heading.extend({
+  addAttributes() {
+    return {
+      level: {
+        default: 1,
+        rendered: false,
+      },
+      id: {
+        default: null,
+        // rendered: false,
+        // parseHTML: (element) =>
+        //   element.querySelector("img")?.getAttribute("imageID"),
+      },
+    };
+  },
+});
 
 const SingleParagraphDocument = Document.extend({
   content: "paragraph",
@@ -113,7 +145,7 @@ const SingleParagraphDocument = Document.extend({
 export default {
   components: {
     EditorContent,
-    EditorMenu,
+    MenuBar,
     LanguageSelector,
   },
 
@@ -147,8 +179,9 @@ export default {
     // watch the params of the route to fetch the data again
     this.$watch(
       () => this.$route.params,
-      () => {
-        this.setupEditors();
+      (toParams, previousParams) => {
+        if (!previousParams || toParams.articleID !== previousParams.articleID)
+          this.setupEditors();
       },
       // fetch the data when the view is created and the data is
       // already being observed
@@ -177,6 +210,7 @@ export default {
       let titleInitialised = false;
       this.editorStore.tiptap.title = new Editor({
         extensions: [
+          History,
           SingleParagraphDocument,
           Paragraph,
           Text,
@@ -196,6 +230,7 @@ export default {
       let descriptionInitialised = false;
       this.editorStore.tiptap.description = new Editor({
         extensions: [
+          History,
           SingleParagraphDocument,
           Paragraph,
           Text,
@@ -229,7 +264,18 @@ export default {
       let contentInitialised = false;
       this.editorStore.tiptap.content = new Editor({
         extensions: [
-          StarterKit,
+          History,
+          Document,
+          Text,
+          Paragraph,
+          Blockquote,
+          BulletList,
+          CodeBlock,
+          HardBreak,
+          HorizontalRule,
+          ListItem,
+          OrderedList,
+          CustomHeading,
           Link.configure({
             openOnClick: false,
             protocols: ["mailto"],
@@ -239,6 +285,14 @@ export default {
           Youtube.configure({
             nocookie: true,
           }),
+          Table,
+          TableRow,
+          TableHeader,
+          // Default TableCell
+          // TableCell,
+          // Custom TableCell with backgroundColor attribute
+          TableCell,
+
           Focus.configure({
             mode: "deepest",
           }),
@@ -255,7 +309,9 @@ export default {
             },
           }),
         ],
-        onUpdate: () => {
+        onUpdate: async () => {
+          // await this.updateHeadings();
+          // await this.updateImages();
           if (!contentInitialised) {
             contentInitialised = true;
           } else {
@@ -275,10 +331,6 @@ export default {
 };
 </script>
 <style lang="scss">
-.is-active {
-  background: $secondary;
-  color: white;
-}
 .ProseMirror {
   outline: none;
 }
@@ -436,5 +488,72 @@ div[data-youtube-video].ProseMirror-selectednode {
   to {
     outline: 4px solid rgba($secondary, 0.7);
   }
+}
+
+/* Table-specific styling */
+.ProseMirror {
+  table {
+    border-collapse: collapse;
+    table-layout: fixed;
+    width: 100%;
+    margin: 0;
+    overflow: hidden;
+    border-radius: 2px;
+
+    td,
+    th {
+      min-width: 1em;
+      border: 2px solid $grey-4;
+      padding: 3px 5px;
+      vertical-align: top;
+      box-sizing: border-box;
+      position: relative;
+
+      > * {
+        margin-bottom: 0;
+      }
+    }
+
+    th {
+      font-weight: bold;
+      text-align: left;
+      background-color: $grey-3;
+    }
+
+    .selectedCell:after {
+      z-index: 2;
+      position: absolute;
+      content: "";
+      left: 0;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      background: rgba($secondary, 0.3);
+      pointer-events: none;
+    }
+
+    .column-resize-handle {
+      position: absolute;
+      right: -2px;
+      top: 0;
+      bottom: -2px;
+      width: 4px;
+      background-color: #adf;
+      pointer-events: none;
+    }
+
+    p {
+      margin: 0;
+    }
+  }
+}
+
+.tableWrapper {
+  overflow-x: auto;
+}
+
+.resize-cursor {
+  cursor: ew-resize;
+  cursor: col-resize;
 }
 </style>

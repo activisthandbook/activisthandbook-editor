@@ -65,13 +65,23 @@
                 type="search"
                 label="Search pictures"
                 outlined
-                color="secondary"
+                color="black"
                 v-model="searchQuery"
-                @keyup.enter="searchPexels()"
+                @keyup.enter="searchImages()"
                 autofocus
               >
                 <template v-slot:prepend>
                   <q-icon name="mdi-magnify" />
+                </template>
+                <template v-slot:append>
+                  <q-btn
+                    label="Search"
+                    no-caps
+                    unelevated
+                    color="black"
+                    @click="searchImages()"
+                    :disable="!searchQuery"
+                  />
                 </template>
               </q-input>
 
@@ -86,7 +96,7 @@
               <div v-if="galleryImages.dataLoaded" class="row q-col-gutter-xs">
                 <div
                   class="col-6 col-sm-4"
-                  v-for="image in galleryImages.data"
+                  v-for="image in images"
                   :key="image.id"
                 >
                   <q-img
@@ -419,21 +429,22 @@
         </q-header>
 
         <q-page-container>
-          <q-page padding>
-            <q-input
-              label="Title"
-              outlined
-              color="secondary"
-              hint="Title is shown underneath image"
-              v-model="image.title"
-              autofocus
-            />
+          <q-page padding class="q-gutter-y-sm">
             <q-img
               :src="previewImageURL"
               :ratio="16 / 9"
               class="q-my-md rounded-borders"
               no-spinner
               no-transition
+            />
+            <q-input
+              label="Title"
+              outlined
+              color="secondary"
+              hint="Title is shown underneath image, along with attribution info."
+              v-model="image.title"
+              autofocus
+              @keyup.enter="insertImage()"
             />
             <q-input
               type="textarea"
@@ -449,21 +460,49 @@
               ]"
               disable
             />
-            <div class="text-bold q-mt-sm">Tags</div>
-            <div v-if="image.data.labels">
-              <q-chip
-                v-for="(label, index) in image.data.labels"
-                :key="index"
-                color="grey-3"
-                square
+
+            <div v-if="image.data.labels" class="q-mt-sm">
+              <!-- <q-input
+                v-model="newTag"
+                label="New tag..."
+                dense
+                outlined
+                autogrow
               >
-                {{ label.description }}
-              </q-chip>
+                <template v-slot:prepend>
+                  <span style="max-width: 100%"
+                    ><q-chip
+                      v-for="(label, index) in image.data.labels"
+                      :key="index"
+                      removable
+                      @remove="deleteTag(tag)"
+                      color="grey-3"
+                      square
+                    >
+                      {{ label }}
+                    </q-chip></span
+                  >
+                </template>
+              </q-input> -->
+
+              <q-select
+                label="Search tags"
+                outlined
+                v-model="image.data.labels"
+                use-input
+                use-chips
+                multiple
+                hide-dropdown-icon
+                input-debounce="0"
+                new-value-mode="add-unique"
+                color="secondary"
+                disable
+              />
             </div>
             <div class="text-italic" v-else>
               Analysing image... <q-spinner color="grey" />
             </div>
-            <div class="text-bold q-mt-sm">Attribution</div>
+            <div class="text-bold q-mt-md">Attribution</div>
             <div>
               Author: {{ image.data.author.name
               }}<span v-if="image.data.author.ai"
@@ -492,6 +531,17 @@ const db = getFirestore();
 import { httpsCallable } from "firebase/functions";
 
 import sanitizeHtml from "sanitize-html";
+
+import algoliasearch from "algoliasearch/lite";
+
+// Connect and authenticate with your Algolia app
+const client = algoliasearch(
+  "2CX4BG5VYL", // Application ID
+  "2a776c23ba964feb9504d1494da81fe7" // Public search-only api key
+);
+
+// Create a new index and add a record
+const imagesSearchIndex = client.initIndex("activisthandbook_images");
 
 function imageDefault() {
   return {
@@ -553,12 +603,26 @@ export default {
         error: null,
         unsubscribe: null,
       },
+      searchResults: null,
       image: imageDefault(),
+
+      newTag: null,
     };
+  },
+  watch: {
+    searchQuery: function (newValue) {
+      if (!newValue) {
+        this.searchResults = null;
+      }
+    },
   },
 
   computed: {
     ...mapStores(useFirebaseStore, useEditorStore),
+    images: function () {
+      if (this.searchResults) return this.searchResults;
+      else return this.galleryImages.data;
+    },
     isValidHttpUrl: function () {
       let url;
 
@@ -587,6 +651,7 @@ export default {
     handleHide() {
       this.view.name = "gallery";
       this.resetFileInput();
+      this.$emit("hide");
     },
 
     // 1️⃣ SETUP
@@ -628,9 +693,14 @@ export default {
         });
     },
     async processImageUpload() {
+      // If these are not set, the current user is the author.
       if (!this.image.data.author.name) {
         this.image.data.author.name =
           this.firebaseStore.auth.currentUser.displayName;
+      }
+      if (!this.image.data.author.source) {
+        // TO-DO: Add author profiles!
+        this.image.data.author.source = `https://edit.activisthandbook.org/author/${this.firebaseStore.auth.currentUser.uid}`;
       }
 
       const processImageUpload = httpsCallable(
@@ -648,6 +718,14 @@ export default {
           console.error(error);
           this.$q.notify("Something went wrong (processImageUpload).");
         });
+    },
+
+    // SEARCH
+    searchImages() {
+      // Search the index and print the results
+      imagesSearchIndex.search(this.searchQuery).then(({ hits }) => {
+        this.searchResults = hits;
+      });
     },
 
     // 2️⃣ FILE INPUT / SELECT IMAGE
@@ -682,6 +760,7 @@ export default {
     resetFileInput() {
       Object.assign(this.image, imageDefault());
       this.view.name = "gallery";
+      this.searchQuery = null;
     },
     selectImage(image) {
       Object.assign(this.image.data, image);
@@ -739,22 +818,13 @@ export default {
 
       let caption = "";
       if (img.title) {
-        caption += sanitizeHtml(img.title);
+        caption += `${sanitizeHtml(img.title)}, by `;
       }
-      if (img.title && img.data.author.name) {
-        caption += ", by ";
-      }
-      if (!img.title && img.data.author.name) {
+      if (!img.title) {
         caption += "By ";
       }
-      if (img.data.author.name && img.data.author.source) {
-        caption += `<a href="${sanitizeHtml(
-          img.data.author.source
-        )}">${sanitizeHtml(img.data.author.name)}</a>`;
-      }
-      if (img.data.author.name && !img.data.author.source) {
-        caption += sanitizeHtml(img.data.author.name);
-      }
+      caption += sanitizeHtml(img.data.author.name);
+
       if (img.data.author.ai) {
         caption += ` | Generated using ${sanitizeHtml(img.data.author.ai)}`;
       }
@@ -767,8 +837,10 @@ export default {
         .focus()
         .setImageWithCaption({
           src: `${this.imageHost}${this.image.data.id}/articleLarge`,
+          imageID: this.image.data.id,
+          imageSource: this.image.data.author.source,
           alt: this.image.data.description,
-          caption: caption,
+          imageCaption: caption,
         })
         .run();
 
@@ -790,5 +862,9 @@ export default {
 
 .drop-active {
   border: 6px dashed black !important;
+}
+.q-chip {
+  background: $grey-3;
+  color: black !important;
 }
 </style>

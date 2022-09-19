@@ -49,6 +49,18 @@ export default boot(({ app }) => {
           text += possible.charAt(Math.floor(Math.random() * possible.length));
         return text;
       },
+      mixin_scrollToID: function (id) {
+        const el = document.getElementById(id);
+        el.scrollIntoView({ behavior: "smooth" });
+        // const target = getScrollTarget(el);
+        // const verticalScrollPosition = getVerticalScrollPosition(target); // returns a Number (pixels)
+
+        // const offset = el.offsetTop;
+        // const duration = 600;
+        // setVerticalScrollPosition("vertical", offset, duration);
+
+        // console.log(offset, verticalScrollPosition);
+      },
     },
   });
 });

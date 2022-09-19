@@ -150,7 +150,7 @@ ${turndownService.turndown(
       ...sanitizeHtml.defaults.allowedAttributes,
       iframe: ["src", "allowfullscreen", "start", "width", "height"],
       div: ["data-youtube-video"],
-      img: ["src", "alt"],
+      img: ["src", "alt", "imageid", "imagesource", "imagecaption"],
     },
 
     allowedIframeHostnames: ["www.youtube-nocookie.com"],
