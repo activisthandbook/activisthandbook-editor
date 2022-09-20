@@ -19,6 +19,13 @@
                     :to="{ name: 'New' }"
                   />
                   <q-btn
+                    label="Edit menu"
+                    icon="mdi-playlist-edit"
+                    no-caps
+                    color="secondary"
+                    :to="{ name: 'Menu' }"
+                  />
+                  <q-btn
                     label="Moderate"
                     icon="mdi-shield-star"
                     no-caps

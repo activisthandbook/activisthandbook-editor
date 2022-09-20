@@ -1,4 +1,11 @@
 <template>
+  <q-card v-if="editorStore.article.wordCount > 5000" class="bg-warning" flat>
+    <q-card-section>
+      <strong>This article is too long!</strong> Try to stay under 5.000 words
+      to keep articles readable. Articles with more than 10.000 words may not be
+      included in our our search index.
+    </q-card-section>
+  </q-card>
   <editor-content :editor="editorStore.tiptap.title" class="title" />
   <editor-content
     :editor="editorStore.tiptap.description"
@@ -38,6 +45,66 @@
   <MenuBar />
 
   <editor-content :editor="editorStore.tiptap.content" class="article" />
+
+  <q-card class="q-mt-xl bg-grey-2" flat bordered>
+    <q-card-section>
+      <div class="q-gutter-y-sm">
+        <div class="text-bold">Article details</div>
+        <q-select
+          label="Search tags"
+          v-model="editorStore.article.tags"
+          use-input
+          use-chips
+          outlined
+          multiple
+          hide-dropdown-icon
+          input-debounce="0"
+          new-value-mode="add-unique"
+          color="secondary"
+          @update:model-value="editorStore.renderAndSave()"
+        />
+      </div>
+    </q-card-section>
+    <q-list class="q-pb-md">
+      <q-item>
+        <q-item-section avatar>
+          <q-icon name="mdi-star-outline" />
+        </q-item-section>
+        <q-item-section>
+          <q-item-label caption> Created </q-item-label>
+          <q-item-label>
+            {{ mixin_humanDate(editorStore.article.createdServerTimestamp) }}
+          </q-item-label>
+        </q-item-section>
+      </q-item>
+      <q-item>
+        <q-item-section avatar>
+          <q-icon name="mdi-file-document-edit-outline" />
+        </q-item-section>
+        <q-item-section>
+          <q-item-label caption> Last edited </q-item-label>
+          <q-item-label>
+            {{
+              mixin_humanDate(editorStore.article.lastUpdatedServerTimestamp)
+            }}
+          </q-item-label>
+        </q-item-section>
+      </q-item>
+      <q-item>
+        <q-item-section avatar>
+          <q-icon name="mdi-check" />
+        </q-item-section>
+        <q-item-section>
+          <q-item-label caption> Last published </q-item-label>
+          <q-item-label>
+            {{
+              mixin_humanDate(editorStore.article.lastPublishedServerTimestamp)
+            }}
+          </q-item-label>
+        </q-item-section>
+      </q-item>
+    </q-list>
+  </q-card>
 
   <!-- 👉 TO-DO: Tags -->
 
@@ -334,7 +401,7 @@ export default {
 .ProseMirror {
   outline: none;
 }
-.content .ProseMirror {
+.article .ProseMirror {
   outline: none;
   min-height: 128px;
 }

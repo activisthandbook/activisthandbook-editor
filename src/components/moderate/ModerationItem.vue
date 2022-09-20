@@ -271,6 +271,7 @@ export default {
         batch.set(publishingQueueRef, {
           title: acceptedVersion.title,
           description: acceptedVersion.description,
+          tags: acceptedVersion.tags,
           path: acceptedVersion.path,
           content: acceptedVersion.content,
           id: acceptedVersion.articleID,
@@ -314,6 +315,7 @@ export default {
         batch.set(versionRef, {
           title: acceptedVersion.title,
           description: acceptedVersion.description,
+          tags: acceptedVersion.tags,
           path: acceptedVersion.path,
           content: acceptedVersion.content,
           articleID: acceptedVersion.articleID,
@@ -361,6 +363,7 @@ export default {
       batch.update(liveArticleRef, {
         title: lastPublishedArticle.title,
         description: lastPublishedArticle.description,
+        tags: lastPublishedArticle.tags,
         path: lastPublishedArticle.path,
         content: lastPublishedArticle.content,
         id: lastPublishedArticle.articleID,

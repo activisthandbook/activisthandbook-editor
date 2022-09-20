@@ -28,8 +28,8 @@ export const useEditorStore = defineStore("editor", {
     },
     tiptap: {
       // tiptap docs
-      title: null,
-      description: null,
+      // title: null,
+      // description: null,
       content: null,
     },
 
@@ -38,6 +38,7 @@ export const useEditorStore = defineStore("editor", {
       title: null,
       description: null,
       path: null,
+      tags: null,
 
       content: null,
       contentHeaders: null,
@@ -144,6 +145,8 @@ export const useEditorStore = defineStore("editor", {
                 true
               );
 
+              await this.render();
+
               this.articleDataLoaded = true;
               LoadingBar.stop();
             } else {
@@ -160,6 +163,7 @@ export const useEditorStore = defineStore("editor", {
       }
     },
     async renderAndSave() {
+      this.local.lastEditTimestamp = Date.now();
       await this.render();
       await this.save();
     },
@@ -167,7 +171,7 @@ export const useEditorStore = defineStore("editor", {
       this.article.title = this.tiptap.title.getHTML().slice(3, -4);
       this.article.description = this.tiptap.description.getHTML().slice(3, -4);
       this.article.content = this.tiptap.content.getHTML();
-      this.local.lastEditTimestamp = Date.now();
+
       this.article.wordCount =
         this.tiptap.content.storage.characterCount.words();
 

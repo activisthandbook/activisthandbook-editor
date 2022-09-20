@@ -40,6 +40,12 @@
                 </q-item-section>
               </q-item>
               <q-separator />
+              <q-item clickable v-close-popup :to="{ name: 'Home' }" exact>
+                <q-item-section>Home</q-item-section>
+                <q-item-section side>
+                  <q-icon name="mdi-home-outline" />
+                </q-item-section>
+              </q-item>
               <q-item clickable v-close-popup :to="{ name: 'New' }">
                 <q-item-section>New article</q-item-section>
                 <q-item-section side>
@@ -52,12 +58,7 @@
                   <q-icon name="mdi-shield-outline" />
                 </q-item-section>
               </q-item>
-              <q-item clickable v-close-popup :to="{ name: 'Home' }" exact>
-                <q-item-section>Home</q-item-section>
-                <q-item-section side>
-                  <q-icon name="mdi-home-outline" />
-                </q-item-section>
-              </q-item>
+
               <q-separator />
               <q-item clickable v-close-popup @click="firebaseStore.signOut()">
                 <q-item-section>Sign out</q-item-section>
@@ -120,7 +121,7 @@
       <q-page padding style="max-width: 720px; margin: auto; width: 100%">
         <div class="q-gutter-y-md q-mt-md q-mb-xl">
           <!-- GUIDE -->
-          <q-card class="bg-secondary text-accent q-mb-lg" flat>
+          <q-card class="bg-secondary text-accent q-mb-md" flat>
             <q-card-section>
               <div class="q-gutter-y-sm">
                 <div>
@@ -173,6 +174,14 @@
       <aside>
         <div class="table-of-contents">
           <div class="text-caption q-mb-sm text-grey-9">Contents</div>
+          <div
+            v-if="
+              !editorStore.article.contentHeaders ||
+              !editorStore.article.contentHeaders[0]
+            "
+          >
+            No headings added yet.
+          </div>
           <div
             v-for="(header, index) in editorStore.article.contentHeaders"
             :key="index"
@@ -381,6 +390,7 @@ export default {
       const versionContent = {
         title: this.editorStore.article.title,
         description: this.editorStore.article.description,
+        tags: this.editorStore.article.tags,
         path: this.editorStore.article.path,
         content: this.editorStore.article.content,
         articleID: this.editorStore.article.id,

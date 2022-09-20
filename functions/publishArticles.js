@@ -38,6 +38,8 @@ exports.publishArticles = functions
 
       await clearPublishingQueue(publishingQueueArticles);
 
+      await updatePublishedArticlesCollection(publishingQueueArticles);
+
       return {
         success: true,
       };
@@ -108,24 +110,51 @@ async function syncWithGithub(token, articles) {
 }
 
 async function clearPublishingQueue(articles) {
-  for (const article of articles) {
-    await db.collection("publishingQueue").doc(article.id).delete();
-  }
+  // Get a new write batch
+  const batch = db.batch();
+
+  articles.forEach((article) => {
+    const articleRef = db.collection("publishingQueue").doc(article.id);
+    batch.delete(articleRef);
+  });
 
   const moderatorRef = db.collection("app").doc("moderator");
-
-  await moderatorRef.set(
+  batch.set(
+    moderatorRef,
     {
       publishingQueueCount: 0,
     },
     { merge: true }
   );
+
+  // Commit the batch
+  await batch.commit();
+}
+
+async function updatePublishedArticlesCollection(articles) {
+  // Get a new write batch
+  const batch = db.batch();
+
+  articles.forEach((article) => {
+    let fullPath = null;
+    if (article.langCode === "en") {
+      fullPath = article.path;
+    } else {
+      fullPath = "/" + article.langCode + "/" + article.path;
+    }
+    const articleRef = db.collection("publishedArticles").doc(article.id);
+    batch.set(articleRef, { ...article, fullPath: fullPath });
+  });
+
+  // Commit the batch
+  await batch.commit();
 }
 
 function generateFileContent(article) {
   // Prevent undefined errors
   if (!article.title) article.title = "";
   if (!article.description) article.description = "";
+  if (!article.tags) article.tags = "";
   if (!article.id) article.id = "";
   if (!article.languageCollectionID) article.languageCollectionID = "";
   if (!article.content) article.content = "";
@@ -136,6 +165,7 @@ function generateFileContent(article) {
   const fileContents = `---
 title: ${sanitizeHtml(article.title)}
 description: ${sanitizeHtml(article.description)}
+tags: ${sanitizeHtml(article.tags)}
 langCode: ${sanitizeHtml(article.langCode)}
 articleID: ${sanitizeHtml(article.id)}
 languageCollectionID: ${sanitizeHtml(article.languageCollectionID)}

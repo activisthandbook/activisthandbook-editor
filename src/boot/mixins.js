@@ -26,7 +26,9 @@ export default boot(({ app }) => {
   app.mixin({
     methods: {
       mixin_humanDate(firestoreTimestamp) {
-        return dayjs(firestoreTimestamp.toDate()).calendar();
+        if (firestoreTimestamp) {
+          return dayjs(firestoreTimestamp.toDate()).calendar();
+        } else return "Date unknown";
       },
 
       mixin_openURL: (link) => {

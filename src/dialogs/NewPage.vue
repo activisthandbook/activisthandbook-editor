@@ -77,6 +77,7 @@ export default {
         title: this.title,
         languageCollectionID: newLanguageCollectionID,
         lastUpdatedServerTimestamp: serverTimestamp(),
+        createdServerTimestamp: serverTimestamp(),
         id: newArticleID,
       });
 
