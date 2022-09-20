@@ -28,6 +28,11 @@ const routes = [
         component: () => import("src/dialogs/TranslatePage.vue"),
         name: "Translate",
       },
+      {
+        path: "import",
+        component: () => import("pages/ImportPage.vue"),
+        name: "Import",
+      },
     ],
   },
   {
