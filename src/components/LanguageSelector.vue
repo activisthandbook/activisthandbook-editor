@@ -17,6 +17,7 @@
     @input="handleInput"
     @focus="focus = true"
     @blur="focus = false"
+    :autofocus="autofocus"
   >
     <template v-slot:prepend>
       <q-icon name="mdi-translate" />
@@ -96,6 +97,7 @@ export default {
     value: Object,
     options: Array,
     languageCollectionID: String,
+    autofocus: Boolean,
   },
   data: function () {
     return {

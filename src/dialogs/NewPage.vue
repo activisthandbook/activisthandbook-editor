@@ -78,6 +78,7 @@ export default {
         languageCollectionID: newLanguageCollectionID,
         lastUpdatedServerTimestamp: serverTimestamp(),
         createdServerTimestamp: serverTimestamp(),
+        lastPublishedServerTimestamp: null,
         id: newArticleID,
       });
 

@@ -24,54 +24,7 @@
   </q-list>
 </template>
 <script>
-import {
-  query,
-  collection,
-  onSnapshot,
-  getFirestore,
-  orderBy,
-  limit,
-} from "firebase/firestore";
-const db = getFirestore();
-
 export default {
-  data: function () {
-    return {
-      articles: {
-        data: null,
-        dataLoaded: false,
-        error: null,
-        unsubscribe: null,
-      },
-    };
-  },
-  created() {
-    this.fetchArticles();
-  },
-  methods: {
-    fetchArticles() {
-      this.articles.unsubscribe = onSnapshot(
-        query(
-          collection(db, "articles"),
-          orderBy("lastUpdatedServerTimestamp", "desc"),
-          limit(10)
-        ),
-        (snapshot) => {
-          let articles = [];
-          snapshot.forEach((doc) => {
-            articles.push(doc.data());
-          });
-          this.articles.data = articles;
-          this.articles.dataLoaded = true;
-        },
-        (error) => {
-          this.articles.error = error;
-        }
-      );
-    },
-  },
-  unmounted() {
-    this.articles.unsubscribe();
-  },
+  props: ["articles"],
 };
 </script>

@@ -2,17 +2,10 @@
   <q-layout view="hhh lpR fFf">
     <q-header class="bg-accent text-black" bordered>
       <q-toolbar class="flex q-py-md">
-        <q-icon name="mdi-shield-star" size="24px" />
-        <q-toolbar-title>Moderate</q-toolbar-title>
+        <q-icon name="mdi-shield-check" size="24px" class="gt-xs" />
+        <q-toolbar-title>Review</q-toolbar-title>
 
-        <q-btn
-          icon="mdi-home"
-          round
-          flat
-          :to="{ name: 'Home' }"
-          color="primary"
-        />
-
+        <AppSwitcher />
         <q-btn
           v-if="moderator.dataLoaded && !publishinDisabled"
           color="primary"
@@ -21,18 +14,9 @@
           class="q-ml-sm draw-attention draw-attention q-ml-sm"
           @click="publishArticles()"
           :disable="publishinDisabled"
-          :icon="publishinDisabled ? 'mdi-check' : 'mdi-arrow-right-circle'"
-        >
-          <span class="q-ml-sm">
-            <span v-if="!publishinDisabled"
-              >Publish {{ moderator.data.publishingQueueCount }}
-              <span v-if="moderator.data.publishingQueueCount > 1"
-                >articles</span
-              ><span v-else>article</span></span
-            >
-            <span v-else>Published</span>
-          </span>
-        </q-btn>
+          icon="mdi-check-all"
+          label="Publish"
+        />
       </q-toolbar>
     </q-header>
 
@@ -96,8 +80,11 @@ const db = getFirestore();
 
 import { httpsCallable } from "firebase/functions";
 
+import AppSwitcher from "components/AppSwitcher.vue";
+
 export default {
   name: "ModerationLayout",
+  components: { AppSwitcher },
   setup() {
     const firebaseStore = useFirebaseStore();
 

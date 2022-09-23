@@ -645,7 +645,7 @@ export default {
     await this.fetchGalleryImages();
   },
   unmounted() {
-    this.galleryImages.unsubscribe();
+    if (this.galleryImages.unsubscribe) this.galleryImages.unsubscribe();
   },
   methods: {
     handleHide() {

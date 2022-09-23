@@ -2,29 +2,19 @@
   <q-layout view="hhh lpR fFf">
     <q-header class="bg-accent text-black" bordered>
       <q-toolbar class="flex q-py-md">
-        <q-toolbar-title>Edit menu</q-toolbar-title>
+        <q-icon name="mdi-folder-text" size="24px" class="gt-xs" />
+        <q-toolbar-title>Menu</q-toolbar-title>
+        <!-- <q-space /> -->
 
-        <q-btn
-          icon="mdi-home"
-          round
-          flat
-          :to="{ name: 'Home' }"
-          color="primary"
-        />
+        <AppSwitcher />
         <q-btn
           no-caps
           color="primary"
-          icon="mdi-send"
-          class="q-ml-md"
+          icon="mdi-check"
+          class="q-ml-sm"
           :disable="!nav_trackChanges.length && !sidebar_trackChanges.length"
         >
-          <span class="q-ml-sm">
-            Update {{ nav_trackChanges.length + sidebar_trackChanges.length }}
-            <span
-              v-if="nav_trackChanges.length + sidebar_trackChanges.length === 1"
-              >menu</span
-            ><span v-else>menus</span>
-          </span>
+          <span class="q-ml-sm"> Publish </span>
         </q-btn>
       </q-toolbar>
     </q-header>
@@ -38,6 +28,7 @@
               <LanguageSelector
                 v-model="lang"
                 :options="languagesStore.languages"
+                autofocus
               />
             </q-card-section>
           </q-card>
@@ -153,6 +144,8 @@ import { mapStores } from "pinia";
 import { useLanguagesStore } from "stores/languages";
 
 import NavigationMenuItem from "components/NavigationMenuItem.vue";
+import AppSwitcher from "components/AppSwitcher.vue";
+
 import { SlickList, SlickItem } from "vue-slicksort";
 
 export default {
@@ -163,7 +156,9 @@ export default {
     SlickItem,
     NavigationMenuItem,
     LanguageSelector,
+    AppSwitcher,
   },
+
   data: function () {
     return {
       lang: null,

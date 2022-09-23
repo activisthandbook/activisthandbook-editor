@@ -29,6 +29,11 @@ const routes = [
         name: "Translate",
       },
       {
+        path: "account",
+        component: () => import("src/pages/AccountPage.vue"),
+        name: "Account",
+      },
+      {
         path: "import",
         component: () => import("pages/ImportPage.vue"),
         name: "Import",

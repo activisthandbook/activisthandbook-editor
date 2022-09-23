@@ -81,6 +81,11 @@ module.exports = configure(function (/* ctx */) {
     devServer: {
       // https: true
       open: true, // opens browser window automatically
+      proxy: {
+        // Proxy for graphQL endpoint
+        "/graphql": "https://activisthandbook.org/graphql",
+        // with options
+      },
     },
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#framework

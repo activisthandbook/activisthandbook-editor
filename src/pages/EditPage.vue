@@ -2,6 +2,7 @@
   <q-layout view="hhh lpR fFf">
     <q-header class="bg-accent text-black" bordered>
       <q-toolbar class="q-py-md">
+        <q-icon name="mdi-file-document-edit" size="24px" class="gt-xs" />
         <q-toolbar-title>Edit</q-toolbar-title>
 
         <!-- <q-btn
@@ -14,61 +15,7 @@
           @click="share()"
         /> -->
 
-        <q-btn
-          label="Tools"
-          icon="mdi-tools"
-          no-caps
-          class="q-mr-sm q-px-lg"
-          color="grey-2"
-          text-color="primary"
-          unelevated
-        >
-          <q-menu :offset="[0, 12]" class="shadow-8 bg-accent">
-            <q-list style="min-width: 100px">
-              <!-- 👉 TODO: Switch between versions -->
-              <q-item clickable v-close-popup disable>
-                <q-item-section>Version history</q-item-section>
-                <q-item-section side>
-                  <q-icon name="mdi-history" />
-                </q-item-section>
-              </q-item>
-
-              <q-item clickable v-close-popup @click="deleteAndPublish()">
-                <q-item-section>Delete</q-item-section>
-                <q-item-section side>
-                  <q-icon name="mdi-delete-outline" />
-                </q-item-section>
-              </q-item>
-              <q-separator />
-              <q-item clickable v-close-popup :to="{ name: 'Home' }" exact>
-                <q-item-section>Home</q-item-section>
-                <q-item-section side>
-                  <q-icon name="mdi-home-outline" />
-                </q-item-section>
-              </q-item>
-              <q-item clickable v-close-popup :to="{ name: 'New' }">
-                <q-item-section>New article</q-item-section>
-                <q-item-section side>
-                  <q-icon name="mdi-text-box-plus-outline" />
-                </q-item-section>
-              </q-item>
-              <q-item clickable v-close-popup :to="{ name: 'Moderate' }">
-                <q-item-section>Moderate</q-item-section>
-                <q-item-section side>
-                  <q-icon name="mdi-shield-outline" />
-                </q-item-section>
-              </q-item>
-
-              <q-separator />
-              <q-item clickable v-close-popup @click="firebaseStore.signOut()">
-                <q-item-section>Sign out</q-item-section>
-                <q-item-section side>
-                  <q-icon name="mdi-exit-to-app" />
-                </q-item-section>
-              </q-item>
-            </q-list>
-          </q-menu>
-        </q-btn>
+        <AppSwitcher />
 
         <q-btn
           color="primary"
@@ -77,7 +24,7 @@
           @click="validateThenPublish()"
           :disable="!allowedToPublish"
           :icon="!allowedToPublish ? 'mdi-check' : 'mdi-send'"
-          class="q-px-lg"
+          class="q-px-lg q-ml-sm"
         >
           <span class="q-ml-sm">
             <span v-if="allowedToPublish">Publish</span>
@@ -153,7 +100,9 @@
           <!-- EDITOR -->
           <TipTapEditor />
         </div>
-        <q-page-sticky
+
+        <!-- TO-DO: Add AI Editor -->
+        <!-- <q-page-sticky
           position="bottom-right"
           :offset="[12, 12]"
           style="z-index: 10"
@@ -169,7 +118,7 @@
             :hide-label="false"
           >
           </q-fab>
-        </q-page-sticky>
+        </q-page-sticky> -->
       </q-page>
       <aside>
         <div class="table-of-contents">
@@ -293,6 +242,7 @@
 import { mapStores } from "pinia";
 import { useEditorStore } from "stores/editor";
 import { useFirebaseStore } from "stores/firebase";
+import AppSwitcher from "components/AppSwitcher.vue";
 
 import {
   getFirestore,
@@ -309,6 +259,7 @@ import TipTapEditor from "src/components/tiptap/TipTapEditor.vue";
 export default {
   components: {
     TipTapEditor,
+    AppSwitcher,
   },
 
   data() {

@@ -22,7 +22,7 @@ exports.processImageUpload = functions
 
       const newData = {
         ...imageData,
-        labels: labels,
+        tags: labels,
         createdServerTimestamp: admin.database.ServerValue.TIMESTAMP,
       };
 
@@ -49,9 +49,6 @@ async function detectImageLabels(imageData) {
   let labels = [];
 
   result.labelAnnotations.forEach((label) => labels.push(label.description));
-
-  functions.logger.log("🔵 result:", result);
-  functions.logger.log("🔵 labels:", labels);
 
   return labels;
 }
