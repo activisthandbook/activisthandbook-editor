@@ -114,6 +114,7 @@ export default {
           articles: arrayUnion({
             articleID: newArticleID,
             langCode: this.lang.code,
+            published: false,
           }),
         }
       );

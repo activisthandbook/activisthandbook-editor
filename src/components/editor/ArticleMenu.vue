@@ -6,41 +6,18 @@
     flat
   >
     <div class="q-gutter-xs flex" style="padding: 12px">
+      <!-- HEADINGS -->
       <div class="bg-grey-4 rounded-borders flex items-center q-pa-xs">
         <span class="text-caption text-bold q-ml-sm q-mr-sm text-black"
           >Heading</span
         >
-        <!-- <q-icon
-          name="mdi-format-size"
-          color="grey"
-          style="margin: 8px 4px 8px 10px"
-          size="22px"
-        /> -->
-        <!-- <q-btn
-          unelevated
-          icon="mdi-text"
-          padding="8px"
-          :class="{
-            'is-active': !editor.tiptap.content.isActive('heading'),
-          }"
-          @click="editor.tiptap.content.chain().focus().setParagraph().run()"
-        >
-          <q-tooltip
-            transition-show="none"
-            transition-hide="none"
-            class="bg-grey-9 text-white"
-            :offset="[0, 4]"
-            >Paragraph</q-tooltip
-          >
-        </q-btn> -->
-        <!-- icon="mdi-numeric-1-box" -->
         <q-btn
           unelevated
           icon="mdi-numeric-1-box"
           flat
           dense
           :class="{
-            'is-active': editor.tiptap.content.isActive('customHeading', {
+            'is-active': editor.tiptap.content.isActive('heading', {
               level: 2,
             }),
           }"
@@ -59,7 +36,7 @@
           dense
           icon="mdi-numeric-2-box"
           :class="{
-            'is-active': editor.tiptap.content.isActive('customHeading', {
+            'is-active': editor.tiptap.content.isActive('heading', {
               level: 3,
             }),
           }"
@@ -96,6 +73,7 @@
 
       <q-space />
 
+      <!-- BOLD, ITALIC, LINK -->
       <q-btn
         padding="sm"
         flat
@@ -199,10 +177,6 @@
         @click="imageDialogOpen = true"
         v-show="!editor.tiptap.content.isActive('imageWithCaption')"
       />
-      <ImageSelector
-        v-model="imageDialogOpen"
-        @hide="imageDialogOpen = false"
-      />
 
       <q-btn
         v-show="editor.tiptap.content.isActive('imageWithCaption')"
@@ -211,10 +185,6 @@
         icon="mdi-image-edit"
         class="hide-at-less-than-medium is-active"
         @click="imageCaptionDialogOpen = true"
-      />
-      <ImageCaptionEditor
-        v-model="imageCaptionDialogOpen"
-        @hide="imageCaptionDialogOpen = false"
       />
 
       <q-btn
@@ -255,6 +225,7 @@
         </q-card>
       </q-dialog>
 
+      <!-- 📱 OVERFLOW MENU -->
       <q-btn padding="sm" flat icon="mdi-dots-horizontal">
         <q-menu
           :offset="[0, 4]"
@@ -385,6 +356,13 @@
                 <q-icon name="mdi-table" />
               </q-item-section>
             </q-item>
+
+            <q-item clickable v-close-popup @click="actionDialogOpen = true">
+              <q-item-section>Call to action</q-item-section>
+              <q-item-section side>
+                <q-icon name="mdi-alert-decagram" />
+              </q-item-section>
+            </q-item>
           </q-list>
         </q-menu>
       </q-btn>
@@ -500,12 +478,21 @@
       </div>
     </div>
   </div>
+
+  <!-- DIALOGS -->
+  <ImageSelector v-model="imageDialogOpen" @hide="imageDialogOpen = false" />
+  <ImageCaptionEditor
+    v-model="imageCaptionDialogOpen"
+    @hide="imageCaptionDialogOpen = false"
+  />
+  <ActionDialog v-model="actionDialogOpen" @hide="actionDialogOpen = false" />
 </template>
 <script>
 import { defineComponent } from "vue";
 
 import ImageSelector from "src/dialogs/ImageSelector.vue";
 import ImageCaptionEditor from "src/dialogs/ImageCaptionEditor.vue";
+import ActionDialog from "src/dialogs/ActionDialog.vue";
 
 import { useEditorStore } from "stores/editor";
 
@@ -513,6 +500,7 @@ export default defineComponent({
   components: {
     ImageSelector,
     ImageCaptionEditor,
+    ActionDialog,
   },
   setup() {
     const editor = useEditorStore();
@@ -534,6 +522,9 @@ export default defineComponent({
       imageDialogOpen: false,
       imageCaptionDialogOpen: false,
 
+      // Action
+      actionDialogOpen: false,
+
       title: "",
       currentLink: "",
       headingMenuOpen: false,
@@ -552,11 +543,31 @@ export default defineComponent({
         .run();
     },
     setLink(link) {
+      let finalLink = null;
+      let url = null;
+
+      if (link.startsWith("https://www.activisthandbook.org/")) {
+        finalLink = link.slice(32);
+      } else if (link.startsWith("https://activisthandbook.org/")) {
+        finalLink = link.slice(28);
+      } else if (link.startsWith("https://") || link.startsWith("http://")) {
+        try {
+          url = new URL(link);
+          url.searchParams.set("utm_source", "activisthandbook.org");
+          finalLink = url.href;
+        } catch {
+          this.$q.notify("Invalid URL");
+          finalLink = link;
+        }
+      } else {
+        finalLink = link;
+      }
+
       this.editor.tiptap.content
         .chain()
         .focus()
         .extendMarkRange("link")
-        .setLink({ href: link })
+        .setLink({ href: finalLink })
         .run();
       this.linkDialog = false;
     },

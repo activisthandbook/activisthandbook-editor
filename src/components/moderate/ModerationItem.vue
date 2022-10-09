@@ -166,7 +166,7 @@ import {
   doc,
   serverTimestamp,
   where,
-  increment,
+  limit,
   runTransaction,
   arrayRemove,
 } from "firebase/firestore";
@@ -210,13 +210,15 @@ export default {
             "lastUpdatedServerTimestamp",
             ">=",
             this.liveDraftArticle.lastPublishedServerTimestamp
-          )
+          ),
+          limit(10)
         );
       } else {
         // NEW ARTICLE: Fetch all versions
         versionsQuery = query(
           collection(db, "articles", this.liveDraftArticle.id, "versions"),
-          orderBy("lastUpdatedServerTimestamp")
+          orderBy("lastUpdatedServerTimestamp"),
+          limit(10)
         );
       }
 
@@ -327,11 +329,6 @@ export default {
 
           lastUpdatedServerTimestamp: serverTimestamp(),
           status: "published",
-        });
-
-        const moderatorRef = doc(db, "app", "moderator");
-        batch.set(moderatorRef, {
-          publishingQueueCount: increment(1),
         });
 
         // Commit the batch

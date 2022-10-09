@@ -37,6 +37,10 @@ export default route(function (/* { store, ssrContext } */) {
 
   Router.beforeEach((to, from) => {
     LoadingBar.stop();
+
+    // Vue.nextTick(() => {
+    document.title = to.meta.title || "Activist Handbook Editor";
+    // });
   });
 
   return Router;

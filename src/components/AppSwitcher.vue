@@ -13,46 +13,10 @@
       class="shadow-10 bg-accent q-pa-sm"
       style="width: 292px"
     >
-      <q-list class="q-ma-sm q-gutter-y-sm" v-if="$route.name === 'Edit'">
-        <!-- 👉 TODO: Switch between versions -->
-        <!-- <q-item
-          clickable
-          v-close-popup
-          disable
-          class="rounded-borders bg-grey-2"
-        >
-          <q-item-section>Version history</q-item-section>
-          <q-item-section side>
-            <q-icon name="mdi-history" />
-          </q-item-section>
-        </q-item> -->
+      <slot></slot>
 
-        <q-item
-          clickable
-          v-close-popup
-          @click="deleteAndPublish()"
-          class="rounded-borders bg-grey-2"
-        >
-          <q-item-section>Delete</q-item-section>
-          <q-item-section side>
-            <q-icon name="mdi-delete-outline" />
-          </q-item-section>
-        </q-item>
-
-        <q-item
-          clickable
-          v-close-popup
-          :to="{ name: 'New' }"
-          class="rounded-borders bg-grey-2"
-        >
-          <q-item-section>New article</q-item-section>
-          <q-item-section side>
-            <q-icon name="mdi-text-box-plus-outline" />
-          </q-item-section>
-        </q-item>
-      </q-list>
       <div class="q-gutter-sm text-center q-mb-sm q-pt-sm">
-        <q-btn
+        <!-- <q-btn
           label="Home"
           icon="mdi-home"
           no-caps
@@ -65,6 +29,35 @@
           color="primary"
           v-if="$route.name !== 'Home'"
           text-color="accent"
+          unelevated
+        /> -->
+        <q-btn
+          icon="mdi-home"
+          padding="0"
+          no-caps
+          label="Home"
+          stack
+          style="width: 80px; height: 72px"
+          size="13px"
+          v-close-popup
+          :to="{ name: 'Home' }"
+          exact
+          flat
+          color="primary"
+        />
+        <q-btn
+          icon="mdi-text-box-plus"
+          padding="0"
+          no-caps
+          label="New"
+          stack
+          style="width: 80px; height: 72px"
+          size="13px"
+          v-close-popup
+          :to="{ name: 'New' }"
+          exact
+          flat
+          color="primary"
         />
         <q-btn
           icon="mdi-shield-check"
@@ -75,10 +68,11 @@
           style="width: 80px; height: 72px"
           size="13px"
           v-close-popup
-          :to="{ name: 'Moderate' }"
+          :to="{ name: 'Review' }"
+          flat
           color="primary"
-          text-color="accent"
         />
+
         <q-btn
           icon="mdi-folder-text"
           padding="0"
@@ -89,8 +83,9 @@
           stack
           color="primary"
           :to="{ name: 'Menu' }"
-          text-color="accent"
+          flat
         />
+
         <q-btn
           icon="mdi-account-group"
           padding="0"
@@ -100,7 +95,20 @@
           size="13px"
           stack
           color="primary"
-          text-color="accent"
+          :to="{ name: 'Authors' }"
+          flat
+        />
+        <q-btn
+          icon="mdi-translate"
+          padding="0"
+          no-caps
+          label="Translate"
+          style="width: 80px; height: 72px"
+          size="13px"
+          stack
+          color="primary"
+          :to="{ name: 'Translate' }"
+          flat
         />
         <q-btn
           class="q-mt-md bg-grey-2"

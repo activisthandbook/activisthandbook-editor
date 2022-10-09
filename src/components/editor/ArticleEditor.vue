@@ -1,5 +1,6 @@
 <template>
   <q-card v-if="editorStore.article.wordCount > 5000" class="bg-warning" flat>
+    <embed />
     <q-card-section>
       <strong>This article is too long!</strong> Try to stay under 5.000 words
       to keep articles readable. Articles with more than 10.000 words may not be
@@ -24,7 +25,7 @@
     outlined
     color="secondary"
     placeholder="my-path"
-    @update:model-value="editorStore.renderAndSave()"
+    @update:model-value="save()"
   >
     <template v-slot:prepend>
       <q-icon name="mdi-link" />
@@ -36,22 +37,18 @@
     </template>
   </q-input>
 
-  <!-- <editor-content
-    :editor="editorStore.tiptap.path"
-    class="path text-caption"
-    :data-prepend="'activisthandbook.org/' + editorStore.article.langCode + '/'"
-  /> -->
-
-  <MenuBar />
+  <ArticleMenu />
 
   <editor-content :editor="editorStore.tiptap.content" class="article" />
+
+  <!-- ℹ️ ARTICLE DETAILS -->
 
   <q-card class="q-mt-xl bg-grey-2" flat bordered>
     <q-card-section>
       <div class="q-gutter-y-sm">
-        <div class="text-bold">Article details</div>
+        <h2 class="q-my-md">Article details</h2>
         <q-select
-          label="Search tags"
+          placeholder="Add tag..."
           v-model="editorStore.article.tags"
           use-input
           use-chips
@@ -61,11 +58,104 @@
           input-debounce="0"
           new-value-mode="add-unique"
           color="secondary"
-          @update:model-value="editorStore.renderAndSave()"
-        />
+          @update:model-value="save()"
+        >
+          <template #prepend>
+            <q-icon name="mdi-tag" />
+          </template>
+        </q-select>
       </div>
     </q-card-section>
-    <q-list class="q-pb-md">
+    <q-separator />
+    <q-list padding>
+      <q-item-label header>Advanced</q-item-label>
+      <q-item tag="label" v-ripple>
+        <q-item-section avatar>
+          <q-icon name="mdi-alert-decagram" />
+        </q-item-section>
+        <q-item-section>
+          <q-item-label>Show action button</q-item-label>
+        </q-item-section>
+        <q-item-section avatar>
+          <q-toggle
+            color="secondary"
+            v-model="editorStore.article.focusMode.isOn"
+            @update:model-value="save()"
+            val="battery"
+          />
+        </q-item-section>
+      </q-item>
+    </q-list>
+    <q-card-section
+      class="q-pt-none q-gutter-y-sm"
+      v-if="editorStore.article.focusMode.isOn"
+    >
+      <!-- <div class="text-bold">Action button</div> -->
+      <q-input
+        outlined
+        label="Button label"
+        v-model="editorStore.article.focusMode.buttonLabel"
+        @update:model-value="save()"
+        color="secondary"
+      >
+        <template #prepend>
+          <q-icon name="mdi-card-text" />
+        </template>
+      </q-input>
+      <q-select
+        label="Button action"
+        v-model="editorStore.article.focusMode.buttonAnchor"
+        outlined
+        emit-value
+        option-value="value"
+        option-label="label"
+        map-options
+        :options="[
+          {
+            label: 'Scroll to call to action',
+            value: 'primary-action',
+          },
+          {
+            label: 'Visit link',
+            value: null,
+          },
+        ]"
+        color="secondary"
+        @update:model-value="save()"
+      >
+        <template #prepend>
+          <q-icon name="mdi-cursor-default-click" />
+        </template>
+      </q-select>
+      <q-input
+        v-if="!editorStore.article.focusMode.buttonAnchor"
+        outlined
+        label="Link"
+        v-model="editorStore.article.focusMode.buttonLink"
+        @update:model-value="save()"
+        color="secondary"
+      >
+        <template #prepend>
+          <q-icon name="mdi-link" />
+        </template>
+      </q-input>
+      <div class="text-caption q-mt-md text-bold">Preview:</div>
+      <div class="action-button-preview">
+        <div class="header">
+          <div class="preview-title">Activist Handbook</div>
+          <div class="button" v-if="editorStore.article.focusMode.buttonLabel">
+            {{ editorStore.article.focusMode.buttonLabel }}
+          </div>
+          <div class="button" v-else>Button</div>
+        </div>
+        <div class="article"></div>
+        <div class="primary" v-if="editorStore.article.focusMode.buttonAnchor">
+          Call to action
+        </div>
+      </div>
+    </q-card-section>
+    <q-separator />
+    <q-list padding>
       <q-item>
         <q-item-section avatar>
           <q-icon name="mdi-star-outline" />
@@ -105,8 +195,6 @@
       </q-item>
     </q-list>
   </q-card>
-
-  <!-- 👉 TO-DO: Tags -->
 
   <q-page-sticky
     position="bottom-left"
@@ -148,7 +236,7 @@
 </template>
 
 <script>
-import MenuBar from "src/components/MenuBar.vue";
+import ArticleMenu from "src/components/editor/ArticleMenu.vue";
 import LanguageSelector from "components/LanguageSelector.vue";
 
 import { mapStores } from "pinia";
@@ -167,6 +255,8 @@ import Text from "@tiptap/extension-text";
 import Paragraph from "@tiptap/extension-paragraph";
 import Heading from "@tiptap/extension-heading";
 import Link from "@tiptap/extension-link";
+import Bold from "@tiptap/extension-bold";
+import Italic from "@tiptap/extension-italic";
 
 import Blockquote from "@tiptap/extension-blockquote";
 import BulletList from "@tiptap/extension-bullet-list";
@@ -175,11 +265,7 @@ import HardBreak from "@tiptap/extension-hard-break";
 import HorizontalRule from "@tiptap/extension-horizontal-rule";
 import ListItem from "@tiptap/extension-list-item";
 import OrderedList from "@tiptap/extension-ordered-list";
-
 import Youtube from "@tiptap/extension-youtube";
-import Focus from "@tiptap/extension-focus";
-import Placeholder from "@tiptap/extension-placeholder";
-import CharacterCount from "@tiptap/extension-character-count";
 
 // Table
 import Table from "@tiptap/extension-table";
@@ -187,7 +273,16 @@ import TableCell from "@tiptap/extension-table-cell";
 import TableHeader from "@tiptap/extension-table-header";
 import TableRow from "@tiptap/extension-table-row";
 
-import { ImageWithCaption } from "./ImageWithCaption";
+import ImageWithCaption from "./ImageWithCaption";
+import ActionDonate from "./ActionDonate";
+import ActionVolunteer from "./ActionVolunteer";
+import ActionCustom from "./ActionCustom";
+import ActionSmart from "./ActionSmart";
+
+import Focus from "@tiptap/extension-focus";
+import Placeholder from "@tiptap/extension-placeholder";
+import CharacterCount from "@tiptap/extension-character-count";
+
 const CustomHeading = Heading.extend({
   addAttributes() {
     return {
@@ -212,7 +307,7 @@ const SingleParagraphDocument = Document.extend({
 export default {
   components: {
     EditorContent,
-    MenuBar,
+    ArticleMenu,
     LanguageSelector,
   },
 
@@ -289,7 +384,7 @@ export default {
           if (!titleInitialised) {
             titleInitialised = true;
           } else {
-            this.editorStore.renderAndSave();
+            this.save();
           }
         },
       });
@@ -311,7 +406,7 @@ export default {
           if (!descriptionInitialised) {
             descriptionInitialised = true;
           } else {
-            this.editorStore.renderAndSave();
+            this.save();
           }
         },
       });
@@ -323,7 +418,7 @@ export default {
           if (!pathInitialised) {
             pathInitialised = true;
           } else {
-            this.editorStore.renderAndSave();
+            this.save();
           }
         },
       });
@@ -334,6 +429,8 @@ export default {
           History,
           Document,
           Text,
+          Bold,
+          Italic,
           Paragraph,
           Blockquote,
           BulletList,
@@ -342,13 +439,20 @@ export default {
           HorizontalRule,
           ListItem,
           OrderedList,
-          CustomHeading,
           Link.configure({
             openOnClick: false,
             protocols: ["mailto"],
           }),
-          Image,
+          // Image,
+
+          // Customised nodes
+          CustomHeading,
           ImageWithCaption,
+          ActionDonate,
+          ActionVolunteer,
+          ActionCustom,
+          ActionSmart,
+
           Youtube.configure({
             nocookie: true,
           }),
@@ -382,10 +486,13 @@ export default {
           if (!contentInitialised) {
             contentInitialised = true;
           } else {
-            this.editorStore.renderAndSave();
+            this.save();
           }
         },
       });
+    },
+    save() {
+      this.editorStore.renderAndSave(this.firebaseStore.auth.currentUser.uid);
     },
   },
 
@@ -622,5 +729,54 @@ div[data-youtube-video].ProseMirror-selectednode {
 .resize-cursor {
   cursor: ew-resize;
   cursor: col-resize;
+}
+
+// Preview
+.action-button-preview {
+  background: white;
+  cursor: default;
+  padding-bottom: 16px;
+  // margin: 16px 0;
+  font-size: 12px;
+  color: white;
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: stretch;
+    margin-bottom: 16px;
+
+    .preview-title,
+    .button {
+      // height: 16px;
+      // background: grey;
+      margin: 8px;
+      padding: 4px 8px;
+    }
+
+    .preview-title {
+      color: black;
+    }
+
+    .button {
+      background: $secondary;
+    }
+  }
+
+  .article {
+    background: lightgrey;
+    height: 150px;
+    width: 60%;
+    margin: auto;
+  }
+  .primary {
+    background: $secondary;
+    text-align: center;
+    padding: 32px 0;
+
+    width: 60%;
+    margin: auto;
+    margin-top: 8px;
+  }
 }
 </style>

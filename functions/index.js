@@ -8,8 +8,10 @@ if (admin.apps.length === 0) {
 const generateArticle = require("./openAI/generateArticle");
 const publishArticles = require("./articles/publishArticles");
 const publishedArticlesCount = require("./articles/publishedArticlesCount");
+const articlePublishingQueueCount = require("./articles/articleQueueCount");
 const getImageUploadURL = require("./images/getImageUploadURL");
 const processImageUpload = require("./images/processImageUpload");
+const updateSubscriber = require("./users/updateSubscriber");
 
 // ARTICLES
 // Generate articles
@@ -24,6 +26,15 @@ exports.publishedArticlesOnCreate =
 exports.publishedArticlesOnDelete =
   publishedArticlesCount.publishedArticlesOnDelete;
 
+// Article publishing queue count
+exports.articlePublishingQueueOnCreate =
+  articlePublishingQueueCount.articlePublishingQueueOnCreate;
+exports.articlePublishingQueueOnDelete =
+  articlePublishingQueueCount.articlePublishingQueueOnDelete;
+
 // IMAGES
 exports.getImageUploadURL = getImageUploadURL.getImageUploadURL;
 exports.processImageUpload = processImageUpload.processImageUpload;
+
+// SUBSCRIBERS
+exports.updateSubscriber = updateSubscriber.updateSubscriber;

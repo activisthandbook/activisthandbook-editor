@@ -17,7 +17,11 @@
         </q-item-label>
         <q-item-label v-else class="text-grey"> No description </q-item-label>
         <q-item-label caption
-          >{{ article.langCode }}/{{ article.path }}</q-item-label
+          ><q-icon name="mdi-link" class="q-mr-xs" />{{ article.langCode }}/{{
+            article.path
+          }}<span v-if="!article.path" class="text-grey-5"
+            >no-path</span
+          ></q-item-label
         >
       </q-item-section>
     </q-item>

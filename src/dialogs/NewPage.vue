@@ -1,9 +1,10 @@
 <template>
   <q-dialog v-model="open" persistent>
-    <q-card class="bg-accent full-width" style="max-width: 320px">
+    <q-card class="bg-accent full-width" style="max-width: 350px">
       <q-card-section>
         <div class="q-gutter-y-md">
           <h1 class="q-mt-md q-mb-none">New article</h1>
+
           <q-input
             label="Title"
             outlined
@@ -16,6 +17,13 @@
             v-model="lang"
             :options="languagesStore.languages"
           />
+          <q-card flat class="bg-grey-2">
+            <q-card-section>
+              <strong>Before you create a new article...</strong> Did you check
+              if similar articles already exist on Activist Handbook? You can
+              also improve existing guides.
+            </q-card-section>
+          </q-card>
           <div class="row justify-end q-gutter-sm">
             <q-btn label="Cancel" no-caps flat @click="goBack()" />
             <q-btn
@@ -87,6 +95,7 @@ export default {
           {
             articleID: newArticleID,
             langCode: this.lang.code,
+            published: false,
           },
         ],
       });

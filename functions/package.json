@@ -17,6 +17,7 @@
     "@octokit/rest": "^18.12.0",
     "@tiptap/extension-focus": "^2.0.0-beta.44",
     "axios": "^0.27.2",
+    "cors": "^2.8.5",
     "firebase-admin": "^10.0.2",
     "firebase-functions": "^3.23.0",
     "js-base64": "^3.7.2",

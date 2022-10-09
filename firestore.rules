@@ -18,8 +18,21 @@ service cloud.firestore {
         allow read, write: if isModerator()
       }
 
-      match /menu/{menuID} {
+      match /app/analytics {
+        allow read: if signedIn()
+      }
+
+      match /users/{settingID} {
+        allow read, write: if isModerator()
+      }
+
+      match /menu/draft {
         allow read, write: if signedIn()
+
+        match /versions/{versionID} {
+          allow read, create: if signedIn()
+          allow write, delete: if isModerator();
+        }
       }
 
       match /images/{imageID} {

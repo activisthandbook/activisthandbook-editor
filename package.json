@@ -2,7 +2,7 @@
   "name": "activisthandbook-edit",
   "version": "0.0.1",
   "description": "Collaborative editor for Activist Handbook",
-  "productName": "Activist Handbook Edit",
+  "productName": "Activist Handbook Editor",
   "author": "Activist Handbook",
   "private": true,
   "scripts": {

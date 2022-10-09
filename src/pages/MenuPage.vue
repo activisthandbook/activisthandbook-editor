@@ -12,7 +12,8 @@
           color="primary"
           icon="mdi-check"
           class="q-ml-sm"
-          :disable="!nav_trackChanges.length && !sidebar_trackChanges.length"
+          @click="publish()"
+          :disable="requestedPublicationTimestamp > lastUpdatedTimestampMillis"
         >
           <span class="q-ml-sm"> Publish </span>
         </q-btn>
@@ -34,7 +35,7 @@
           </q-card>
 
           <div v-if="selectedLangCode" class="q-gutter-md">
-            <h1>Top navigation</h1>
+            <!-- <h1>Top navigation</h1>
             <div>
               <div
                 v-if="!nav_menuItems || !nav_menuItems[selectedLangCode]"
@@ -73,9 +74,9 @@
                 icon="mdi-plus"
                 @click="nav_addItem()"
               />
-            </div>
+            </div> -->
 
-            <h1 class="q-mt-lg">Left sidebar</h1>
+            <h1 class="q-mt-lg">Sidebar</h1>
 
             <div>
               <div
@@ -137,6 +138,7 @@ import {
   getDoc,
   doc,
   serverTimestamp,
+  writeBatch,
 } from "firebase/firestore";
 const db = getFirestore();
 
@@ -161,15 +163,27 @@ export default {
 
   data: function () {
     return {
-      lang: null,
-      selectedLangCode: null,
+      lang: {
+        code: "en",
+        EnglishName: "English",
+        direction: "ltr",
+        localName: "English",
+      },
+      selectedLangCode: "en",
       menuDataLoaded: false,
+
+      // Data
       nav_menuItems: {},
       sidebar_menuItems: {},
-      nav_accordionGroupID: this.mixin_randomID(),
-      sidebar_accordionGroupID: this.mixin_randomID(),
+      requestedPublication: null,
+      requestedPublicationTimestamp: null,
+      lastUpdatedTimestampMillis: null,
       nav_trackChanges: [],
       sidebar_trackChanges: [],
+
+      nav_accordionGroupID: this.mixin_randomID(),
+      sidebar_accordionGroupID: this.mixin_randomID(),
+
       touched: false,
       dragging: false,
     };
@@ -208,12 +222,23 @@ export default {
   },
   methods: {
     async fetchMenu() {
-      await getDoc(doc(db, "menu", "all"))
+      await getDoc(doc(db, "menu", "draft"))
         .then(async (snapshot) => {
           if (snapshot.exists()) {
             if (snapshot.data().nav) this.nav_menuItems = snapshot.data().nav;
             if (snapshot.data().sidebar)
               this.sidebar_menuItems = snapshot.data().sidebar;
+
+            if (snapshot.data().requestedPublication)
+              this.requestedPublication = snapshot.data().requestedPublication;
+            if (snapshot.data().requestedPublicationTimestamp)
+              this.requestedPublicationTimestamp = snapshot
+                .data()
+                .requestedPublicationTimestamp.toMillis();
+            if (snapshot.data().lastUpdatedServerTimestamp)
+              this.lastUpdatedServerTimestamp = snapshot
+                .data()
+                .lastUpdatedServerTimestamp.toMillis();
 
             this.menuDataLoaded = true;
             this.$q.loadingBar.stop();
@@ -274,6 +299,8 @@ export default {
       ) {
         this.touched = true;
         this.nav_trackChanges.push(this.selectedLangCode);
+        const d = new Date();
+        this.lastUpdatedTimestampMillis = d.getTime()();
       }
     },
     nav_save: _.throttle(async function () {
@@ -283,8 +310,9 @@ export default {
         this.nav_trackChanges.forEach((languageCode) => {
           newMenu[languageCode] = this.nav_menuItems[languageCode];
         });
+
         await setDoc(
-          doc(db, "menu", "all"),
+          doc(db, "menu", "draft"),
           {
             nav: { ...newMenu },
             lastUpdatedServerTimestamp: serverTimestamp(),
@@ -338,6 +366,8 @@ export default {
       ) {
         this.touched = true;
         this.sidebar_trackChanges.push(this.selectedLangCode);
+        const d = new Date();
+        this.lastUpdatedTimestampMillis = d.getTime();
       }
     },
     sidebar_save: _.throttle(async function () {
@@ -348,7 +378,7 @@ export default {
           newMenu[languageCode] = this.sidebar_menuItems[languageCode];
         });
         await setDoc(
-          doc(db, "menu", "all"),
+          doc(db, "menu", "draft"),
           {
             sidebar: { ...newMenu },
             lastUpdatedServerTimestamp: serverTimestamp(),
@@ -364,6 +394,46 @@ export default {
           });
       }
     }, 4000),
+    async publish() {
+      const time = Date.now();
+
+      const batch = writeBatch(db);
+
+      // 1. Create new version
+      const versionID = this.mixin_randomID();
+      const versionRef = doc(db, "menu", "draft", "versions", versionID);
+
+      batch.set(
+        versionRef,
+        {
+          sidebar: this.sidebar_menuItems,
+          nav: this.nav_menuItems,
+          lastUpdatedServerTimestamp: serverTimestamp(),
+          id: versionID,
+          status: "review",
+        },
+        {
+          merge: true,
+        }
+      );
+
+      // 2. Update live draft
+      batch.set(
+        doc(db, "menu", "draft"),
+        {
+          requestedPublication: true,
+          requestedPublicationTimestamp: serverTimestamp(),
+        },
+        {
+          merge: true,
+        }
+      );
+
+      await batch.commit().then(() => {
+        this.requestedPublication = true;
+        this.requestedPublicationTimestamp = time;
+      });
+    },
   },
 };
 </script>

@@ -16,12 +16,15 @@ import {
   getDoc,
   doc,
   serverTimestamp,
+  arrayRemove,
+  arrayUnion,
 } from "firebase/firestore";
 const db = getFirestore();
 
 export const useEditorStore = defineStore("editor", {
   state: () => ({
     editorsInitialised: false,
+    recentArticles: [],
     local: {
       lastSaveTimestamp: null,
       lastEditTimestamp: null,
@@ -39,6 +42,12 @@ export const useEditorStore = defineStore("editor", {
       description: null,
       path: null,
       tags: null,
+      focusMode: {
+        isOn: false,
+        buttonLabel: null,
+        buttonAnchor: "primary-action",
+        buttonLink: null,
+      },
 
       content: null,
       contentHeaders: null,
@@ -119,6 +128,11 @@ export const useEditorStore = defineStore("editor", {
                     "img",
                     "figure",
                     "figcaption",
+                    // Custom elements
+                    "action-donate",
+                    "action-volunteer",
+                    "action-custom",
+                    "action-smart-small",
                   ]),
                   allowedAttributes: {
                     ...sanitizeHtml.defaults.allowedAttributes,
@@ -162,15 +176,18 @@ export const useEditorStore = defineStore("editor", {
         this.editorsInitialised = true;
       }
     },
-    async renderAndSave() {
+    async renderAndSave(userID) {
       this.local.lastEditTimestamp = Date.now();
       await this.render();
-      await this.save();
+      await this.save(userID);
+      await this.updateMyRecentArticles(userID);
     },
-    render: _.throttle(async function () {
+    render: _.throttle(async function (userID) {
       this.article.title = this.tiptap.title.getHTML().slice(3, -4);
       this.article.description = this.tiptap.description.getHTML().slice(3, -4);
       this.article.content = this.tiptap.content.getHTML();
+
+      console.log("test", this.tiptap.content.getJSON());
 
       this.article.wordCount =
         this.tiptap.content.storage.characterCount.words();
@@ -178,12 +195,13 @@ export const useEditorStore = defineStore("editor", {
       await this.updateHeadings();
       await this.updateImages();
     }, 4000),
-    save: _.throttle(async function () {
+    save: _.throttle(async function (userID) {
       await setDoc(
         doc(db, "articles", this.article.id),
         {
           ...this.article,
           lastUpdatedServerTimestamp: serverTimestamp(),
+          lastUpdatedBy: userID,
         },
         { merge: true }
       )
@@ -195,6 +213,31 @@ export const useEditorStore = defineStore("editor", {
           console.error(error);
         });
     }, 4000),
+    updateMyRecentArticles: async function (userID) {
+      if (!this.recentArticles.includes(this.article.id)) {
+        this.recentArticles.push(this.article.id);
+        await setDoc(
+          doc(db, "users", userID),
+          {
+            recentlyEditedArticles: arrayRemove(this.article.id),
+          },
+          { merge: true }
+        ).catch((error) => {
+          Notify.create("Saving recent edits failed");
+          console.error(error);
+        });
+        await setDoc(
+          doc(db, "users", userID),
+          {
+            recentlyEditedArticles: arrayUnion(this.article.id),
+          },
+          { merge: true }
+        ).catch((error) => {
+          Notify.create("Saving recent edits failed");
+          console.error(error);
+        });
+      }
+    },
     async updateHeadings() {
       const headings = [];
       const transaction = this.tiptap.content.state.tr;

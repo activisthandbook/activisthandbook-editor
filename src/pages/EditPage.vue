@@ -15,7 +15,21 @@
           @click="share()"
         /> -->
 
-        <AppSwitcher />
+        <AppSwitcher>
+          <!-- <q-list class="q-ma-sm q-gutter-y-sm"> -->
+          <!-- 👉 TODO: Switch between versions -->
+          <!-- <q-item
+          clickable
+          v-close-popup
+          disable
+          class="rounded-borders bg-grey-2"
+        >
+          <q-item-section>Version history</q-item-section>
+          <q-item-section side>
+            <q-icon name="mdi-history" />
+          </q-item-section>
+        </q-item> -->
+        </AppSwitcher>
 
         <q-btn
           color="primary"
@@ -98,7 +112,17 @@
           </q-card>
 
           <!-- EDITOR -->
-          <TipTapEditor />
+          <ArticleEditor />
+          <q-separator class="q-my-lg" />
+          <div class="text-center">
+            <q-btn
+              label="Delete article"
+              @click="deleteAndPublish()"
+              no-caps
+              color="black"
+              icon="mdi-delete"
+            />
+          </div>
         </div>
 
         <!-- TO-DO: Add AI Editor -->
@@ -134,9 +158,12 @@
           <div
             v-for="(header, index) in editorStore.article.contentHeaders"
             :key="index"
-            :class="{ 'q-ml-lg': header.level === 3 }"
+            :class="{
+              'q-ml-md': header.level === 3,
+            }"
           >
             <q-btn
+              v-if="header.level < 4"
               @click="mixin_scrollToID(header.id)"
               no-caps
               square
@@ -254,11 +281,11 @@ import {
 const db = getFirestore();
 
 // VUE COMPONENTS
-import TipTapEditor from "src/components/tiptap/TipTapEditor.vue";
+import ArticleEditor from "src/components/editor/ArticleEditor.vue";
 
 export default {
   components: {
-    TipTapEditor,
+    ArticleEditor,
     AppSwitcher,
   },
 

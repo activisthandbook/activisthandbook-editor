@@ -76,14 +76,7 @@
           :hide-label="false"
           :to="{ name: 'New' }"
         >
-          <q-tooltip
-            anchor="center left"
-            self="center right"
-            transition-show="jump-left"
-            transition-hide="jump-right"
-            class="bg-black text-bold"
-            >New article</q-tooltip
-          >
+          <span class="q-mr-sm">New article</span>
         </q-btn>
       </q-page-sticky>
     </q-page-container>

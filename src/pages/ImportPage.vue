@@ -288,6 +288,7 @@ export default {
           languageCollections[renderedPageCollectionIndex].articles.push({
             articleID: renderedPage.id,
             langCode: renderedPage.langCode,
+            published: false,
           });
         } else {
           const languageCollectionID = this.mixin_randomID();
@@ -299,6 +300,7 @@ export default {
               {
                 articleID: renderedPage.id,
                 langCode: renderedPage.langCode,
+                published: false,
               },
             ],
           });
@@ -326,15 +328,20 @@ export default {
           .replaceAll("<h1", "<h2")
           .replaceAll("</h1", "</h2");
 
-        // Fix links (In Vitepress, the default language does not use a language prefix)
-        renderedPage.content = renderedPage.content.replaceAll('"/en/', "/");
+        // 8. Fix links
+        // - In Vitepress, the default language does not use a language prefix)
+        // - We want relative paths
+        renderedPage.content = renderedPage.content
+          .replaceAll('"https://activisthandbook.org/', '"/')
+          .replaceAll('"https://www.activisthandbook.org/', '"/')
+          .replaceAll('"/en/', '"/');
 
-        // 8. Add tags
+        // 9. Add tags
         page.tags.forEach((tag) => {
           renderedPage.tags.push(sanitizeHtml(tag.title));
         });
 
-        // 7. Sanitize content
+        // 10. Sanitize content
         renderedPage.content = sanitizeHtml(renderedPage.content, {
           allowedTags: sanitizeHtml.defaults.allowedTags.concat([
             "iframe",
