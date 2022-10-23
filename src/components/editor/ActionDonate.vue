@@ -1,11 +1,6 @@
 <template>
+  <!-- SYNC WITH WEBSITE: Has content -->
   <node-view-wrapper class="embed-donation">
-    <!-- <div
-      class="drag-handle"
-      contenteditable="false"
-      draggable="true"
-      data-drag-handle
-    /> -->
     <span
       class="label"
       contenteditable="false"

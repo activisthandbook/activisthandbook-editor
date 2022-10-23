@@ -20,6 +20,7 @@
                   Everyone can see what contributions you make to Activist
                   Handbook.
                 </div>
+              </div>
             </q-card-section>
           </q-card>
           <q-card class="bg-accent q-py-sm" v-if="recentArticles.data[0]">

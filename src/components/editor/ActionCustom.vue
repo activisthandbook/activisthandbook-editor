@@ -1,4 +1,5 @@
 <template>
+  <!-- SYNC WITH WEBSITE: Has content & button-->
   <node-view-wrapper class="action-custom">
     <span
       class="label"
@@ -9,23 +10,27 @@
       Custom action
     </span>
     <node-view-content class="content" />
-    <div class="button">
-      <q-popup-edit v-model="label" auto-save v-slot="scope">
-        <q-input
-          v-model="scope.value"
-          dense
-          autofocus
-          counter
-          @keyup.enter="scope.set"
-        />
-      </q-popup-edit>
+    <div class="button items-center justify-center" contenteditable="false">
+      {{ buttonlabel }}
     </div>
     <q-card contenteditable="false" class="text-black bg-accent">
       <q-card-section>
         <div class="q-gutter-y-sm">
           <div class="text-bold">Action button</div>
-          <q-input label="Button label" outlined color="secondary" />
-          <q-input label="Button link" outlined color="secondary" />
+          <q-input
+            label="Button label"
+            outlined
+            color="secondary"
+            v-model="buttonlabel"
+            @update:model-value="update()"
+          />
+          <q-input
+            label="Button link"
+            outlined
+            color="secondary"
+            v-model="buttonlink"
+            @update:model-value="update()"
+          />
         </div>
       </q-card-section>
     </q-card>
@@ -64,9 +69,11 @@
 
   .button {
     min-width: 200px;
-    display: inline-block;
+    color: black;
     height: 52px;
-    margin: 24px 0;
+    margin-bottom: 32px;
+    padding: 0 16px;
+    display: inline-flex;
     background: $accent;
     box-shadow: calc(4px + 0.4vw) calc(4px + 0.4vw) 0 black;
   }
@@ -78,13 +85,34 @@ import { NodeViewContent, nodeViewProps, NodeViewWrapper } from "@tiptap/vue-3";
 
 export default {
   props: nodeViewProps,
-  data: function () {
-    return {};
+  // props: {
+  //   node: {
+  //     type: Object,
+  //     required: true,
+  //   },
+  // },
+  data() {
+    return {
+      buttonlabel: this.node.attrs.buttonlabel,
+      buttonlink: this.node.attrs.buttonlink,
+    };
+  },
+  mounted() {
+    console.log(this.node.attrs);
   },
 
   components: {
     NodeViewWrapper,
     NodeViewContent,
+  },
+
+  methods: {
+    update() {
+      this.updateAttributes({
+        buttonlabel: this.buttonlabel,
+        buttonlink: this.buttonlink,
+      });
+    },
   },
 };
 </script>

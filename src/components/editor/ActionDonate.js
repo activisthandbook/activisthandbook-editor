@@ -21,7 +21,10 @@ export default Node.create({
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ["action-donate", mergeAttributes(HTMLAttributes), 0];
+    return [
+      "client-only",
+      ["action-donate", mergeAttributes(HTMLAttributes), 0],
+    ];
   },
 
   addNodeView() {
@@ -43,7 +46,7 @@ export default Node.create({
                   content: [
                     {
                       type: "text",
-                      text: "Donate ",
+                      text: "Donate",
                     },
                   ],
                 },

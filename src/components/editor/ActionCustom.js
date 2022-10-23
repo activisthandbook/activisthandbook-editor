@@ -21,11 +21,28 @@ export default Node.create({
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ["action-custom", mergeAttributes(HTMLAttributes), 0];
+    return [
+      "client-only",
+      ["action-custom", mergeAttributes(HTMLAttributes), 0],
+    ];
   },
 
   addNodeView() {
     return VueNodeViewRenderer(ActionCustomComponent);
+  },
+
+  addAttributes() {
+    return {
+      buttonlink: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("buttonlink"),
+      },
+
+      buttonlabel: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("buttonlabel"),
+      },
+    };
   },
 
   addCommands() {

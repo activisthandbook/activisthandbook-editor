@@ -63,6 +63,7 @@ export const useEditorStore = defineStore("editor", {
       requestedPublicationTimestamp: null,
       langCode: null,
 
+      // https://medium.com/feedflood/update-data-in-cloud-firestore-merge-true-in-set-operation-166703040de
       metadata: {
         createdTimestamp: null,
         createdBy: null,
@@ -141,6 +142,7 @@ export const useEditorStore = defineStore("editor", {
                     "figure",
                     "figcaption",
                     // Custom elements
+                    "client-only",
                     "action-donate",
                     "action-volunteer",
                     "action-custom",
@@ -163,6 +165,7 @@ export const useEditorStore = defineStore("editor", {
                       "imagesource",
                       "imagecaption",
                     ],
+                    "action-custom": ["buttonlink", "buttonlabel"],
                   },
 
                   allowedIframeHostnames: ["www.youtube-nocookie.com"],
@@ -191,7 +194,7 @@ export const useEditorStore = defineStore("editor", {
     async renderAndSave(userID) {
       this.local.lastEditTimestamp = Date.now();
       await this.throttledRender();
-      await this.save(userID);
+      await this.throttledSave(userID);
       await this.updateMyRecentArticles(userID);
     },
     throttledRender: _.throttle(async function (userID) {
@@ -209,7 +212,10 @@ export const useEditorStore = defineStore("editor", {
       await this.updateImages();
       await this.updatePathTags();
     },
-    save: _.throttle(async function (userID) {
+    throttledSave: _.throttle(async function (userID) {
+      await this.save(userID);
+    }, 5000),
+    async save(userID) {
       await setDoc(
         doc(db, "articles", this.article.id),
         {
@@ -228,7 +234,7 @@ export const useEditorStore = defineStore("editor", {
           Notify.create("Saving failed");
           console.error(error);
         });
-    }, 4000),
+    },
     updateMyRecentArticles: async function (userID) {
       if (!this.recentArticles.includes(this.article.id)) {
         this.recentArticles.push(this.article.id);
@@ -300,15 +306,17 @@ export const useEditorStore = defineStore("editor", {
       this.article.contentImages = images;
     },
     async updatePathTags() {
-      const array = this.article.path.split("/");
-      let finalArray = [];
+      if (this.article.path) {
+        const array = this.article.path.split("/");
+        let finalArray = [];
 
-      for (let i = 0; i < array.length; i++) {
-        finalArray.push(`${i}*${array[i]}`);
+        for (let i = 0; i < array.length; i++) {
+          finalArray.push(`${i}*${array[i]}`);
+        }
+
+        this.article.pathTags = finalArray;
+        this.article.pathDepth = finalArray.length;
       }
-
-      this.article.pathTags = finalArray;
-      this.article.pathDepth = finalArray.length;
     },
     validateArticle() {
       let errorList = [];

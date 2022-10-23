@@ -323,10 +323,8 @@ export default {
       batch.update(liveArticleRef, {
         requestedPublication: false,
         lastPublishedServerTimestamp: serverTimestamp(),
-        metadata: {
-          updatedTimestamp: serverTimestamp(),
-          updatedBy: this.firebaseStore.auth.currentUser.uid,
-        },
+        "metadata.updatedTimestamp": serverTimestamp(),
+        "metadata.updatedBy": this.firebaseStore.auth.currentUser.uid,
       });
 
       // 4. Create a new version with the status "published"
@@ -392,10 +390,8 @@ export default {
         requestedPublication: false,
         reverted: true,
 
-        metadata: {
-          updatedTimestamp: serverTimestamp(),
-          updatedBy: this.firebaseStore.auth.currentUser.uid,
-        },
+        "metadata:updatedTimestamp": serverTimestamp(),
+        "metadata.updatedBy": this.firebaseStore.auth.currentUser.uid,
       });
       // Commit the batch
       await batch.commit();

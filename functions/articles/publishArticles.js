@@ -17,7 +17,20 @@ const db = getFirestore();
 // https://github.com/valeriangalliat/markdown-it-anchor
 // https://github.com/mdit-vue/mdit-vue/tree/main/packages/plugin-toc
 var TurndownService = require("turndown");
-var turndownService = new TurndownService();
+var turndownService = new TurndownService({
+  headingStyle: "atx",
+  bulletListMarker: "-",
+});
+turndownService.keep([
+  "div",
+  "figure",
+  "iframe",
+  "client-only",
+  "action-custom",
+  "action-donate",
+  "action-smart-small",
+  "action-volunteer",
+]);
 
 const languagesFile = require("./languages");
 const languages = languagesFile.languages;
@@ -39,6 +52,28 @@ exports.publishArticles = functions
         "The function must be called while authenticated with a verified email."
       );
     } else {
+      const userProfileRef = db
+        .collection("userProfiles")
+        .doc(context.auth.token.uid);
+      const userDoc = await userProfileRef.get();
+
+      if (!userDoc.exists) {
+        log("🔴 Error: Could not find user profile");
+        throw new functions.https.HttpsError(
+          "not-found",
+          "Could not find user profile"
+        );
+      } else {
+        const userDocData = userDoc.data();
+
+        if (!userDocData.roles.includes("moderator")) {
+          throw new functions.https.HttpsError(
+            "failed-precondition",
+            "You are not a moderator."
+          );
+        }
+      }
+
       // STEP 1: FETCH DATA
       // Fetch all articles that need to be published. And retrieve all the language collections that these articles are part of.
       const publishingQueueArticles = await fetchPublishingQueue();
@@ -388,7 +423,8 @@ ${turndownService.turndown(
       "img",
       "figure",
       "figcaption",
-      // Custom elements
+      // Custom elements (make sure these are also included in TurndownService!!!)
+      "client-only",
       "action-donate",
       "action-volunteer",
       "action-custom",
@@ -399,6 +435,7 @@ ${turndownService.turndown(
       iframe: ["src", "allowfullscreen", "start", "width", "height"],
       div: ["data-youtube-video"],
       img: ["src", "alt", "imageid", "imagesource", "imagecaption"],
+      "action-custom": ["buttonlink", "buttonlabel"],
     },
 
     allowedIframeHostnames: ["www.youtube-nocookie.com"],

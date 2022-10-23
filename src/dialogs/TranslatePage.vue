@@ -123,10 +123,8 @@ export default {
             articleID: newArticleID,
             langCode: this.lang.code,
           }),
-          metadata: {
-            updatedTimestamp: serverTimestamp(),
-            updatedBy: this.firebaseStore.auth.currentUser.uid,
-          },
+          "metadata:updatedTimestamp": serverTimestamp(),
+          "metadata.updatedBy": this.firebaseStore.auth.currentUser.uid,
         }
       );
 

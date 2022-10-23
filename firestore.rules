@@ -8,24 +8,37 @@ service cloud.firestore {
           request.auth.token.email_verified == true
       }
 
-      function isModerator() {
-        return
-          request.auth != null &&
-          get(/databases/$(database)/documents/userProfiles/$(request.auth.uid)).data.isModerator == true;
+      function getRoles() {
+          return get(/databases/$(database)/documents/userProfiles/$(request.auth.uid)).data.roles;
+        }
+
+      function hasRole(userRoles, role) {
+        return signedIn() && (role in userRoles);
       }
 
+      // function isModerator() {
+      //   return
+      //     request.auth != null &&
+      //     get(/databases/$(database)/documents/userProfiles/$(request.auth.uid)).data.roles.includes("") == true;
+      // }
+
       match /app/{settingID} {
-        allow read, write: if isModerator();
+        allow read, write: if hasRole(getRoles(), "moderator");
       }
 
       match /app/analytics {
         allow read: if signedIn();
-        allow update: if isModerator();
+        allow update: if hasRole(getRoles(), "moderator");
       }
 
       match /userProfiles/{userID} {
         allow read: if signedIn();
-        allow write: if signedIn() && request.auth.uid == userID;
+        allow write:
+          if signedIn() &&
+          // User can only edit their own document
+          request.auth.uid == userID &&
+          // Users cannot edit their roles
+          request.resource.data.roles == resource.data.roles;
       }
 
       match /menu/draft {
@@ -33,12 +46,12 @@ service cloud.firestore {
 
         match /versions/{versionID} {
           allow read, create: if signedIn();
-          allow write, delete: if isModerator();
+          allow write, delete: if hasRole(getRoles(), "moderator");
         }
       }
 
        match /menu/publishingQueue {
-        allow read, write: if isModerator();
+        allow read, write: if hasRole(getRoles(), "moderator");
       }
 
       match /images/{imageID} {
@@ -50,7 +63,7 @@ service cloud.firestore {
 
         match /versions/{versionID} {
         	allow read, create: if signedIn();
-          allow write, delete: if isModerator();
+          allow write, delete: if hasRole(getRoles(), "moderator");
         }
       }
 
@@ -59,7 +72,7 @@ service cloud.firestore {
       }
 
       match /publishingQueue/{articleID} {
-        allow write, read: if isModerator();
+        allow write, read: if hasRole(getRoles(), "moderator");
       }
 
       match /articleSync/{articleSyncID} {

@@ -1,4 +1,5 @@
 <template>
+  <!-- SYNC WITH WEBSITE: Has content -->
   <node-view-wrapper class="action-volunteer">
     <span
       class="label"

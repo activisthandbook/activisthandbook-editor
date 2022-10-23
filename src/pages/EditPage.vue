@@ -244,6 +244,20 @@
           </div>
           <div class="q-mt-md q-gutter-sm">
             <q-btn
+              v-if="
+                usersStore.profile.data[
+                  firebaseStore.auth.currentUser.uid
+                ].roles.includes('moderator')
+              "
+              label="Review"
+              no-caps
+              color="secondary"
+              icon="mdi-shield-check"
+              :to="{ name: 'Review' }"
+              outline
+            />
+            <q-btn
+              v-else
               label="Home"
               no-caps
               color="secondary"
@@ -251,6 +265,7 @@
               :to="{ name: 'Home' }"
               outline
             />
+
             <q-btn
               label="Continue editing"
               no-caps
@@ -299,6 +314,7 @@ const db = getFirestore();
 
 // VUE COMPONENTS
 import ArticleEditor from "src/components/editor/ArticleEditor.vue";
+import { useUsersStore } from "src/stores/users";
 
 export default {
   components: {
@@ -316,7 +332,7 @@ export default {
   },
 
   computed: {
-    ...mapStores(useEditorStore, useFirebaseStore),
+    ...mapStores(useEditorStore, useFirebaseStore, useUsersStore),
     allowedToPublish: function () {
       if (
         this.editorStore.article.requestedPublication &&
@@ -388,7 +404,8 @@ export default {
       }
     },
     async publish() {
-      this.editorStore.render();
+      await this.editorStore.render();
+      await this.editorStore.save(this.firebaseStore.auth.currentUser.uid);
 
       const time = Date.now();
 
@@ -438,7 +455,7 @@ export default {
         }
       );
 
-      await batch.commit().then(() => {
+      await batch.commit().then(async () => {
         this.editorStore.article.requestedPublication = true;
         this.editorStore.article.requestedPublicationTimestamp = time;
 

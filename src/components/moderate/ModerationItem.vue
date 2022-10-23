@@ -45,7 +45,7 @@
 
             <q-item-label class="text-caption">
               <q-icon name="mdi-link" class="q-mr-xs" />activisthandbook.org/{{
-                fullPath
+                fullPath(articleVersions.data[articleVersionSelected])
               }}
             </q-item-label>
           </q-item-section>
@@ -201,8 +201,21 @@
             class="bg-grey-3 q-mx-lg q-my-lg"
           >
             <q-card-section>
-              It is not yet possible to preview the version of this article that
-              is currently on this website.
+              <div>
+                It is not yet possible to show the version of this article that
+                is currently on this website.
+              </div>
+              <q-btn
+                class="q-mt-sm"
+                label="Open on website"
+                :href="`https://new.activisthandbook.org/${fullPath(
+                  articleVersions.data[articleVersions.data.length - 1]
+                )}`"
+                target="_blank"
+                icon-right="mdi-open-in-new"
+                no-caps
+                outline
+              />
             </q-card-section>
           </q-card>
 
@@ -256,24 +269,22 @@ export default {
       if (this.liveDraftArticle.lastPublishedServerTimestamp) return false;
       else return true;
     },
-    fullPath: function () {
-      let fullPath = "";
-      if (
-        this.articleVersions.data[this.articleVersionSelected].langCode !== "en"
-      ) {
-        fullPath +=
-          this.articleVersions.data[this.articleVersionSelected].langCode + "/";
-      }
-      fullPath += this.articleVersions.data[this.articleVersionSelected].path;
 
-      return fullPath;
-    },
     ...mapStores(useAnalyticsStore, useFirebaseStore),
   },
   created() {
     this.fetchVersions();
   },
   methods: {
+    fullPath(article) {
+      let fullPath = "";
+      if (article.langCode !== "en") {
+        fullPath += article.langCode + "/";
+      }
+      fullPath += article.path;
+
+      return fullPath;
+    },
     fetchVersions: async function () {
       // FETCH VERSIONS: Here we'll fetch all versions so the moderator can compare them.
 
@@ -360,7 +371,7 @@ export default {
         description: acceptedVersion.description,
         tags: acceptedVersion.tags,
         path: acceptedVersion.path,
-        fullPath: this.fullPath,
+        fullPath: this.fullPath(acceptedVersion),
         publishedPath: acceptedVersion.path,
         content: acceptedVersion.content,
         id: acceptedVersion.articleID,
@@ -394,10 +405,8 @@ export default {
         requestedPublication: false,
         publishedPath: acceptedVersion.path,
         lastPublishedServerTimestamp: serverTimestamp(),
-        metadata: {
-          updatedTimestamp: serverTimestamp(),
-          updatedBy: this.firebaseStore.auth.currentUser.uid,
-        },
+        "metadata:updatedTimestamp": serverTimestamp(),
+        "metadata.updatedBy": this.firebaseStore.auth.currentUser.uid,
       });
 
       // 4. Create a new version with the status "published"
@@ -415,7 +424,7 @@ export default {
           description: acceptedVersion.description,
           tags: acceptedVersion.tags,
           path: acceptedVersion.path,
-          fullPath: this.fullPath,
+          fullPath: this.fullPath(acceptedVersion),
           publishedPath: acceptedVersion.path,
           content: acceptedVersion.content,
           articleID: acceptedVersion.articleID,
@@ -479,10 +488,8 @@ export default {
         requestedPublication: false,
         reverted: true,
 
-        metadata: {
-          updatedTimestamp: serverTimestamp(),
-          updatedBy: this.firebaseStore.auth.currentUser.uid,
-        },
+        "metadata:updatedTimestamp": serverTimestamp(),
+        "metadata.updatedBy": this.firebaseStore.auth.currentUser.uid,
       });
       // Commit the batch
       await batch.commit();
@@ -511,10 +518,8 @@ export default {
                 langCode: this.liveDraftArticle.langCode,
                 articleID: this.liveDraftArticle.id,
               }),
-              metadata: {
-                updatedTimestamp: serverTimestamp(),
-                updatedBy: this.firebaseStore.auth.currentUser.uid,
-              },
+              "metadata:updatedTimestamp": serverTimestamp(),
+              "metadata.updatedBy": this.firebaseStore.auth.currentUser.uid,
             });
           }
 
@@ -542,28 +547,36 @@ export default {
     },
 
     versionLabel: function () {
-      if (!this.isNewArticle) {
-      }
-      const date = this.mixin_humanDate(
-        this.articleVersions.data[this.articleVersionSelected].metadata
-          .createdTimestamp
-      );
+      // if (!this.isNewArticle) {
+      // }
+      if (
+        !this.articleVersions.data[this.articleVersionSelected].websiteVersion
+      ) {
+        const createdDate = this.mixin_humanDate(
+          this.articleVersions.data[this.articleVersionSelected].metadata
+            .createdTimestamp
+        );
+        const updatedDate = this.mixin_humanDate(
+          this.articleVersions.data[this.articleVersionSelected].metadata
+            .updatedTimestamp
+        );
 
-      if (!this.isNewArticle && this.articleVersionSelected === 0) {
-        return date + " (Published on website)";
-      } else if (
-        this.articleVersionSelected ===
-        this.articleVersions.data.length - 2
-      ) {
-        return date + " (Recommended)";
-      } else if (
-        this.articleVersionSelected ===
-        this.articleVersions.data.length - 1
-      ) {
-        return date + " (Unfinished draft)";
-      } else {
-        return date;
-      }
+        if (!this.isNewArticle && this.articleVersionSelected === 0) {
+          return createdDate + " (Published on website)";
+        } else if (
+          this.articleVersionSelected ===
+          this.articleVersions.data.length - 2
+        ) {
+          return createdDate + " (Recommended)";
+        } else if (
+          this.articleVersionSelected ===
+          this.articleVersions.data.length - 1
+        ) {
+          return updatedDate + " (Unfinished draft)";
+        } else {
+          return createdDate;
+        }
+      } else return "Published on website";
     },
   },
   unmounted() {

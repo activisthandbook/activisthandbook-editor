@@ -1,4 +1,5 @@
 <template>
+  <!-- SYNC WITH WEBSITE: Does not have content -->
   <node-view-wrapper class="action-smart">
     <div contenteditable="false">
       <span

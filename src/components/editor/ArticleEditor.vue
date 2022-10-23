@@ -37,9 +37,6 @@
     </template>
   </q-input>
 
-  {{ editorStore.article.pathTags }}
-  {{ editorStore.article.path }}
-
   <ArticleMenu />
 
   <editor-content :editor="editorStore.tiptap.content" class="article" />
@@ -524,7 +521,7 @@ export default {
 }
 .article .ProseMirror {
   outline: none;
-  min-height: 128px;
+  min-height: 50vh;
 }
 
 .title .ProseMirror,

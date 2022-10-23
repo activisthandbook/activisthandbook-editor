@@ -115,6 +115,7 @@ export default {
         doc(db, "userProfiles", this.firebaseStore.auth.currentUser.uid),
         {
           recentlyEditedArticles: arrayUnion(newArticleID),
+
           metadata: {
             updatedTimestamp: serverTimestamp(),
             updatedBy: this.firebaseStore.auth.currentUser.uid,

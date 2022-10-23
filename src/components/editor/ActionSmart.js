@@ -20,7 +20,10 @@ export default Node.create({
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ["action-smart-small", mergeAttributes(HTMLAttributes)];
+    return [
+      "client-only",
+      ["action-smart-small", mergeAttributes(HTMLAttributes)],
+    ];
   },
 
   addNodeView() {
