@@ -16,19 +16,46 @@
         /> -->
 
         <AppSwitcher>
-          <!-- <q-list class="q-ma-sm q-gutter-y-sm"> -->
-          <!-- 👉 TODO: Switch between versions -->
-          <!-- <q-item
-          clickable
-          v-close-popup
-          disable
-          class="rounded-borders bg-grey-2"
-        >
-          <q-item-section>Version history</q-item-section>
-          <q-item-section side>
-            <q-icon name="mdi-history" />
-          </q-item-section>
-        </q-item> -->
+          <q-list class="q-ma-sm q-gutter-y-sm">
+            <!-- 👉 TODO: Switch between versions -->
+            <q-item
+              v-if="publishedFullPath"
+              clickable
+              v-close-popup
+              class="rounded-borders bg-grey-2"
+              :href="websiteURL"
+              target="_blank"
+            >
+              <q-item-section>View on website</q-item-section>
+              <q-item-section side>
+                <q-icon name="mdi-eye" />
+              </q-item-section>
+            </q-item>
+            <q-item
+              v-if="publishedFullPath"
+              clickable
+              v-close-popup
+              class="rounded-borders bg-grey-2"
+              :href="versionHistoryURL"
+              target="_blank"
+            >
+              <q-item-section>Version history</q-item-section>
+              <q-item-section side>
+                <q-icon name="mdi-history" />
+              </q-item-section>
+            </q-item>
+            <q-item
+              clickable
+              v-close-popup
+              class="rounded-borders bg-grey-2"
+              @click="deleteAndPublish()"
+            >
+              <q-item-section>Delete</q-item-section>
+              <q-item-section side>
+                <q-icon name="mdi-delete" />
+              </q-item-section>
+            </q-item>
+          </q-list>
         </AppSwitcher>
 
         <q-btn
@@ -113,16 +140,6 @@
 
           <!-- EDITOR -->
           <ArticleEditor />
-          <q-separator class="q-my-lg" />
-          <div class="text-center">
-            <q-btn
-              label="Delete article"
-              @click="deleteAndPublish()"
-              no-caps
-              color="black"
-              icon="mdi-delete"
-            />
-          </div>
         </div>
 
         <!-- TO-DO: Add AI Editor -->
@@ -309,6 +326,26 @@ export default {
         return false;
       } else return true;
     },
+    publishedFullPath: function () {
+      let fullPath = "";
+      if (this.editorStore.article.publishedPath) {
+        if (this.editorStore.article.langCode !== "en") {
+          fullPath += this.editorStore.article.langCode + "/";
+        }
+        fullPath += this.editorStore.article.publishedPath;
+      }
+      return fullPath;
+    },
+    websiteURL: function () {
+      return "https://new.activisthandbook.org/" + this.publishedFullPath;
+    },
+    versionHistoryURL: function () {
+      return (
+        "https://github.com/activisthandbook/activisthandbook/commits/main/articles/" +
+        this.publishedFullPath +
+        ".md"
+      );
+    },
   },
 
   created() {
@@ -351,6 +388,8 @@ export default {
       }
     },
     async publish() {
+      this.editorStore.render();
+
       const time = Date.now();
 
       const batch = writeBatch(db);
@@ -377,9 +416,11 @@ export default {
         deleteArticle: this.editorStore.article.deleteArticle,
         langCode: this.editorStore.article.langCode,
         wordCount: this.editorStore.article.wordCount,
-
-        lastUpdatedServerTimestamp: serverTimestamp(),
         status: "review",
+        metadata: {
+          createdTimestamp: serverTimestamp(),
+          createdBy: this.firebaseStore.auth.currentUser.uid,
+        },
       };
       batch.set(versionRef, versionContent, {
         merge: true,

@@ -1,5 +1,17 @@
 <template>
-  <router-view />
+  <div
+    v-if="
+      firebaseStore.auth.currentUser &&
+      !usersStore.profile.dataLoaded[firebaseStore.auth.currentUser.uid]
+    "
+    class="fixed-center text-center text-caption text-grey"
+  >
+    <q-spinner color="grey" size="3em" />
+    <div class="q-mt-md">Loading...</div>
+  </div>
+  <div v-else>
+    <router-view />
+  </div>
 </template>
 
 <script>

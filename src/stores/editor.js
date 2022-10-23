@@ -40,7 +40,12 @@ export const useEditorStore = defineStore("editor", {
       id: null,
       title: null,
       description: null,
+
       path: null,
+      pathTags: null,
+      pathDepth: null,
+      publishedPath: null,
+
       tags: null,
       focusMode: {
         isOn: false,
@@ -57,6 +62,13 @@ export const useEditorStore = defineStore("editor", {
       requestedPublication: null,
       requestedPublicationTimestamp: null,
       langCode: null,
+
+      metadata: {
+        createdTimestamp: null,
+        createdBy: null,
+        updatedTimestamp: null,
+        updatedTimestamp: null,
+      },
     },
     articleDataLoaded: false,
   }),
@@ -178,30 +190,34 @@ export const useEditorStore = defineStore("editor", {
     },
     async renderAndSave(userID) {
       this.local.lastEditTimestamp = Date.now();
-      await this.render();
+      await this.throttledRender();
       await this.save(userID);
       await this.updateMyRecentArticles(userID);
     },
-    render: _.throttle(async function (userID) {
+    throttledRender: _.throttle(async function (userID) {
+      this.render(userID);
+    }, 4000),
+    async render(userID) {
       this.article.title = this.tiptap.title.getHTML().slice(3, -4);
       this.article.description = this.tiptap.description.getHTML().slice(3, -4);
       this.article.content = this.tiptap.content.getHTML();
-
-      console.log("test", this.tiptap.content.getJSON());
 
       this.article.wordCount =
         this.tiptap.content.storage.characterCount.words();
 
       await this.updateHeadings();
       await this.updateImages();
-    }, 4000),
+      await this.updatePathTags();
+    },
     save: _.throttle(async function (userID) {
       await setDoc(
         doc(db, "articles", this.article.id),
         {
           ...this.article,
-          lastUpdatedServerTimestamp: serverTimestamp(),
-          lastUpdatedBy: userID,
+          metadata: {
+            updatedTimestamp: serverTimestamp(),
+            updatedBy: userID,
+          },
         },
         { merge: true }
       )
@@ -217,7 +233,7 @@ export const useEditorStore = defineStore("editor", {
       if (!this.recentArticles.includes(this.article.id)) {
         this.recentArticles.push(this.article.id);
         await setDoc(
-          doc(db, "users", userID),
+          doc(db, "userProfiles", userID),
           {
             recentlyEditedArticles: arrayRemove(this.article.id),
           },
@@ -227,9 +243,13 @@ export const useEditorStore = defineStore("editor", {
           console.error(error);
         });
         await setDoc(
-          doc(db, "users", userID),
+          doc(db, "userProfiles", userID),
           {
             recentlyEditedArticles: arrayUnion(this.article.id),
+            metadata: {
+              updatedTimestamp: serverTimestamp(),
+              updatedBy: userID,
+            },
           },
           { merge: true }
         ).catch((error) => {
@@ -241,8 +261,6 @@ export const useEditorStore = defineStore("editor", {
     async updateHeadings() {
       const headings = [];
       const transaction = this.tiptap.content.state.tr;
-
-      console.log("test!");
 
       this.tiptap.content.state.doc.descendants(async (node, pos) => {
         if (node.type.name === "heading") {
@@ -280,6 +298,17 @@ export const useEditorStore = defineStore("editor", {
       });
 
       this.article.contentImages = images;
+    },
+    async updatePathTags() {
+      const array = this.article.path.split("/");
+      let finalArray = [];
+
+      for (let i = 0; i < array.length; i++) {
+        finalArray.push(`${i}*${array[i]}`);
+      }
+
+      this.article.pathTags = finalArray;
+      this.article.pathDepth = finalArray.length;
     },
     validateArticle() {
       let errorList = [];

@@ -37,13 +37,16 @@
     </template>
   </q-input>
 
+  {{ editorStore.article.pathTags }}
+  {{ editorStore.article.path }}
+
   <ArticleMenu />
 
   <editor-content :editor="editorStore.tiptap.content" class="article" />
 
   <!-- ℹ️ ARTICLE DETAILS -->
 
-  <q-card class="q-mt-xl bg-grey-2" flat bordered>
+  <q-card class="q-mt-xl bg-accent">
     <q-card-section>
       <div class="q-gutter-y-sm">
         <h2 class="q-my-md">Article details</h2>
@@ -68,10 +71,61 @@
     </q-card-section>
     <q-separator />
     <q-list padding>
-      <q-item-label header>Advanced</q-item-label>
-      <q-item tag="label" v-ripple>
+      <q-item>
         <q-item-section avatar>
-          <q-icon name="mdi-alert-decagram" />
+          <q-icon name="mdi-star-outline" />
+        </q-item-section>
+        <q-item-section>
+          <q-item-label caption> Created </q-item-label>
+          <q-item-label>
+            {{ mixin_humanDate(editorStore.article.metadata.createdTimestamp) }}
+          </q-item-label>
+        </q-item-section>
+      </q-item>
+      <q-item>
+        <q-item-section avatar>
+          <q-icon name="mdi-file-document-edit-outline" />
+        </q-item-section>
+        <q-item-section>
+          <q-item-label caption> Last edited </q-item-label>
+          <q-item-label v-if="editorStore.article.metadata.updatedTimestamp">
+            {{ mixin_humanDate(editorStore.article.metadata.updatedTimestamp) }}
+          </q-item-label>
+          <q-item-label v-else> Never </q-item-label>
+        </q-item-section>
+      </q-item>
+      <q-item>
+        <q-item-section avatar>
+          <q-icon name="mdi-check" />
+        </q-item-section>
+        <q-item-section>
+          <q-item-label caption> Last published </q-item-label>
+          <q-item-label v-if="editorStore.article.lastPublishedServerTimestamp">
+            {{
+              mixin_humanDate(editorStore.article.lastPublishedServerTimestamp)
+            }}
+          </q-item-label>
+          <q-item-label v-else> Never </q-item-label>
+        </q-item-section>
+      </q-item>
+    </q-list>
+    <q-separator />
+    <q-list padding>
+      <q-item-label header>Advanced</q-item-label>
+      <q-item tag="label" clickable disable>
+        <q-item-section avatar>
+          <q-avatar icon="mdi-rocket-launch" />
+        </q-item-section>
+        <q-item-section>
+          <q-item-label>Landing page</q-item-label>
+        </q-item-section>
+        <q-item-section avatar>
+          <q-toggle color="secondary" />
+        </q-item-section>
+      </q-item>
+      <q-item tag="label" clickable>
+        <q-item-section avatar>
+          <q-avatar icon="mdi-alert-decagram" />
         </q-item-section>
         <q-item-section>
           <q-item-label>Show action button</q-item-label>
@@ -154,46 +208,6 @@
         </div>
       </div>
     </q-card-section>
-    <q-separator />
-    <q-list padding>
-      <q-item>
-        <q-item-section avatar>
-          <q-icon name="mdi-star-outline" />
-        </q-item-section>
-        <q-item-section>
-          <q-item-label caption> Created </q-item-label>
-          <q-item-label>
-            {{ mixin_humanDate(editorStore.article.createdServerTimestamp) }}
-          </q-item-label>
-        </q-item-section>
-      </q-item>
-      <q-item>
-        <q-item-section avatar>
-          <q-icon name="mdi-file-document-edit-outline" />
-        </q-item-section>
-        <q-item-section>
-          <q-item-label caption> Last edited </q-item-label>
-          <q-item-label>
-            {{
-              mixin_humanDate(editorStore.article.lastUpdatedServerTimestamp)
-            }}
-          </q-item-label>
-        </q-item-section>
-      </q-item>
-      <q-item>
-        <q-item-section avatar>
-          <q-icon name="mdi-check" />
-        </q-item-section>
-        <q-item-section>
-          <q-item-label caption> Last published </q-item-label>
-          <q-item-label>
-            {{
-              mixin_humanDate(editorStore.article.lastPublishedServerTimestamp)
-            }}
-          </q-item-label>
-        </q-item-section>
-      </q-item>
-    </q-list>
   </q-card>
 
   <q-page-sticky

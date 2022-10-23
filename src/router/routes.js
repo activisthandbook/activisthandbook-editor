@@ -9,6 +9,21 @@ const routes = [
         name: "Home",
       },
       {
+        path: "start",
+        component: () => import("pages/StartPage.vue"),
+        name: "Start",
+      },
+      {
+        path: "signout",
+        component: () => import("pages/SignoutPage.vue"),
+        name: "Signout",
+      },
+      {
+        path: "browse",
+        component: () => import("pages/BrowsePage.vue"),
+        name: "Browse",
+      },
+      {
         path: "new",
         component: () => import("src/dialogs/NewPage.vue"),
         name: "New",
@@ -32,7 +47,7 @@ const routes = [
       {
         path: "translate/:languageCollectionID",
         component: () => import("src/dialogs/TranslatePage.vue"),
-        name: "Translate",
+        name: "Translate article",
         meta: {
           title: "Translate | Activist Handbook",
         },

@@ -18,12 +18,27 @@
             flat
             class="bg-secondary text-accent"
           >
-            <q-card-section class="flex items-center">
-              <q-spinner size="24px" style="opacity: 0.5" />
-              <span class="q-ml-sm">
-                Updating website... ({{ this.remainingSeconds }}
-                seconds left)
-              </span>
+            <q-card-section>
+              <div class="flex items-center q-gutter-md">
+                <q-spinner size="24px" style="opacity: 0.5" class="q-mr-sm" />
+                <div class="q-ml-sm text-bold">
+                  <div>
+                    Updating website... ({{ this.remainingSeconds }} seconds
+                    left)
+                  </div>
+                  <div class="text-caption">
+                    Sending the update to servers in 100+ countries
+                  </div>
+                </div>
+                <q-space />
+                <q-btn
+                  label="View changes"
+                  href="https://github.com/activisthandbook/activisthandbook/commits/main"
+                  target="_blank"
+                  no-caps
+                  flat
+                />
+              </div>
             </q-card-section>
           </q-card>
 
@@ -32,7 +47,8 @@
             v-if="
               !this.showRenderingTime &&
               analyticsStore.dataLoaded &&
-              analyticsStore.data.articlePublishingQueueCount
+              (analyticsStore.data.articlePublishingQueueCount ||
+                analyticsStore.data.menuInPublishingQueue)
             "
             class="bg-primary text-accent q-mb-lg"
             dark
@@ -40,10 +56,31 @@
             <q-card-section>
               <div class="flex justify-between items-center q-gutter-sm">
                 <div>
-                  <strong>{{
-                    analyticsStore.data.articlePublishingQueueCount
-                  }}</strong>
-                  articles in publishing queue
+                  <strong v-if="analyticsStore.data.menuInPublishingQueue"
+                    >Menu</strong
+                  >
+                  <span
+                    v-if="
+                      analyticsStore.data.articlePublishingQueueCount &&
+                      analyticsStore.data.menuInPublishingQueue
+                    "
+                  >
+                    and
+                  </span>
+                  <strong
+                    v-if="analyticsStore.data.articlePublishingQueueCount"
+                  >
+                    <strong>
+                      {{ analyticsStore.data.articlePublishingQueueCount }}
+                    </strong>
+                    <span
+                      v-if="analyticsStore.data.articlePublishingQueueCount > 1"
+                    >
+                      articles</span
+                    >
+                    <span v-else> article</span>
+                  </strong>
+                  waiting to be published.
                 </div>
                 <q-btn
                   color="accent"
@@ -58,10 +95,6 @@
                   @click="publishArticles()"
                   icon="mdi-check-all"
                   label="Publish"
-                  :disable="
-                    !analyticsStore.dataLoaded ||
-                    analyticsStore.data.articlePublishingQueueCount < 1
-                  "
                 />
               </div>
             </q-card-section>
@@ -72,22 +105,22 @@
             class="bg-grey-3 rounded-borders"
             align="justify"
           >
-            <q-tab name="review" icon="mdi-eye" label="Requests" no-caps>
+            <q-tab
+              name="review"
+              icon="mdi-file-document-edit"
+              label="Articles"
+              no-caps
+            >
               <q-badge
                 floating
                 color="secondary"
                 rounded
                 v-if="articles.dataLoaded && articles.data[0]"
               >
-                {{ articles.data.length }}
+                {{ articles.data.length
+                }}<span v-if="articles.data.length === 10">+</span>
               </q-badge>
             </q-tab>
-            <q-tab
-              name="all"
-              icon="mdi-file-document-edit"
-              label="All edits"
-              no-caps
-            />
             <q-tab name="menu" icon="mdi-folder-text" label="Menu" no-caps>
               <q-badge
                 floating
@@ -102,23 +135,26 @@
 
           <div style="min-height: 256px">
             <!-- REVIEW -->
-            <div v-if="articles.dataLoaded && tab === 'review'">
+            <div
+              v-if="articles.dataLoaded && tab === 'review'"
+              class="q-gutter-y-md q-my-md"
+            >
               <q-card v-if="!articles.data[0]" class="bg-accent">
                 <q-card-section>No new edits.</q-card-section>
               </q-card>
 
-              <transition-group
+              <!-- <transition-group
                 name="list"
                 class="q-gutter-y-md q-my-md"
                 tag="div"
-              >
-                <ModerationItem
-                  v-for="article in articles.data"
-                  :liveDraftArticle="article"
-                  :key="article.id"
-                  :quickReview="quickReview"
-                />
-              </transition-group>
+              > -->
+              <ModerationItem
+                v-for="article in articles.data"
+                :liveDraftArticle="article"
+                :key="article.id"
+                :quickReview="quickReview"
+              />
+              <!-- </transition-group> -->
             </div>
 
             <!-- MENU -->
@@ -127,7 +163,7 @@
             </div>
           </div>
 
-          <q-separator class="q-my-xl" />
+          <!-- <q-separator class="q-my-xl" />
 
           <q-card flat class="q-mt-xl bg-grey-2">
             <q-card-section class="text-center">
@@ -153,7 +189,7 @@
                 />
               </div>
             </q-card-section>
-          </q-card>
+          </q-card> -->
         </div>
       </q-page>
     </q-page-container>
@@ -206,6 +242,7 @@ import {
   doc,
   query,
   where,
+  orderBy,
   limit,
   onSnapshot,
   getFirestore,
@@ -250,19 +287,24 @@ export default {
       },
     };
   },
-  mounted: function () {
+  created: function () {
     // Fetch articles
     this.fetchArticles();
     this.fetchMenu();
+  },
+  unmounted() {
+    this.articles.unsubscribe();
+    this.menu.unsubscribe();
   },
   methods: {
     async fetchArticles() {
       const q = query(
         collection(db, "articles"),
         where("requestedPublication", "==", true),
+        orderBy("requestedPublicationTimestamp", "asc"),
         limit(10)
       );
-      this.articles.unsubscribe = await onSnapshot(q, async (querySnapshot) => {
+      this.articles.unsubscribe = onSnapshot(q, async (querySnapshot) => {
         const articles = [];
         querySnapshot.forEach((doc) => {
           articles.push({
@@ -324,6 +366,19 @@ export default {
               message: "Website published",
               color: "black",
               textColor: "accent",
+              timeout: 7000,
+              actions: [
+                {
+                  label: "View",
+                  color: "accent",
+                  noCaps: true,
+                  handler: () => {
+                    window
+                      .open("https://activisthandbook.org", "_blank")
+                      .focus();
+                  },
+                },
+              ],
             });
           }, renderingTime);
         })

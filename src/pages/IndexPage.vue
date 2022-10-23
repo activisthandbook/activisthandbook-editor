@@ -10,54 +10,121 @@
       <q-page padding style="max-width: 720px; margin: auto">
         <div class="q-gutter-y-md q-mt-md q-mb-xl">
           <div class="q-gutter-y-md">
-            <div>
-              <q-card
-                class="bg-accent q-py-sm"
-                v-if="unpublishedArticles.data.length"
-              >
-                <q-card-section>
-                  <h3 class="flex items-center">
-                    <q-icon name="mdi-star-outline" class="q-mr-sm" />
-                    <span>New</span>
-                  </h3>
-                </q-card-section>
+            <q-tabs
+              v-model="tab"
+              class="bg-grey-3 rounded-borders"
+              align="justify"
+              active-color="secondary"
+            >
+              <q-tab
+                name="my-files"
+                icon="mdi-account-circle"
+                label="My files"
+                no-caps
+              />
 
-                <ArticleList :articles="unpublishedArticles" />
-              </q-card>
-            </div>
-            <div>
-              <q-card
-                class="bg-accent q-py-sm"
-                v-if="recentlyEditedArticles.data.length"
-              >
-                <q-card-section>
-                  <h3 class="flex items-center">
-                    <q-icon
-                      name="mdi-file-document-edit-outline"
-                      class="q-mr-sm"
-                    />
-                    <span>Recently edited</span>
-                  </h3>
-                </q-card-section>
-
-                <ArticleList :articles="recentlyEditedArticles" />
-              </q-card>
-            </div>
-            <div>
-              <q-card
-                class="bg-accent q-py-sm"
-                v-if="publishedArticles.data.length"
-              >
-                <q-card-section>
-                  <h3 class="flex items-center">
-                    <q-icon name="mdi-check-circle" class="q-mr-sm" />
-                    <span>Recently published</span>
-                  </h3>
-                </q-card-section>
-
-                <ArticleList :articles="publishedArticles" />
-              </q-card>
-            </div>
+              <q-tab
+                name="new"
+                icon="mdi-star-outline"
+                label="New"
+                no-caps
+                disable
+              />
+              <q-tab
+                name="published"
+                icon="mdi-check-circle-outline"
+                label="Published"
+                no-caps
+                disable
+              />
+              <q-tab
+                name="tree"
+                icon="mdi-file-tree"
+                label="Tree"
+                no-caps
+                disable
+              />
+              <q-tab
+                name="import"
+                icon="mdi-database-import-outline"
+                label="Imported"
+                no-caps
+                disable
+              />
+            </q-tabs>
+            <q-card
+              class="bg-accent q-py-sm"
+              v-if="
+                usersStore.recentArticles.dataLoaded[
+                  firebaseStore.auth.currentUser.uid
+                ]
+              "
+            >
+              <q-list>
+                <q-item class="q-py-md bg-grey-1 q-mb-sm">
+                  <q-item-section avatar>
+                    <q-icon name="mdi-file-document-edit-outline" size="32px" />
+                  </q-item-section>
+                  <q-item-section class="text-h5">
+                    My recent edits
+                  </q-item-section>
+                </q-item>
+              </q-list>
+              <!-- <q-card-section>
+                <h3 class="flex items-center">
+                  <q-icon
+                    name="mdi-file-document-edit-outline"
+                    class="q-mr-sm"
+                  />
+                  <span>My recent edits</span>
+                </h3>
+              </q-card-section> -->
+              <ArticleList
+                :articles="
+                  usersStore.recentArticles.data[
+                    firebaseStore.auth.currentUser.uid
+                  ]
+                "
+              />
+            </q-card>
+            <q-card class="bg-secondary" dark>
+              <q-card-section>
+                <div class="q-gutter-y-md">
+                  <div>
+                    <strong
+                      >Thank you for making Activist Handbook better<span
+                        v-if="
+                          usersStore.profile.dataLoaded[
+                            firebaseStore.auth.currentUser.uid
+                          ]
+                        "
+                        >,
+                        {{
+                          usersStore.profile.data[
+                            firebaseStore.auth.currentUser.uid
+                          ].firstName
+                        }} </span
+                      >.</strong
+                    >
+                    Our team trains 4000 activists every month. And we couldn't
+                    do it without you.
+                  </div>
+                  <div>
+                    Need help getting started? Our team of volunteers is happy
+                    to assist:
+                  </div>
+                  <q-btn
+                    label="Support page"
+                    no-caps
+                    color="accent"
+                    text-color="black"
+                    icon-right="mdi-arrow-right"
+                    href="https://activisthandbook.org/en/support/writers"
+                    target="_blank"
+                  />
+                </div>
+              </q-card-section>
+            </q-card>
           </div>
         </div>
       </q-page>
@@ -84,16 +151,9 @@
 </template>
 
 <script>
-import {
-  query,
-  collection,
-  onSnapshot,
-  getFirestore,
-  orderBy,
-  limit,
-  where,
-} from "firebase/firestore";
-const db = getFirestore();
+import { mapStores } from "pinia";
+import { useUsersStore } from "src/stores/users";
+import { useFirebaseStore } from "src/stores/firebase";
 
 import AppSwitcher from "components/AppSwitcher.vue";
 import ArticleList from "components/ArticleList.vue";
@@ -101,100 +161,23 @@ import ArticleList from "components/ArticleList.vue";
 export default {
   name: "IndexPage",
   components: { AppSwitcher, ArticleList },
-  data: function () {
+  data() {
     return {
-      unpublishedArticles: {
-        data: [],
-        dataLoaded: false,
-        error: null,
-        unsubscribe: null,
-      },
-      recentlyEditedArticles: {
-        data: [],
-        dataLoaded: false,
-        error: null,
-        unsubscribe: null,
-      },
-      publishedArticles: {
-        data: [],
-        dataLoaded: false,
-        error: null,
-        unsubscribe: null,
-      },
+      tab: "my-files",
     };
   },
-  created() {
-    this.fetchUnpublishedArticles();
-    this.fetchRecentlyEditedArticles();
-    this.fetchPublishedArticles();
+  computed: {
+    ...mapStores(useUsersStore, useFirebaseStore),
   },
-  methods: {
-    fetchUnpublishedArticles() {
-      this.unpublishedArticles.unsubscribe = onSnapshot(
-        query(
-          collection(db, "articles"),
-          where("lastPublishedServerTimestamp", "==", null),
-          limit(3)
-        ),
-        (snapshot) => {
-          let articles = [];
-          snapshot.forEach((doc) => {
-            articles.push(doc.data());
-          });
-          this.unpublishedArticles.data = articles;
-          this.unpublishedArticles.dataLoaded = true;
-        },
-        (error) => {
-          this.unpublishedArticles.error = error;
-        }
-      );
-    },
-    fetchRecentlyEditedArticles() {
-      this.recentlyEditedArticles.unsubscribe = onSnapshot(
-        query(
-          collection(db, "articles"),
-          orderBy("lastUpdatedServerTimestamp", "desc"),
-          limit(3)
-        ),
-        (snapshot) => {
-          let articles = [];
-          snapshot.forEach((doc) => {
-            articles.push(doc.data());
-          });
-          this.recentlyEditedArticles.data = articles;
-          this.recentlyEditedArticles.dataLoaded = true;
-        },
-        (error) => {
-          this.recentlyEditedArticles.error = error;
-        }
-      );
-    },
-    fetchPublishedArticles() {
-      this.publishedArticles.unsubscribe = onSnapshot(
-        query(
-          collection(db, "articles"),
-          orderBy("lastPublishedServerTimestamp", "desc"),
-          where("lastPublishedServerTimestamp", "!=", null),
-          limit(3)
-        ),
-        (snapshot) => {
-          let articles = [];
-          snapshot.forEach((doc) => {
-            articles.push(doc.data());
-          });
-          this.publishedArticles.data = articles;
-          this.publishedArticles.dataLoaded = true;
-        },
-        (error) => {
-          this.publishedArticles.error = error;
-        }
-      );
-    },
+  created() {
+    this.usersStore.fetchRecentArticles(
+      this.firebaseStore.auth.currentUser.uid
+    );
   },
   unmounted() {
-    this.unpublishedArticles.unsubscribe();
-    this.recentlyEditedArticles.unsubscribe();
-    this.publishedArticles.unsubscribe();
+    this.usersStore.destroyRecentArticles(
+      this.firebaseStore.auth.currentUser.uid
+    );
   },
 };
 </script>

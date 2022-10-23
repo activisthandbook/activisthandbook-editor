@@ -1,107 +1,112 @@
 <template>
   <h2>Sidebar</h2>
-  <div
-    flat
-    class="bg-grey-3 q-mt-sm"
-    style="position: sticky; top: 0; z-index: 1"
-  >
-    <q-card-section>
-      <div class="text-bold">Compare versions:</div>
-      <div class="q-px-xs" v-if="menuVersions.dataLoaded && menuVersions.data">
-        <q-slider
-          v-model="menuVersionSelected"
-          :min="0"
-          :max="menuVersions.data.length - 1"
-          :step="1"
-          markers
-          snap
-          label
-          :label-value="versionLabel"
-          label-always
-          color="grey-6"
-          thumb-color="secondary"
-          thumb-size="32px"
-          track-size="16px"
-        />
-      </div>
-      <div class="flex" style="margin-top: -12px">
-        <span v-if="isNewMenu">First edit</span>
-        <span v-else>On website now</span>
-        <q-space />
-        <span>Last edit</span>
-      </div>
-      <div class="row q-col-gutter-sm q-mt-sm">
-        <div class="col-12 col-sm-3">
-          <q-btn
-            label="Revert"
-            icon="mdi-close"
-            color="secondary"
-            outline
-            class="full-width"
-            no-caps
-            @click="revertToLastPublished()"
-          />
-        </div>
-
-        <div class="col-12 col-sm-3">
-          <q-btn
-            label="Edit"
-            icon="mdi-pencil"
-            color="secondary"
-            outline
-            class="full-width"
-            no-caps
-            :to="{
-              name: 'Menu',
-            }"
-          />
-        </div>
-
-        <div class="col-12 col-sm-6">
-          <q-btn
-            label="Accept this version"
-            icon="mdi-check"
-            color="secondary"
-            class="full-width"
-            no-caps
-            @click="acceptVersion()"
-          />
-        </div>
-      </div>
-    </q-card-section>
-  </div>
-
-  <div class="flex items-center q-mt-sm">
-    <q-toggle v-model="showOnlyDifferences" color="secondary" /> Only show
-    differences with website
-    <div class="text-caption">
-      Note: if this setting is on, items that have been removed are not shown!
-    </div>
-  </div>
-
-  <div class="q-gutter-y-md q-my-md">
-    <q-card
-      v-for="(menuItem, index) in menuToBeShown.sidebar"
-      :key="menuItem.id"
-      class="bg-accent"
-    >
+  <div v-if="menuToBeShown.sidebar">
+    <q-card flat class="bg-grey-3 q-mt-sm">
       <q-card-section>
-        <div class="text-bold">{{ index }}</div>
-        <q-tree :nodes="menuItem" children-key="items" node-key="id" dense>
-          <template v-slot:default-header="prop">
-            <div class="text-weight-bold text-secondary">
-              {{ prop.node.text }}
-            </div>
-          </template>
+        <div class="text-bold">Compare versions:</div>
+        <div
+          class="q-px-xs"
+          v-if="menuVersions.dataLoaded && menuVersions.data"
+        >
+          <q-slider
+            v-model="menuVersionSelected"
+            :min="0"
+            :max="menuVersions.data.length - 1"
+            :step="1"
+            markers
+            snap
+            label
+            :label-value="versionLabel"
+            label-always
+            color="grey-6"
+            thumb-color="secondary"
+            thumb-size="32px"
+            track-size="16px"
+          />
+        </div>
+        <div class="flex" style="margin-top: -12px">
+          <span v-if="isNewMenu">First edit</span>
+          <span v-else>On website now</span>
+          <q-space />
+          <span>Last edit</span>
+        </div>
+        <div class="row q-col-gutter-sm q-mt-sm">
+          <div class="col-12 col-sm-3">
+            <q-btn
+              label="Revert"
+              icon="mdi-close"
+              color="secondary"
+              outline
+              class="full-width"
+              no-caps
+              @click="revertToLastPublished()"
+            />
+          </div>
 
-          <template v-slot:default-body="prop">
-            <div class="text-caption">
-              {{ prop.node.link }}
-            </div>
-          </template>
-        </q-tree>
+          <div class="col-12 col-sm-3">
+            <q-btn
+              label="Edit"
+              icon="mdi-pencil"
+              color="secondary"
+              outline
+              class="full-width"
+              no-caps
+              :to="{
+                name: 'Menu',
+              }"
+            />
+          </div>
+
+          <div class="col-12 col-sm-6">
+            <q-btn
+              label="Accept this version"
+              icon="mdi-check"
+              color="secondary"
+              class="full-width"
+              no-caps
+              @click="acceptVersion()"
+            />
+          </div>
+        </div>
+      </q-card-section>
+      <q-card-section class="flex items-center">
+        <q-toggle v-model="showOnlyDifferences" color="secondary" /> Only show
+        differences with website
+        <div class="text-caption">
+          Note: if this setting is on, items that have been removed are not
+          shown!
+        </div>
       </q-card-section>
     </q-card>
+
+    <div class="q-gutter-y-md q-my-md">
+      <q-card
+        v-for="(menuItem, index) in menuToBeShown.sidebar"
+        :key="menuItem.id"
+        class="bg-accent"
+      >
+        <q-card-section>
+          <div class="text-h3 q-pb-sm text-uppercase">{{ index }}</div>
+          <q-tree :nodes="menuItem" children-key="items" node-key="id" dense>
+            <template v-slot:default-header="prop">
+              <div class="text-weight-bold text-secondary">
+                {{ prop.node.text }}
+              </div>
+            </template>
+
+            <template v-slot:default-body="prop">
+              <div class="text-caption">
+                {{ prop.node.link }}
+              </div>
+            </template>
+          </q-tree>
+        </q-card-section>
+      </q-card>
+    </div>
+  </div>
+  <div v-else>
+    <div class="q-my-md">No updates to menu.</div>
+    <q-btn label="Edit menu" :to="{ name: 'Menu' }" no-caps />
   </div>
 </template>
 <script>
@@ -118,9 +123,10 @@ import {
   serverTimestamp,
   where,
   limit,
-  runTransaction,
-  arrayRemove,
 } from "firebase/firestore";
+import { mapStores } from "pinia";
+import { useFirebaseStore } from "src/stores/firebase";
+import { useAnalyticsStore } from "src/stores/analytics";
 const db = getFirestore();
 
 export default {
@@ -137,10 +143,14 @@ export default {
       },
     };
   },
-  mounted() {
+  created() {
     this.fetchVersions();
   },
+  unmounted() {
+    this.menuVersions.unsubscribe();
+  },
   computed: {
+    ...mapStores(useFirebaseStore, useAnalyticsStore),
     menuToBeShown() {
       if (this.showOnlyDifferences) return this.differences;
       else return this.menuVersions.data[this.menuVersionSelected];
@@ -187,7 +197,10 @@ export default {
       else return true;
     },
     versionLabel: function () {
-      if (this.menuVersions.dataLoaded) {
+      if (
+        this.menuVersions.dataLoaded &&
+        this.menuVersions.data[this.menuVersionSelected]
+      ) {
         const date = this.mixin_humanDate(
           this.menuVersions.data[this.menuVersionSelected]
             .lastUpdatedServerTimestamp
@@ -219,17 +232,14 @@ export default {
       if (this.liveDraftMenu.lastPublishedServerTimestamp) {
         versionsQuery = query(
           collection(db, "menu", "draft", "versions"),
+          where("status", "==", "review"),
           orderBy("lastUpdatedServerTimestamp"),
-          where(
-            "lastUpdatedServerTimestamp",
-            ">=",
-            this.liveDraftMenu.lastPublishedServerTimestamp
-          ),
           limit(10)
         );
       } else {
         versionsQuery = query(
           collection(db, "menu", "draft", "versions"),
+          where("status", "==", "review"),
           orderBy("lastUpdatedServerTimestamp"),
           limit(10)
         );
@@ -239,9 +249,11 @@ export default {
       this.menuVersions.unsubscribe = onSnapshot(
         versionsQuery,
         (querySnapshot) => {
+          console.log("menuVersions changed");
           // Process the data we just received from the server
           const versions = [];
           querySnapshot.forEach((doc) => {
+            console.log("querySnapshot doc", doc.data());
             versions.push({ ...doc.data(), id: doc.id });
           });
 
@@ -270,6 +282,123 @@ export default {
           console.log(error);
         }
       );
+    },
+    acceptVersion: async function () {
+      /* TODO: Add check for duplicate path  */
+      // - Change to transaction
+      // - Check the publishingQueue for an identical path
+
+      const acceptedVersion = this.menuVersions.data[this.menuVersionSelected];
+
+      // } else {
+      // Get a new write batch
+      const batch = writeBatch(db);
+
+      // 1. Copy the currently selected version to the publishingQueue collection
+      const publishingQueueRef = doc(db, "menu", "publishingQueue");
+      batch.set(publishingQueueRef, {
+        ...acceptedVersion,
+        metadata: {
+          createdTimestamp: serverTimestamp(),
+          createdBy: this.firebaseStore.auth.currentUser.uid,
+        },
+      });
+
+      // 2. Delete all review versions
+      this.menuVersions.data.forEach((version) => {
+        if (version.status === "review") {
+          const reviewVersionRef = doc(
+            db,
+            "menu",
+            "draft",
+            "versions",
+            version.id
+          );
+          batch.delete(reviewVersionRef);
+        }
+      });
+
+      // 3. Set requestedReview to false for the live edit version
+      const liveArticleRef = doc(db, "menu", "draft");
+      batch.update(liveArticleRef, {
+        requestedPublication: false,
+        lastPublishedServerTimestamp: serverTimestamp(),
+        metadata: {
+          updatedTimestamp: serverTimestamp(),
+          updatedBy: this.firebaseStore.auth.currentUser.uid,
+        },
+      });
+
+      // 4. Create a new version with the status "published"
+      const versionID = this.mixin_randomID();
+      const versionRef = doc(db, "menu", "draft", "versions", versionID);
+      batch.set(versionRef, {
+        ...acceptedVersion,
+        status: "published",
+        metadata: {
+          createdTimestamp: serverTimestamp(),
+          createdBy: this.firebaseStore.auth.currentUser.uid,
+        },
+      });
+
+      const analyticsRef = doc(db, "app", "analytics");
+      batch.update(analyticsRef, {
+        menuInPublishingQueue: true,
+        metadata: {
+          createdTimestamp: serverTimestamp(),
+          createdBy: this.firebaseStore.auth.currentUser.uid,
+        },
+      });
+
+      // Commit the batch
+      await batch.commit();
+
+      // update analytics locally (it will be updated on server automatically with a counter, but this way we prevent a delay)
+      this.analyticsStore.data.menuInPublishingQueue = true;
+    },
+    revertToLastPublished: async function () {
+      // Get a new write batch
+      const batch = writeBatch(db);
+
+      const lastPublishedArticle = this.articleVersions.data[0];
+
+      // 1. Deletes all review versions (not the previous published ones)
+      this.articleVersions.data.forEach((article) => {
+        if (article.status === "review") {
+          const reviewVersionRef = doc(
+            db,
+            "articles",
+            this.liveDraftArticle.id,
+            "versions",
+            article.id
+          );
+          batch.delete(reviewVersionRef);
+        }
+      });
+
+      // 2. Reverts the live edit to the last published version.
+      const liveArticleRef = doc(db, "articles", this.liveDraftArticle.id);
+      batch.update(liveArticleRef, {
+        title: lastPublishedArticle.title,
+        description: lastPublishedArticle.description,
+        tags: lastPublishedArticle.tags,
+        path: lastPublishedArticle.path,
+        content: lastPublishedArticle.content,
+        id: lastPublishedArticle.articleID,
+        languageCollectionID: lastPublishedArticle.languageCollectionID,
+        deleteArticle: lastPublishedArticle.deleteArticle,
+        langCode: lastPublishedArticle.langCode,
+        wordCount: lastPublishedArticle.wordCount,
+        requestedPublication: false,
+        reverted: true,
+
+        metadata: {
+          updatedTimestamp: serverTimestamp(),
+          updatedBy: this.firebaseStore.auth.currentUser.uid,
+        },
+      });
+      // Commit the batch
+      await batch.commit();
     },
   },
 };

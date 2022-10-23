@@ -138,6 +138,15 @@
     </q-menu>
   </q-btn>
 </template>
+<script>
+import { mapStores } from "pinia";
+import { useFirebaseStore } from "src/stores/firebase";
+export default {
+  computed: {
+    ...mapStores(useFirebaseStore),
+  },
+};
+</script>
 <style lang="scss" scoped>
 .apps a {
   background: rgba(black, 0.1);

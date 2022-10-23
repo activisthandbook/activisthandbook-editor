@@ -2,8 +2,8 @@
   <q-card-section class="q-pt-none">
     <q-card flat class="bg-warning q-mt-md" v-if="article.deleteArticle">
       <q-card-section
-        >If you accept, this article and all its version history will be
-        permanently deleted!</q-card-section
+        >If you accept this version, this article and all its version history
+        will be permanently deleted!</q-card-section
       >
     </q-card>
 

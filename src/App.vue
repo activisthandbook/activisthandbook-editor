@@ -1,29 +1,13 @@
 <template>
-  <div v-if="!firebaseStore.userLoaded">
-    <q-spinner class="fixed-center" color="grey" size="3em" />
+  <div
+    v-if="!firebaseStore.userLoaded || firebaseStore.userVerificationLoading"
+    class="fixed-center text-center text-caption text-grey"
+  >
+    <q-spinner color="grey" size="3em" />
+    <div class="q-mt-md">Getting ready...</div>
   </div>
   <router-view v-else-if="firebaseStore.userAuthenticated" />
-  <div v-else class="absolute-center full-width" style="max-width: 512px">
-    <q-card class="bg-accent q-ma-md">
-      <q-card-section>
-        <div class="q-gutter-y-sm">
-          <h1>Start editing</h1>
-          <div>
-            Everyone can edit Activist Handbook. Just sign in to start
-            contributing.
-          </div>
-          <div id="firebaseui-auth-container"></div>
-          <q-btn
-            label="Sign in with Google"
-            color="secondary"
-            @click="signin"
-            no-caps
-            icon="mdi-account"
-          />
-        </div>
-      </q-card-section>
-    </q-card>
-  </div>
+  <LoginPage v-else />
 </template>
 
 <script>
@@ -33,11 +17,15 @@ import { defineComponent } from "vue";
 import { useFirebaseStore } from "stores/firebase";
 
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+// import { mapStores } from "pinia";
+
+import LoginPage from "src/pages/LoginPage.vue";
 
 const provider = new GoogleAuthProvider();
 
 export default defineComponent({
   name: "App",
+  components: { LoginPage },
   setup() {
     const firebaseStore = useFirebaseStore();
     // call the action as a method of the store
@@ -49,10 +37,15 @@ export default defineComponent({
       color: "grey",
     });
 
-    return {
-      firebaseStore,
-    };
+    return { firebaseStore };
   },
+  async created() {
+    await this.firebaseStore.signInWithEmailLink();
+  },
+  // computed: {
+  //   ...mapStores(useUsersStore),
+  // },
+
   methods: {
     signin() {
       signInWithPopup(this.firebaseStore.auth, provider)

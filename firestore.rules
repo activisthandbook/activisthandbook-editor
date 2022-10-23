@@ -11,28 +11,34 @@ service cloud.firestore {
       function isModerator() {
         return
           request.auth != null &&
-          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isModerator == true;
+          get(/databases/$(database)/documents/userProfiles/$(request.auth.uid)).data.isModerator == true;
       }
 
       match /app/{settingID} {
-        allow read, write: if isModerator()
+        allow read, write: if isModerator();
       }
 
       match /app/analytics {
-        allow read: if signedIn()
+        allow read: if signedIn();
+        allow update: if isModerator();
       }
 
-      match /users/{settingID} {
-        allow read, write: if isModerator()
+      match /userProfiles/{userID} {
+        allow read: if signedIn();
+        allow write: if signedIn() && request.auth.uid == userID;
       }
 
       match /menu/draft {
-        allow read, write: if signedIn()
+        allow read, write: if signedIn();
 
         match /versions/{versionID} {
-          allow read, create: if signedIn()
+          allow read, create: if signedIn();
           allow write, delete: if isModerator();
         }
+      }
+
+       match /menu/publishingQueue {
+        allow read, write: if isModerator();
       }
 
       match /images/{imageID} {
@@ -53,15 +59,15 @@ service cloud.firestore {
       }
 
       match /publishingQueue/{articleID} {
-        allow write, read: if isModerator()
+        allow write, read: if isModerator();
       }
 
       match /articleSync/{articleSyncID} {
-        allow read, write: if signedIn()
+        allow read, write: if signedIn();
       }
 
       match /results/{resultID} {
-        allow get: if signedIn()
+        allow get: if signedIn();
       }
 
       match /customers/{uid} {

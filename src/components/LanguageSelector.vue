@@ -60,7 +60,7 @@
           no-caps
           v-if="searchInput"
           :to="{
-            name: 'Translate',
+            name: 'Translate article',
             params: { languageCollectionID: languageCollectionID },
           }"
         />
@@ -74,7 +74,7 @@
           color="secondary"
           no-caps
           :to="{
-            name: 'Translate',
+            name: 'Translate article',
             params: { languageCollectionID: languageCollectionID },
           }"
         />

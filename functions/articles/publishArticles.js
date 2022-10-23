@@ -1,3 +1,5 @@
+const debugging = true;
+
 const functions = require("firebase-functions");
 
 let { Octokit } = require("@octokit/rest");
@@ -40,26 +42,38 @@ exports.publishArticles = functions
       // STEP 1: FETCH DATA
       // Fetch all articles that need to be published. And retrieve all the language collections that these articles are part of.
       const publishingQueueArticles = await fetchPublishingQueue();
-      functions.logger.log(
-        "🔵 publishingQueueArticles",
-        publishingQueueArticles
-      );
-      functions.logger.log("🔵 languageCollections", languageCollections);
+      const publishingQueueMenu = await fetchPublishingQueueMenu();
 
-      // STEP 2: UPDATED PUBLISHED COLLECTION & LANGUAGE COLLECTIONS
-      await updatePublishedArticles(publishingQueueArticles);
-      functions.logger.log("🔵 languageCollections", languageCollections);
+      log("🔵 publishingQueueArticles", publishingQueueArticles);
+      log("🔵 languageCollections", languageCollections);
+      log("🔵 publishingQueueMenu", publishingQueueMenu);
+
+      if (!publishingQueueArticles && !publishingQueueMenu) {
+        throw new functions.https.HttpsError(
+          "not-found",
+          "No articles or menu found in the publishing queue."
+        );
+      }
+
+      if (publishingQueueArticles) {
+        // STEP 2: UPDATED PUBLISHED COLLECTION & LANGUAGE COLLECTIONS
+        await updatePublishedArticles(publishingQueueArticles);
+        log("🔵 languageCollections", languageCollections);
+      }
 
       // STEP 3: SYNC WITH GITHUB
       // Generate file output and sync with GitHub.
-      await syncWithGithub(process.env.GITHUB_API, publishingQueueArticles);
+      await syncWithGithub(
+        process.env.GITHUB_API,
+        publishingQueueArticles,
+        publishingQueueMenu
+      );
 
       // STEP 4: CLEAR PUBLISHING QUEUE
-      await clearPublishingQueue(publishingQueueArticles);
+      await clearPublishingQueue(publishingQueueArticles, publishingQueueMenu);
 
       return {
         success: true,
-        updatedArticleCount: publishingQueueArticles.length,
       };
     }
   });
@@ -71,16 +85,13 @@ async function fetchPublishingQueue() {
   const snapshot = await publishingQueueRef.get();
   if (snapshot.empty) {
     // console.log('No matching documents.');
-    throw new functions.https.HttpsError(
-      "not-found",
-      "No articles found in the publishing queue."
-    );
+    return null;
   } else {
     let articles = [];
 
     snapshot.forEach((doc) => {
       articles.push(doc.data());
-      functions.logger.log("⚪️ article added", doc.data());
+      log("⚪️ article added", doc.data());
     });
 
     // TO-DO: Optimize speed https://gist.github.com/joeytwiddle/37d2085425c049629b80956d3c618971
@@ -93,8 +104,8 @@ async function fetchPublishingQueue() {
 }
 
 async function fetchLanguageCollection(languageCollectionID) {
-  functions.logger.log("⚪️ languageCollections", languageCollections);
-  functions.logger.log("⚪️ languageCollectionID", languageCollectionID);
+  log("⚪️ languageCollections", languageCollections);
+  log("⚪️ languageCollectionID", languageCollectionID);
 
   // if (!languageCollections[languageCollectionID]) {
   const languageCollectionRef = db
@@ -102,16 +113,27 @@ async function fetchLanguageCollection(languageCollectionID) {
     .doc(languageCollectionID);
   const doc = await languageCollectionRef.get();
   if (!doc.exists) {
-    functions.logger.log("🔴 Error: Could not find language collection");
+    log("🔴 Error: Could not find language collection");
     throw new functions.https.HttpsError(
       "not-found",
       "Could not find language collection."
     );
   } else {
     languageCollections[languageCollectionID] = doc.data();
-    functions.logger.log("⚪️ language collection added", doc.data());
+    log("⚪️ language collection added", doc.data());
   }
   // }
+}
+
+async function fetchPublishingQueueMenu() {
+  const publishingQueueRef = db.collection("menu").doc("publishingQueue");
+  const docSnapshot = await publishingQueueRef.get();
+  if (docSnapshot.empty) {
+    // console.log('No matching documents.');
+    return null;
+  } else {
+    return docSnapshot.data();
+  }
 }
 
 // STEP 2 _________________________________
@@ -120,7 +142,9 @@ async function updatePublishedArticles(articles) {
   // Get a new write batch
   const batch = db.batch();
 
+  // 🔁 LOOP THROUGH ALL ARTICLES
   for (const article of articles) {
+    // References for docs we want to edit later
     const publishedArticleRef = db
       .collection("publishedArticles")
       .doc(article.id);
@@ -128,103 +152,143 @@ async function updatePublishedArticles(articles) {
       .collection("languageCollections")
       .doc(article.languageCollectionID);
 
-    // languageCollections[article.languageCollectionID].publishedArticles =
-    //   languageCollections[article.languageCollectionID].articles;
+    let publishedArticlesIndex = null;
+    if (languageCollections[article.languageCollectionID].publishedArticles) {
+      // Find the index of the current article language in the publishedArticles of this article's languageCollection
+      publishedArticlesIndex = languageCollections[
+        article.languageCollectionID
+      ].publishedArticles.findIndex((x) => x.articleID === article.id);
 
-    if (article.delete) {
+      log("⚪️ publishedArticlesIndex", publishedArticlesIndex);
+    }
+
+    // 🗑 DELETE ARTICLE
+    // Actions:
+    // - remove from language collection
+    if (article.deleteArticle) {
+      log("⚪️ delete article", article);
       batch.delete(publishedArticleRef);
 
-      // Find the index of the current article language in the publishedArticles of this article's languageCollection
-      const currentLanguageIndex = languageCollections[
-        article.languageCollectionID
-      ].publishedArticles.findIndex(
-        (object) => object.langCode === article.langCode
-      );
+      // Fallback 'if' statement: publishedArticles should always be defined for articles that you are trying to delete
+      if (languageCollections[article.languageCollectionID].publishedArticles) {
+        // Remove article from publishedArticles array
+        languageCollections[
+          article.languageCollectionID
+        ].publishedArticles.splice(publishedArticlesIndex, 1);
 
-      // Update in local array
-      languageCollections[
-        article.languageCollectionID
-      ].publishedArticles.splice(currentLanguageIndex, 1);
-    } else {
+        log(
+          "⚪️ publishedArticles",
+          languageCollections[article.languageCollectionID].publishedArticles
+        );
+      }
+    } // 🗑 END DELETE ARTICLE
+
+    // 📝 EDIT ARTICLE
+    // Actions:
+    // 1. Update publishedArticles collection
+    // 2. Build full link from languageCode and path
+    // 3. Get details on this language based on the languageCode
+    // 4. Define object to add or update in the languageCollection 'publishedArticles' array.
+    // 5. Check if this languageCollection already contains any published articles & find index
+    // 6. Create, add to or update publishedArticles array
+    else {
+      log("⚪️ edit article", article);
+      // 1. Update publishedArticles collection
       batch.set(publishedArticleRef, article);
 
+      // 2. Build full link from languageCode and path
       let link = null;
       if (article.langCode === "en") {
         link = `/${article.path}`;
       } else {
         link = `/${article.langCode}/${article.path}`;
       }
+      log("⚪️ link article", link);
 
+      // 3. Get details on this language based on the languageCode
       const languageDetails = languages.find(
         (x) => x.code === article.langCode
       );
+      log("⚪️ languageDetails", languageDetails);
 
+      // 4. Define object to add or update in the languageCollection 'publishedArticles' array.
       const languageToAdd = {
-        // It's important these keys are in alphabetical order!
         articleID: article.id,
         langCode: article.langCode,
         link: link,
         localName: languageDetails.localName,
       };
+      log("⚪️ languageToAdd", languageToAdd);
 
-      // Update in local array (many lines below)
-      if (languageCollections[article.languageCollectionID].publishedArticles) {
-        const indexArticleInLanguageCollection = languageCollections[
-          article.languageCollectionID
-        ].publishedArticles.findIndex((x) => x.articleID === article.id);
-      }
+      // 6. Create, add to or update publishedArticles array
 
+      // A. No published languages yet -> create array
       if (
-        // No published languages yet
         !languageCollections[article.languageCollectionID].publishedArticles
       ) {
         languageCollections[article.languageCollectionID].publishedArticles = [
           languageToAdd,
         ];
-      } else if (
-        // Does not include this language yet (at least not an exact instance like this)
-        !languageCollections[
-          article.languageCollectionID
-        ].publishedArticles.includes(languageToAdd) ||
-        // This article is not included in language collection yet
-        indexArticleInLanguageCollection === -1
-      ) {
-        // Add it!
+        log(
+          "⚪️ No published languages yet -> create publishedArticles array",
+          languageCollections[article.languageCollectionID].publishedArticles
+        );
+      }
+
+      // B. Article not included in language collection yet -> add to array
+      else if (publishedArticlesIndex === -1) {
         languageCollections[
           article.languageCollectionID
         ].publishedArticles.push(languageToAdd);
-      } else if (indexArticleInLanguageCollection >= 0) {
+
+        log(
+          "⚪️ Article not included in language collection yet -> add to array",
+          languageCollections[article.languageCollectionID].publishedArticles
+        );
+      }
+
+      // C. Article has been published before -> update array
+      else if (publishedArticlesIndex >= 0) {
         // Remove current instance
         languageCollections[
           article.languageCollectionID
-        ].publishedArticles.splice(indexArticleInLanguageCollection, 1);
+        ].publishedArticles.splice(publishedArticlesIndex, 1);
 
         // Add updated instance
         languageCollections[
           article.languageCollectionID
         ].publishedArticles.push(languageToAdd);
-      }
-    }
 
-    // Sort the language collection
+        log(
+          "⚪️Article has been published before -> update array",
+          languageCollections[article.languageCollectionID].publishedArticles
+        );
+      }
+    } // 📝 END EDIT ARTICLE
+
+    // 🔤 SORT LANGUAGE COLLECTION ALPHABETICALLY
     languageCollections[article.languageCollectionID].publishedArticles.sort(
       (a, b) => a.localName - b.localName
     ); // b - a for reverse sort
+    log(
+      "⚪️sort publishedArticles",
+      languageCollections[article.languageCollectionID].publishedArticles
+    );
 
-    // Update on server
+    // 🔥 UPDATE LANGUAGE COLLECTION IN FIRESTORE
     batch.update(languageCollectionRef, {
       publishedArticles:
         languageCollections[article.languageCollectionID].publishedArticles,
     });
-  }
+  } // 🔁 END LOOP
 
-  // Commit the batch
+  // 🔥 COMMIT THE BATCH
   await batch.commit();
 }
 
 // STEP 3 _________________________________
 
-async function syncWithGithub(token, articles) {
+async function syncWithGithub(token, articles, menu) {
   const octokit = new Octokit({
     auth: token,
   });
@@ -237,10 +301,8 @@ async function syncWithGithub(token, articles) {
   let files = {};
   let filesToDelete = [];
 
-  for (const article of articles) {
-    if (article.delete) {
-      filesToDelete.push(article.path);
-    } else {
+  if (articles) {
+    for (const article of articles) {
       let githubPath = "";
       if (article.langCode == "en") {
         githubPath = "articles/" + article.path + ".md";
@@ -248,20 +310,38 @@ async function syncWithGithub(token, articles) {
         githubPath =
           "articles/" + article.langCode + "/" + article.path + ".md";
       }
-      files[githubPath] = generateFileContent(article);
+
+      if (article.deleteArticle) {
+        filesToDelete.push(githubPath);
+      } else {
+        files[githubPath] = generateFileContent(article);
+      }
+    }
+    for (const languageCollectionID in languageCollections) {
+      const githubPath =
+        "articles/public/languageCollections/" + languageCollectionID + ".json";
+
+      if (
+        languageCollections[languageCollectionID].publishedArticles &&
+        languageCollections[languageCollectionID].publishedArticles.length
+      ) {
+        files[githubPath] = JSON.stringify(
+          languageCollections[languageCollectionID].publishedArticles
+        );
+      } else {
+        filesToDelete.push(githubPath);
+      }
     }
   }
 
-  for (const languageCollectionID in languageCollections) {
-    const githubPath =
-      "articles/public/languageCollections/" + languageCollectionID + ".json";
-    files[githubPath] = JSON.stringify(
-      languageCollections[languageCollectionID].publishedArticles
-    );
+  if (menu) {
+    const fileContentsMenu = generateFileContentMenu(menu);
+    files[".vitepress/menus/sidebar.json"] = fileContentsMenu.sidebar;
+    log("⚪️ fileContentsMenu", fileContentsMenu);
   }
 
-  functions.logger.log("🔵 files", files);
-  functions.logger.log("🔵 filesToDelete", filesToDelete);
+  log("🔵 files", files);
+  log("🔵 filesToDelete", filesToDelete);
 
   const commits = await octokit.rest.repos.createOrUpdateFiles({
     owner,
@@ -297,7 +377,7 @@ tags: ${sanitizeHtml(article.tags)}
 langCode: ${sanitizeHtml(article.langCode)}
 articleID: ${sanitizeHtml(article.id)}
 wordCount: ${sanitizeHtml(article.wordCount)}
-lastUpdated: ${article.lastUpdatedServerTimestamp.toMillis()}
+lastUpdated: ${article.metadata.createdTimestamp.toMillis()}
 languageCollectionID: ${sanitizeHtml(article.languageCollectionID)}
 ---
 
@@ -325,50 +405,61 @@ ${turndownService.turndown(
   })
 )}
 `;
-  functions.logger.log("⚪️ fileContents", fileContents);
+  log("⚪️ fileContents", fileContents);
 
   return fileContents;
 }
 
+function generateFileContentMenu(menu) {
+  if (menu.sidebar.en) {
+    // Change name of 'en' sidebar, and put it at the end of the object (because if it's position in the object would be before other languages, those would never match in vitepress)
+    const enSidebar = menu.sidebar.en;
+    delete menu.sidebar.en;
+    menu.sidebar["/"] = enSidebar;
+  }
+
+  const sidebarFileContents = JSON.stringify(menu.sidebar);
+
+  return { sidebar: sidebarFileContents };
+}
+
 // STEP 4 _________________________________
 
-async function clearPublishingQueue(articles) {
+async function clearPublishingQueue(articles, menu) {
   // Get a new write batch
   const batch = db.batch();
 
-  for (const article of articles) {
-    const articleRef = db.collection("publishingQueue").doc(article.id);
-    batch.delete(articleRef);
+  if (articles) {
+    for (const article of articles) {
+      const articleRef = db.collection("publishingQueue").doc(article.id);
+      batch.delete(articleRef);
+    }
   }
 
-  const moderatorRef = db.collection("app").doc("moderator");
-  batch.set(
-    moderatorRef,
-    {
-      publishingQueueCount: 0,
-    },
-    { merge: true }
-  );
+  if (menu) {
+    const menuPublishingQueueRef = db.collection("menu").doc("publishingQueue");
+
+    batch.delete(menuPublishingQueueRef);
+    const moderatorRef = db.collection("app").doc("analytics");
+    batch.set(
+      moderatorRef,
+      {
+        menuInPublishingQueue: false,
+      },
+      { merge: true }
+    );
+  }
 
   // Commit the batch
   await batch.commit();
 }
 
-// async function updatePublishedArticlesCollection(articles) {
-//   // Get a new write batch
-//   const batch = db.batch();
-
-//   articles.forEach((article) => {
-//     let fullPath = null;
-//     if (article.langCode === "en") {
-//       fullPath = article.path;
-//     } else {
-//       fullPath = "/" + article.langCode + "/" + article.path;
-//     }
-//     const articleRef = db.collection("publishedArticles").doc(article.id);
-//     batch.set(articleRef, { ...article, fullPath: fullPath });
-//   });
-
-//   // Commit the batch
-//   await batch.commit();
-// }
+function log(message, attachment) {
+  if (debugging) {
+    if (attachment) {
+      functions.logger.log(message, attachment);
+    } else {
+      functions.logger.log(message);
+    }
+  }
+}

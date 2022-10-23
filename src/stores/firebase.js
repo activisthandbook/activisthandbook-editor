@@ -3,7 +3,15 @@ import { defineStore } from "pinia";
 import { boot } from "quasar/wrappers";
 import { initializeApp } from "firebase/app";
 import { getAnalytics, logEvent, setUserId } from "firebase/analytics";
-import { getAuth, signInAnonymously, onAuthStateChanged } from "firebase/auth";
+import {
+  getAuth,
+  signInAnonymously,
+  signOut,
+  onAuthStateChanged,
+  sendSignInLinkToEmail,
+  isSignInWithEmailLink,
+  signInWithEmailLink,
+} from "firebase/auth";
 // import { getFirestore, enableIndexedDbPersistence } from "firebase/firestore";
 import { getFunctions } from "firebase/functions";
 import { getStorage } from "firebase/storage";
@@ -34,6 +42,7 @@ export const useFirebaseStore = defineStore("firebase", {
     firestore: null,
     userAuthenticated: false,
     userLoaded: false,
+    userVerificationLoading: false,
   }),
 
   actions: {
@@ -109,13 +118,122 @@ export const useFirebaseStore = defineStore("firebase", {
       getPerformance(firebaseApp);
     },
     async signOut() {
-      await signOut(auth)
+      this.userLoaded = false;
+      this.userAuthenticated = false;
+
+      await signOut(this.auth)
         .then(() => {
           // Sign-out successful.
+          Notify.create({
+            message: "Signout succesful",
+            icon: "mdi-check",
+          });
         })
         .catch((error) => {
           // An error happened.
+          console.log(error);
         });
+    },
+    /* 💌 SEND VERIFICATION EMAIL
+    Docs: https://firebase.google.com/docs/auth/web/email-link-auth#send_an_authentication_link_to_the_users_email_address
+    */
+    async sendVerificationEmail(email) {
+      // event.preventDefault();
+      const actionCodeSettings = {
+        /* URL you want to redirect back to. The domain (www.example.com) for this URL must be in the authorized domains list in the Firebase Console. */
+        url: window.location.href,
+        // url: window.location.origin + "/start?next=" + window.location.pathname,
+        handleCodeInApp: true,
+      };
+
+      await sendSignInLinkToEmail(this.auth, email, actionCodeSettings)
+        .then(() => {
+          /* ✅ SUCCESS: The link was successfully sent. Inform the user. Save the email locally so you don't need to ask the user for it again if they open the link on the same device. */
+          window.localStorage.setItem("emailForSignIn", email);
+          Notify.create({
+            message: "Verification email sent",
+            icon: "mdi-email-check",
+          });
+
+          // logEvent(getAnalytics(), "verification_email_sent");
+
+          return true;
+        })
+        .catch((error) => {
+          /* ❌ ERROR: Notify user of error (as a last resort). */
+          console.error(error);
+
+          throw new Error(error);
+        });
+    },
+
+    /* 🔐 SIGN IN USING EMAIL LINK
+    Docs: https://firebase.google.com/docs/auth/web/email-link-auth#completing_sign-in_in_a_web_page
+    */
+    async signInWithEmailLink() {
+      // Confirm the link is a sign-in with email link.
+      if (isSignInWithEmailLink(this.auth, window.location.href)) {
+        this.userVerificationLoading = true;
+
+        /* Additional state parameters can also be passed via URL. This can be used to continue the user's intended action before triggering the sign-in operation. */
+
+        /* Get the email. This should be available if the user completes the flow on the same device where they started it. */
+        let email = window.localStorage.getItem("emailForSignIn");
+
+        if (!email) {
+          /* LINK OPENED ON NEW DEVICE
+          User opened the link on a different device. To prevent session fixation attacks, ask the user to provide the associated email again. For example: */
+          email = window.prompt("Please provide your email for confirmation");
+
+          // 👉 TO-DO: Make this more user friendly using Quasar dialog
+        }
+
+        // The client SDK will parse the code from the link for you.
+        await signInWithEmailLink(this.auth, email, window.location.href)
+          .then((result) => {
+            this.userVerificationLoading = false;
+            /* ✅ SUCCESS
+            - You can access the new user via result.user.
+            - Additional user info profile not available via: result.additionalUserInfo.profile == null
+            - You can check if the user is new or existing: result.additionalUserInfo.isNewUser */
+
+            let query = Object.assign({}, this.router.currentRoute.query);
+            delete query.apiKey;
+            delete query.oobCode;
+            delete query.mode;
+            delete query.lang;
+            this.router.replace({ query });
+
+            this.userAuthenticated = true;
+
+            // Clear email from storage.
+            window.localStorage.removeItem("emailForSignIn");
+            // commit("signedInWithEmailLink");
+
+            // Notify the user that the login was succesful.
+            Notify.create({
+              message: "You are now signed in",
+              icon: "mdi-account-check",
+              timeout: 3000,
+            });
+
+            // logEvent(getAnalytics(), "signin", {
+            //   with: "email-link",
+            // });
+
+            return true;
+          })
+          .catch((error) => {
+            this.userVerificationLoading = false;
+            /* ❌ ERROR: Common errors could be invalid email and invalid or expired OTPs. */
+            Notify.create({
+              message: error + " (auth.js)",
+              icon: "mdi-alert",
+            });
+          });
+      } else {
+        console.log("not a sign in link");
+      }
     },
   },
 });

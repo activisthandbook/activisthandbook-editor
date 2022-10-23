@@ -288,7 +288,6 @@ export default {
           languageCollections[renderedPageCollectionIndex].articles.push({
             articleID: renderedPage.id,
             langCode: renderedPage.langCode,
-            published: false,
           });
         } else {
           const languageCollectionID = this.mixin_randomID();
@@ -300,7 +299,6 @@ export default {
               {
                 articleID: renderedPage.id,
                 langCode: renderedPage.langCode,
-                published: false,
               },
             ],
           });

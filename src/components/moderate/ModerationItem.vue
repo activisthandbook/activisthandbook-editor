@@ -7,20 +7,34 @@
     <q-card class="q-py-sm bg-accent">
       <q-expansion-item class="bg-accent">
         <template v-slot:header>
-          <q-item-section class="q-py-sm">
+          <q-item-section
+            class="q-py-md text-bold"
+            v-if="
+              articleVersions.data[this.articleVersionSelected].websiteVersion
+            "
+          >
+            <q-item-label class="q-pt-sm">Website version</q-item-label>
+            <q-item-label caption class="q-py-sm"
+              >Preview unavailable</q-item-label
+            >
+          </q-item-section>
+          <q-item-section class="q-py-sm" v-else>
+            <q-item-label caption>
+              {{
+                mixin_humanDate(
+                  articleVersions.data[this.articleVersionSelected].metadata
+                    .createdTimestamp
+                )
+              }}
+            </q-item-label>
             <q-item-label class="text-bold">
               <div v-if="articleVersions.data[articleVersionSelected].title">
                 {{ articleVersions.data[articleVersionSelected].title }}
               </div>
               <div v-else class="text-grey">No title</div>
             </q-item-label>
+
             <q-item-label>
-              {{
-                mixin_humanDate(
-                  articleVersions.data[this.articleVersionSelected]
-                    .lastUpdatedServerTimestamp
-                )
-              }}
               <div
                 v-if="articleVersions.data[articleVersionSelected].description"
               >
@@ -28,10 +42,11 @@
               </div>
               <div v-else class="text-grey">No description</div>
             </q-item-label>
+
             <q-item-label class="text-caption">
-              <q-icon name="mdi-link" />activisthandbook.org/{{
-                articleVersions.data[articleVersionSelected].langCode
-              }}/{{ articleVersions.data[articleVersionSelected].path }}
+              <q-icon name="mdi-link" class="q-mr-xs" />activisthandbook.org/{{
+                fullPath
+              }}
             </q-item-label>
           </q-item-section>
           <q-item-section side>
@@ -44,12 +59,18 @@
             />
             <q-chip
               v-else-if="isNewArticle"
-              icon="mdi-star"
+              icon="mdi-star-outline"
               label="New"
               class="q-ma-none"
               color="grey-3"
             />
-            <q-chip v-else label="Update" class="q-ma-none" color="grey-3" />
+            <q-chip
+              v-else
+              icon="mdi-file-edit-outline"
+              label="Edit"
+              class="q-ma-none"
+              color="grey-3"
+            />
           </q-item-section>
         </template>
 
@@ -87,32 +108,13 @@
                 <q-space />
                 <span>Last edit</span>
               </div>
-              <div class="row q-col-gutter-sm q-mt-sm">
-                <div class="col-12 col-sm-3" v-if="isNewArticle">
-                  <q-btn
-                    label="Delete"
-                    icon="mdi-delete"
-                    color="secondary"
-                    outline
-                    class="full-width"
-                    no-caps
-                    @click="deleteArticle()"
-                  />
-                </div>
-
-                <div class="col-12 col-sm-3" v-else>
-                  <q-btn
-                    label="Revert"
-                    icon="mdi-close"
-                    color="secondary"
-                    outline
-                    class="full-width"
-                    no-caps
-                    @click="revertToLastPublished()"
-                  />
-                </div>
-
-                <div class="col-12 col-sm-3">
+              <div
+                class="row q-col-gutter-sm q-mt-sm"
+                v-if="
+                  !articleVersions.data[articleVersionSelected].deleteArticle
+                "
+              >
+                <div class="col-12 col-sm-6">
                   <q-btn
                     label="Edit"
                     icon="mdi-pencil"
@@ -131,7 +133,16 @@
 
                 <div class="col-12 col-sm-6">
                   <q-btn
-                    :disable="!isNewArticle && articleVersionSelected === 0"
+                    v-if="!isNewArticle && articleVersionSelected === 0"
+                    label="Revert to last published"
+                    icon="mdi-history"
+                    color="secondary"
+                    class="full-width"
+                    no-caps
+                    @click="revertToLastPublished()"
+                  />
+                  <q-btn
+                    v-else
                     label="Accept this version"
                     icon="mdi-check"
                     color="secondary"
@@ -141,8 +152,59 @@
                   />
                 </div>
               </div>
+              <!-- DELETING ARTICLE -->
+              <div class="row q-col-gutter-sm q-mt-sm" v-else>
+                <div class="col-12 col-sm-6">
+                  <q-btn
+                    label="Edit"
+                    icon="mdi-pencil"
+                    color="secondary"
+                    outline
+                    class="full-width"
+                    no-caps
+                    :to="{
+                      name: 'Edit',
+                      params: {
+                        articleID: liveDraftArticle.id,
+                      },
+                    }"
+                  />
+                </div>
+                <div class="col-12 col-sm-6">
+                  <q-btn
+                    v-if="!isNewArticle"
+                    :disable="articleVersionSelected === 0"
+                    label="Delete from website"
+                    icon="mdi-delete"
+                    color="secondary"
+                    class="full-width"
+                    no-caps
+                    @click="acceptVersion()"
+                  />
+                  <q-btn
+                    v-else
+                    label="Delete drafts"
+                    icon="mdi-delete"
+                    color="secondary"
+                    class="full-width"
+                    no-caps
+                    @click="deleteArticle()"
+                  />
+                </div>
+              </div>
             </q-card-section>
           </div>
+
+          <q-card
+            v-if="articleVersions.data[articleVersionSelected].websiteVersion"
+            flat
+            class="bg-grey-3 q-mx-lg q-my-lg"
+          >
+            <q-card-section>
+              It is not yet possible to preview the version of this article that
+              is currently on this website.
+            </q-card-section>
+          </q-card>
 
           <ModeratePreview
             :article="articleVersions.data[articleVersionSelected]"
@@ -170,6 +232,9 @@ import {
   runTransaction,
   arrayRemove,
 } from "firebase/firestore";
+import { mapStores } from "pinia";
+import { useAnalyticsStore } from "src/stores/analytics";
+import { useFirebaseStore } from "src/stores/firebase";
 const db = getFirestore();
 
 export default {
@@ -191,12 +256,25 @@ export default {
       if (this.liveDraftArticle.lastPublishedServerTimestamp) return false;
       else return true;
     },
+    fullPath: function () {
+      let fullPath = "";
+      if (
+        this.articleVersions.data[this.articleVersionSelected].langCode !== "en"
+      ) {
+        fullPath +=
+          this.articleVersions.data[this.articleVersionSelected].langCode + "/";
+      }
+      fullPath += this.articleVersions.data[this.articleVersionSelected].path;
+
+      return fullPath;
+    },
+    ...mapStores(useAnalyticsStore, useFirebaseStore),
   },
   created() {
     this.fetchVersions();
   },
   methods: {
-    fetchVersions: function () {
+    fetchVersions: async function () {
       // FETCH VERSIONS: Here we'll fetch all versions so the moderator can compare them.
 
       // Define the query
@@ -205,11 +283,12 @@ export default {
         // PUBLISHED BEFORE: This is not a new article. It has been published before, so we only want to show the versions back until the last published one on the website (so including that one)
         versionsQuery = query(
           collection(db, "articles", this.liveDraftArticle.id, "versions"),
-          orderBy("lastUpdatedServerTimestamp"),
+          orderBy("metadata.createdTimestamp"),
           where(
-            "lastUpdatedServerTimestamp",
-            ">=",
-            this.liveDraftArticle.lastPublishedServerTimestamp
+            "status",
+            "==",
+            "review"
+            // this.liveDraftArticle.lastPublishedServerTimestamp
           ),
           limit(10)
         );
@@ -217,7 +296,7 @@ export default {
         // NEW ARTICLE: Fetch all versions
         versionsQuery = query(
           collection(db, "articles", this.liveDraftArticle.id, "versions"),
-          orderBy("lastUpdatedServerTimestamp"),
+          orderBy("metadata.createdTimestamp"),
           limit(10)
         );
       }
@@ -225,9 +304,17 @@ export default {
       // Now let's fetch the actual data.
       this.articleVersions.unsubscribe = onSnapshot(
         versionsQuery,
-        (querySnapshot) => {
+        async (querySnapshot) => {
           // Process the data we just received from the server
           const versions = [];
+
+          // Hacky solution
+          if (!this.isNewArticle) {
+            versions.push({
+              websiteVersion: true,
+            });
+          }
+
           querySnapshot.forEach((doc) => {
             versions.push({ ...doc.data(), id: doc.id });
           });
@@ -258,54 +345,63 @@ export default {
       const acceptedVersion =
         this.articleVersions.data[this.articleVersionSelected];
 
-      if (acceptedVersion.deleteArticle) {
-        this.deleteArticle();
-      } else {
-        // Get a new write batch
-        const batch = writeBatch(db);
+      // } else {
+      // Get a new write batch
+      const batch = writeBatch(db);
 
-        // 1. Copy the currently selected version to the publishingQueue collection
-        const publishingQueueRef = doc(
-          db,
-          "publishingQueue",
-          this.liveDraftArticle.id
-        );
-        batch.set(publishingQueueRef, {
-          title: acceptedVersion.title,
-          description: acceptedVersion.description,
-          tags: acceptedVersion.tags,
-          path: acceptedVersion.path,
-          content: acceptedVersion.content,
-          id: acceptedVersion.articleID,
-          languageCollectionID: acceptedVersion.languageCollectionID,
-          deleteArticle: acceptedVersion.deleteArticle,
-          langCode: acceptedVersion.langCode,
-          wordCount: acceptedVersion.wordCount,
-          lastUpdatedServerTimestamp: serverTimestamp(),
-        });
+      // 1. Copy the currently selected version to the publishingQueue collection
+      const publishingQueueRef = doc(
+        db,
+        "publishingQueue",
+        this.liveDraftArticle.id
+      );
+      batch.set(publishingQueueRef, {
+        title: acceptedVersion.title,
+        description: acceptedVersion.description,
+        tags: acceptedVersion.tags,
+        path: acceptedVersion.path,
+        fullPath: this.fullPath,
+        publishedPath: acceptedVersion.path,
+        content: acceptedVersion.content,
+        id: acceptedVersion.articleID,
+        languageCollectionID: acceptedVersion.languageCollectionID,
+        deleteArticle: acceptedVersion.deleteArticle,
+        langCode: acceptedVersion.langCode,
+        wordCount: acceptedVersion.wordCount,
+        metadata: {
+          createdTimestamp: serverTimestamp(),
+          createdBy: this.firebaseStore.auth.currentUser.uid,
+        },
+      });
 
-        // 2. Delete all review versions
-        this.articleVersions.data.forEach((article) => {
-          if (article.status === "review") {
-            const reviewVersionRef = doc(
-              db,
-              "articles",
-              this.liveDraftArticle.id,
-              "versions",
-              article.id
-            );
-            batch.delete(reviewVersionRef);
-          }
-        });
+      // 2. Delete all review versions
+      this.articleVersions.data.forEach((article) => {
+        if (article.status === "review") {
+          const reviewVersionRef = doc(
+            db,
+            "articles",
+            this.liveDraftArticle.id,
+            "versions",
+            article.id
+          );
+          batch.delete(reviewVersionRef);
+        }
+      });
 
-        // 3. Set requestedReview to false for the live edit version
-        const liveArticleRef = doc(db, "articles", this.liveDraftArticle.id);
-        batch.update(liveArticleRef, {
-          requestedPublication: false,
-          lastPublishedServerTimestamp: serverTimestamp(),
-        });
+      // 3. Set requestedReview to false for the live edit version
+      const liveArticleRef = doc(db, "articles", this.liveDraftArticle.id);
+      batch.update(liveArticleRef, {
+        requestedPublication: false,
+        publishedPath: acceptedVersion.path,
+        lastPublishedServerTimestamp: serverTimestamp(),
+        metadata: {
+          updatedTimestamp: serverTimestamp(),
+          updatedBy: this.firebaseStore.auth.currentUser.uid,
+        },
+      });
 
-        // 4. Create a new version with the status "published"
+      // 4. Create a new version with the status "published"
+      if (!acceptedVersion.deleteArticle) {
         const versionID = this.mixin_randomID();
         const versionRef = doc(
           db,
@@ -319,6 +415,8 @@ export default {
           description: acceptedVersion.description,
           tags: acceptedVersion.tags,
           path: acceptedVersion.path,
+          fullPath: this.fullPath,
+          publishedPath: acceptedVersion.path,
           content: acceptedVersion.content,
           articleID: acceptedVersion.articleID,
           id: versionID,
@@ -326,14 +424,24 @@ export default {
           deleteArticle: acceptedVersion.deleteArticle,
           langCode: acceptedVersion.langCode,
           wordCount: acceptedVersion.wordCount,
-
-          lastUpdatedServerTimestamp: serverTimestamp(),
           status: "published",
+          metadata: {
+            createdTimestamp: serverTimestamp(),
+            createdBy: this.firebaseStore.auth.currentUser.uid,
+          },
         });
-
-        // Commit the batch
-        await batch.commit();
       }
+
+      // Commit the batch
+      await batch.commit();
+      // }
+
+      if (acceptedVersion.deleteArticle) {
+        await this.deleteArticle();
+      }
+
+      // update analytics locally (it will be updated on server automatically with a counter, but this way we prevent a delay)
+      this.analyticsStore.data.articlePublishingQueueCount++;
     },
     revertToLastPublished: async function () {
       // Get a new write batch
@@ -355,7 +463,7 @@ export default {
         }
       });
 
-      // 2. Reverts the live edit to the last published version
+      // 2. Reverts the live edit to the last published version.
       const liveArticleRef = doc(db, "articles", this.liveDraftArticle.id);
       batch.update(liveArticleRef, {
         title: lastPublishedArticle.title,
@@ -368,12 +476,14 @@ export default {
         deleteArticle: lastPublishedArticle.deleteArticle,
         langCode: lastPublishedArticle.langCode,
         wordCount: lastPublishedArticle.wordCount,
-        lastUpdatedServerTimestamp: lastPublishedArticle.lastPublishedArticle,
-
         requestedPublication: false,
         reverted: true,
-      });
 
+        metadata: {
+          updatedTimestamp: serverTimestamp(),
+          updatedBy: this.firebaseStore.auth.currentUser.uid,
+        },
+      });
       // Commit the batch
       await batch.commit();
     },
@@ -401,19 +511,26 @@ export default {
                 langCode: this.liveDraftArticle.langCode,
                 articleID: this.liveDraftArticle.id,
               }),
+              metadata: {
+                updatedTimestamp: serverTimestamp(),
+                updatedBy: this.firebaseStore.auth.currentUser.uid,
+              },
             });
           }
 
           // 2. Deletes all versions
+          // TO-DO: Move this to cloud function
           this.articleVersions.data.forEach((article) => {
-            const reviewVersionRef = doc(
-              db,
-              "articles",
-              this.liveDraftArticle.id,
-              "versions",
-              article.id
-            );
-            transaction.delete(reviewVersionRef);
+            if (!article.websiteVersion || article.requestedPublication) {
+              const reviewVersionRef = doc(
+                db,
+                "articles",
+                this.liveDraftArticle.id,
+                "versions",
+                article.id
+              );
+              transaction.delete(reviewVersionRef);
+            }
           });
 
           const liveArticleRef = doc(db, "articles", this.liveDraftArticle.id);
@@ -428,8 +545,8 @@ export default {
       if (!this.isNewArticle) {
       }
       const date = this.mixin_humanDate(
-        this.articleVersions.data[this.articleVersionSelected]
-          .lastUpdatedServerTimestamp
+        this.articleVersions.data[this.articleVersionSelected].metadata
+          .createdTimestamp
       );
 
       if (!this.isNewArticle && this.articleVersionSelected === 0) {

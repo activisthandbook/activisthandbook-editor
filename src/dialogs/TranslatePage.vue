@@ -39,11 +39,13 @@ import {
   getDoc,
   getFirestore,
   arrayUnion,
+  serverTimestamp,
 } from "firebase/firestore";
 const db = getFirestore();
 
 import { mapStores } from "pinia";
 import { useLanguagesStore } from "stores/languages";
+import { useFirebaseStore } from "src/stores/firebase";
 
 import LanguageSelector from "components/LanguageSelector.vue";
 export default {
@@ -59,7 +61,7 @@ export default {
   computed: {
     // note we are not passing an array, just one store after the other
     // each store will be accessible as its id + 'Store'
-    ...mapStores(useLanguagesStore),
+    ...mapStores(useLanguagesStore, useFirebaseStore),
     errors: function () {
       let errors = [];
       if (!this.lang) {
@@ -97,7 +99,7 @@ export default {
       });
   },
   methods: {
-    createNewTranslation: async function () {
+    async createNewTranslation() {
       const newArticleID = this.mixin_randomID();
       this.loading = true;
 
@@ -106,6 +108,12 @@ export default {
       batch.set(doc(db, "articles", newArticleID), {
         langCode: this.lang.code,
         languageCollectionID: this.$route.params.languageCollectionID,
+        metadata: {
+          updatedTimestamp: null,
+          updatedBy: null,
+          createdTimestamp: serverTimestamp(),
+          createdBy: this.firebaseStore.auth.currentUser.uid,
+        },
       });
 
       batch.update(
@@ -114,17 +122,31 @@ export default {
           articles: arrayUnion({
             articleID: newArticleID,
             langCode: this.lang.code,
-            published: false,
           }),
+          metadata: {
+            updatedTimestamp: serverTimestamp(),
+            updatedBy: this.firebaseStore.auth.currentUser.uid,
+          },
         }
       );
 
-      await batch.commit().then(() => {
-        this.loading = false;
-        this.$router.push({
-          name: "Edit",
-          params: { articleID: newArticleID },
-        });
+      batch.set(
+        doc(db, "userProfiles", this.firebaseStore.auth.currentUser.uid),
+        {
+          recentlyEditedArticles: arrayUnion(newArticleID),
+          metadata: {
+            updatedTimestamp: serverTimestamp(),
+            updatedBy: this.firebaseStore.auth.currentUser.uid,
+          },
+        },
+        { merge: true }
+      );
+
+      await batch.commit();
+      this.loading = false;
+      this.$router.push({
+        name: "Edit",
+        params: { articleID: newArticleID },
       });
     },
     goBack() {

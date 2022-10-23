@@ -5,7 +5,6 @@ const db = getFirestore();
 
 export const useAnalyticsStore = defineStore("analytics", {
   state: () => ({
-    test: "test",
     data: null,
     dataLoaded: null,
     error: null,
