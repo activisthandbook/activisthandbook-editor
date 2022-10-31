@@ -51,11 +51,13 @@ h3,
   font-family: $font-secondary;
 
   &:not(.q-btn--round, .q-btn--fab, .q-btn--rounded) {
-    border-radius: 6px;
+    border-radius: 8px;
   }
 }
-.q-card {
-  border-radius: 8px;
+.q-card,
+.rounded-borders,
+.q-menu {
+  border-radius: 12px;
 }
 .q-field--with-bottom {
   padding-bottom: 0;

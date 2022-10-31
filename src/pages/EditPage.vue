@@ -188,7 +188,7 @@
               class="full-width"
               align="left"
               :class="{ 'text-bold': header.level === 2 }"
-              dense
+              padding="4px 10px"
             >
               <div class="ellipsis">{{ header.text }}</div>
             </q-btn>

@@ -25,9 +25,8 @@ var turndownService = new TurndownService({
 });
 turndownService.keep([
   "div",
-  "figure",
   "iframe",
-  // "client-only",
+  "dynamic-image",
   "action-custom",
   "action-donate",
   "action-smart-small",
@@ -467,11 +466,9 @@ ${turndownService.turndown(
   sanitizeHtml(article.content, {
     allowedTags: sanitizeHtml.defaults.allowedTags.concat([
       "iframe",
-      "img",
-      "figure",
-      "figcaption",
       // Custom elements (make sure these are also included in TurndownService!!!)
       // "client-only",
+      "dynamic-image",
       "action-donate",
       "action-volunteer",
       "action-custom",
@@ -481,10 +478,9 @@ ${turndownService.turndown(
       ...sanitizeHtml.defaults.allowedAttributes,
       iframe: ["src", "allowfullscreen", "start", "width", "height"],
       div: ["data-youtube-video"],
-      img: ["src", "alt", "imageid", "imagesource", "imagecaption"],
+      "dynamic-image": ["alt", "imageid", "title"],
       "action-custom": ["buttonlink", "buttonlabel"],
     },
-
     allowedIframeHostnames: ["www.youtube-nocookie.com"],
   })
 )}

@@ -816,31 +816,58 @@ export default {
       const img = {};
       Object.assign(img, this.image);
 
-      let caption = "";
+      let captionFirstPart = "";
       if (img.title) {
-        caption += `${sanitizeHtml(img.title)}, by `;
+        captionFirstPart += `${sanitizeHtml(img.title)}, by `;
       }
       if (!img.title) {
-        caption += "By ";
+        captionFirstPart += "By ";
       }
-      caption += sanitizeHtml(img.data.author.name);
+      // caption += sanitizeHtml(img.data.author.name);
 
+      let captionSecondPart = "";
       if (img.data.author.ai) {
-        caption += ` | Generated using ${sanitizeHtml(img.data.author.ai)}`;
+        captionSecondPart += ` | Generated using ${img.data.author.ai}`;
       }
       if (img.data.author.licence) {
-        caption += ` (${sanitizeHtml(img.data.author.licence)})`;
+        captionSecondPart += ` (${img.data.author.licence})`;
       }
 
       await this.editorStore.tiptap.content
         .chain()
         .focus()
         .setImageWithCaption({
-          src: `${this.imageHost}${this.image.data.id}/articleLarge`,
-          imageID: this.image.data.id,
-          imageSource: this.image.data.author.source,
+          // src: `${this.imageHost}${this.image.data.id}/articleLarge`,
+          imageid: this.image.data.id,
+          imagesource: this.image.data.author.source,
           alt: this.image.data.description,
-          imageCaption: caption,
+          content: [
+            {
+              type: "paragraph",
+              content: [
+                {
+                  type: "text",
+                  text: captionFirstPart,
+                },
+                {
+                  type: "text",
+                  marks: [
+                    {
+                      type: "link",
+                      attrs: {
+                        href: this.image.data.author.source,
+                      },
+                    },
+                  ],
+                  text: img.data.author.name,
+                },
+                {
+                  type: "text",
+                  text: captionSecondPart,
+                },
+              ],
+            },
+          ],
         })
         .run();
 

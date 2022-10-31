@@ -90,7 +90,7 @@
     border-left: 8px solid $primary;
     border-radius: 6px;
     background-color: $grey-2;
-    margin: 0;
+    margin: 8px 0 20px 0;
     padding: 8px 16px;
     font-style: italic;
 
@@ -108,19 +108,22 @@
   }
 
   figure {
-    margin: 8px 0;
+    margin: 8px 0 20px 0;
 
     figcaption {
       background: $grey-2;
       padding: 6px 8px;
       border-radius: 4px;
       text-align: center;
-      font-size: 0.8em;
+      font-size: 12px;
       color: $grey-8;
 
+      p {
+        margin: 0;
+      }
+
       a {
-        color: var(--vp-c-black);
-        border: none;
+        border-bottom-width: 2px;
       }
     }
   }
@@ -132,7 +135,7 @@
     padding-bottom: 56.25%;
     height: 0;
     background: $grey-9;
-    margin: 8px 0;
+    margin: 8px 0 20px 0;
 
     iframe {
       width: 100% !important;

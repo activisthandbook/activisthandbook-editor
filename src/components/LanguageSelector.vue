@@ -10,7 +10,6 @@
     :options="searchResults"
     @filter="searchLanguage"
     dense
-    outlined
     color="secondary"
     popup-content-class="bg-accent"
     virtual-scroll-item-size="53.59"

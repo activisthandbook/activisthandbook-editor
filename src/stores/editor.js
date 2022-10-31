@@ -139,11 +139,9 @@ export const useEditorStore = defineStore("editor", {
                 sanitizeHtml(this.article.content, {
                   allowedTags: sanitizeHtml.defaults.allowedTags.concat([
                     "iframe",
-                    "img",
-                    "figure",
-                    "figcaption",
                     // Custom elements
                     // "client-only",
+                    "dynamic-image",
                     "action-donate",
                     "action-volunteer",
                     "action-custom",
@@ -159,13 +157,7 @@ export const useEditorStore = defineStore("editor", {
                       "height",
                     ],
                     div: ["data-youtube-video"],
-                    img: [
-                      "src",
-                      "alt",
-                      "imageid",
-                      "imagesource",
-                      "imagecaption",
-                    ],
+                    "dynamic-image": ["alt", "imageid", "title"],
                     "action-custom": ["buttonlink", "buttonlabel"],
                   },
 
@@ -300,7 +292,7 @@ export const useEditorStore = defineStore("editor", {
 
       await this.tiptap.content.state.doc.descendants(async (node, pos) => {
         if (node.type.name === "imageWithCaption") {
-          images.push(node.attrs.imageID);
+          images.push(node.attrs.imageid);
         }
       });
 

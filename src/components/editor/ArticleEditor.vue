@@ -22,7 +22,6 @@
   <q-input
     dense
     v-model="editorStore.article.path"
-    outlined
     color="secondary"
     placeholder="my-path"
     @update:model-value="save()"
@@ -284,7 +283,7 @@ import TableCell from "@tiptap/extension-table-cell";
 import TableHeader from "@tiptap/extension-table-header";
 import TableRow from "@tiptap/extension-table-row";
 
-import ImageWithCaption from "./ImageWithCaption";
+import DynamicImage from "./DynamicImage";
 import ActionDonate from "./ActionDonate";
 import ActionVolunteer from "./ActionVolunteer";
 import ActionCustom from "./ActionCustom";
@@ -458,7 +457,7 @@ export default {
 
           // Customised nodes
           CustomHeading,
-          ImageWithCaption,
+          DynamicImage,
           ActionDonate,
           ActionVolunteer,
           ActionCustom,
@@ -526,10 +525,9 @@ export default {
 
 .title .ProseMirror,
 .description .ProseMirror {
-  border: 1px solid $grey-5;
+  border-bottom: 1px solid $grey-5;
   line-height: 1;
-  border-radius: 4px;
-  padding: 16px;
+  padding: 16px 0;
   transition: 0.3s border-color;
   font-family: $font-secondary;
   font-weight: 700;
@@ -540,7 +538,7 @@ export default {
   &:focus {
     border-color: $secondary;
     border-width: 2px;
-    margin: -1px;
+    margin-bottom: -1px;
   }
 
   p {
@@ -641,23 +639,23 @@ export default {
 .ProseMirror img,
 .ProseMirror div[data-youtube-video] {
   outline-offset: 2px;
+  cursor: move;
 
   // &.ProseMirror-focussed {
   //   outline: 4px solid rgba($secondary, 0.6);
   //   animation: focusVideo 0.6s infinite alternate;
   // }
 }
-figure,
+.dynamic-image,
 .ProseMirror div[data-youtube-video] {
-  cursor: move;
   border-radius: 2px;
 }
 .ProseMirror div[data-youtube-video]:hover,
-figure:hover {
+.dynamic-image:hover {
   outline: 4px solid rgba($secondary, 0.2);
 }
 
-figure.has-focus,
+.dynamic-image.has-focus,
 div[data-youtube-video].ProseMirror-selectednode {
   //   outline: 4px solid rgba($secondary, 0.6);
   //   animation: focusVideo 0.6s infinite alternate;

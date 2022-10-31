@@ -1,13 +1,13 @@
 <template>
   <q-card
     v-if="editor && editor.tiptap.content"
-    class="bg-grey-2 justify-center sticky"
-    bordered
+    class="bg-accent justify-center sticky"
     flat
+    bordered
   >
-    <div class="q-gutter-xs flex" style="padding: 12px">
+    <div class="q-gutter-x-xs flex" style="padding: 12px">
       <!-- HEADINGS -->
-      <div class="bg-grey-4 rounded-borders flex items-center q-pa-xs">
+      <div class="bg-grey-3 rounded-borders flex items-center q-pa-xs">
         <span class="text-caption text-bold q-ml-sm q-mr-sm text-black"
           >Heading</span
         >
@@ -175,16 +175,6 @@
         icon="mdi-image"
         class="hide-at-less-than-medium"
         @click="imageDialogOpen = true"
-        v-show="!editor.tiptap.content.isActive('imageWithCaption')"
-      />
-
-      <q-btn
-        v-show="editor.tiptap.content.isActive('imageWithCaption')"
-        padding="sm"
-        flat
-        icon="mdi-image-edit"
-        class="hide-at-less-than-medium is-active"
-        @click="imageCaptionDialogOpen = true"
       />
 
       <q-btn
@@ -300,7 +290,6 @@
             </q-item>
 
             <q-item
-              v-show="!editor.tiptap.content.isActive('imageWithCaption')"
               clickable
               v-close-popup
               @click="imageDialogOpen = true"
@@ -309,18 +298,6 @@
               <q-item-section>Image</q-item-section>
               <q-item-section side>
                 <q-icon name="mdi-image" />
-              </q-item-section>
-            </q-item>
-            <q-item
-              v-show="editor.tiptap.content.isActive('imageWithCaption')"
-              clickable
-              v-close-popup
-              class="is-active show-at-less-than-medium"
-              @click="imageCaptionDialogOpen = true"
-            >
-              <q-item-section>Edit image</q-item-section>
-              <q-item-section side>
-                <q-icon name="mdi-image-edit" />
               </q-item-section>
             </q-item>
 
@@ -481,17 +458,12 @@
 
   <!-- DIALOGS -->
   <ImageSelector v-model="imageDialogOpen" @hide="imageDialogOpen = false" />
-  <ImageCaptionEditor
-    v-model="imageCaptionDialogOpen"
-    @hide="imageCaptionDialogOpen = false"
-  />
   <ActionDialog v-model="actionDialogOpen" @hide="actionDialogOpen = false" />
 </template>
 <script>
 import { defineComponent } from "vue";
 
 import ImageSelector from "src/dialogs/ImageSelector.vue";
-import ImageCaptionEditor from "src/dialogs/ImageCaptionEditor.vue";
 import ActionDialog from "src/dialogs/ActionDialog.vue";
 
 import { useEditorStore } from "stores/editor";
@@ -499,7 +471,6 @@ import { useEditorStore } from "stores/editor";
 export default defineComponent({
   components: {
     ImageSelector,
-    ImageCaptionEditor,
     ActionDialog,
   },
   setup() {
@@ -520,7 +491,6 @@ export default defineComponent({
 
       // image
       imageDialogOpen: false,
-      imageCaptionDialogOpen: false,
 
       // Action
       actionDialogOpen: false,
