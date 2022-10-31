@@ -59,7 +59,16 @@ service cloud.firestore {
       }
 
     	match /articles/{articleID} {
-        allow read, write: if signedIn();
+        allow read:
+          if signedIn();
+        allow create:
+          if signedIn() &&
+          request.resource.data.publishedFullPath == null;
+        allow update:
+          if signedIn() &&
+          request.resource.data.publishedFullPath == resource.data.publishedFullPath;
+        allow delete:
+          if hasRole(getRoles(), "moderator");
 
         match /versions/{versionID} {
         	allow read, create: if signedIn();

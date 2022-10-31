@@ -179,7 +179,7 @@
                     color="secondary"
                     class="full-width"
                     no-caps
-                    @click="acceptVersion()"
+                    @click="deleteArticle()"
                   />
                   <q-btn
                     v-else
@@ -356,7 +356,6 @@ export default {
       const acceptedVersion =
         this.articleVersions.data[this.articleVersionSelected];
 
-      // } else {
       // Get a new write batch
       const batch = writeBatch(db);
 
@@ -367,18 +366,8 @@ export default {
         this.liveDraftArticle.id
       );
       batch.set(publishingQueueRef, {
-        title: acceptedVersion.title,
-        description: acceptedVersion.description,
-        tags: acceptedVersion.tags,
-        path: acceptedVersion.path,
-        fullPath: this.fullPath(acceptedVersion),
-        publishedPath: acceptedVersion.path,
-        content: acceptedVersion.content,
+        ...acceptedVersion,
         id: acceptedVersion.articleID,
-        languageCollectionID: acceptedVersion.languageCollectionID,
-        deleteArticle: acceptedVersion.deleteArticle,
-        langCode: acceptedVersion.langCode,
-        wordCount: acceptedVersion.wordCount,
         metadata: {
           createdTimestamp: serverTimestamp(),
           createdBy: this.firebaseStore.auth.currentUser.uid,
@@ -403,43 +392,31 @@ export default {
       const liveArticleRef = doc(db, "articles", this.liveDraftArticle.id);
       batch.update(liveArticleRef, {
         requestedPublication: false,
-        publishedPath: acceptedVersion.path,
+        // publishedFullPath: this.fullPath(acceptedVersion),
         lastPublishedServerTimestamp: serverTimestamp(),
-        "metadata:updatedTimestamp": serverTimestamp(),
+        "metadata.updatedTimestamp": serverTimestamp(),
         "metadata.updatedBy": this.firebaseStore.auth.currentUser.uid,
       });
 
       // 4. Create a new version with the status "published"
-      if (!acceptedVersion.deleteArticle) {
-        const versionID = this.mixin_randomID();
-        const versionRef = doc(
-          db,
-          "articles",
-          this.liveDraftArticle.id,
-          "versions",
-          versionID
-        );
-        batch.set(versionRef, {
-          title: acceptedVersion.title,
-          description: acceptedVersion.description,
-          tags: acceptedVersion.tags,
-          path: acceptedVersion.path,
-          fullPath: this.fullPath(acceptedVersion),
-          publishedPath: acceptedVersion.path,
-          content: acceptedVersion.content,
-          articleID: acceptedVersion.articleID,
-          id: versionID,
-          languageCollectionID: acceptedVersion.languageCollectionID,
-          deleteArticle: acceptedVersion.deleteArticle,
-          langCode: acceptedVersion.langCode,
-          wordCount: acceptedVersion.wordCount,
-          status: "published",
-          metadata: {
-            createdTimestamp: serverTimestamp(),
-            createdBy: this.firebaseStore.auth.currentUser.uid,
-          },
-        });
-      }
+      const versionID = this.mixin_randomID();
+      const versionRef = doc(
+        db,
+        "articles",
+        this.liveDraftArticle.id,
+        "versions",
+        versionID
+      );
+      batch.set(versionRef, {
+        ...acceptedVersion,
+        id: versionID,
+        publishedFullPath: this.fullPath(acceptedVersion),
+        status: "published",
+        metadata: {
+          createdTimestamp: serverTimestamp(),
+          createdBy: this.firebaseStore.auth.currentUser.uid,
+        },
+      });
 
       // Commit the batch
       await batch.commit();
@@ -475,20 +452,12 @@ export default {
       // 2. Reverts the live edit to the last published version.
       const liveArticleRef = doc(db, "articles", this.liveDraftArticle.id);
       batch.update(liveArticleRef, {
-        title: lastPublishedArticle.title,
-        description: lastPublishedArticle.description,
-        tags: lastPublishedArticle.tags,
-        path: lastPublishedArticle.path,
-        content: lastPublishedArticle.content,
+        ...lastPublishedArticle,
         id: lastPublishedArticle.articleID,
-        languageCollectionID: lastPublishedArticle.languageCollectionID,
-        deleteArticle: lastPublishedArticle.deleteArticle,
-        langCode: lastPublishedArticle.langCode,
-        wordCount: lastPublishedArticle.wordCount,
         requestedPublication: false,
         reverted: true,
 
-        "metadata:updatedTimestamp": serverTimestamp(),
+        "metadata.updatedTimestamp": serverTimestamp(),
         "metadata.updatedBy": this.firebaseStore.auth.currentUser.uid,
       });
       // Commit the batch
@@ -497,7 +466,10 @@ export default {
     deleteArticle: async function () {
       try {
         await runTransaction(db, async (transaction) => {
-          // 1. Read the language collection that this article is member of (To see if it is only child. If so, we delete the entire collection.)
+          const acceptedVersion =
+            this.articleVersions.data[this.articleVersionSelected];
+
+          // 1. Read the language collection that this article is member of
           const languageCollectionRef = doc(
             db,
             "languageCollections",
@@ -510,21 +482,33 @@ export default {
           if (!languageCollectionDoc.exists()) {
             throw "Language collection not found";
           }
-          if (languageCollectionDoc.data().articles.length === 1) {
-            transaction.delete(languageCollectionRef);
-          } else {
-            transaction.update(languageCollectionRef, {
-              articles: arrayRemove({
-                langCode: this.liveDraftArticle.langCode,
-                articleID: this.liveDraftArticle.id,
-              }),
-              "metadata:updatedTimestamp": serverTimestamp(),
-              "metadata.updatedBy": this.firebaseStore.auth.currentUser.uid,
-            });
-          }
 
-          // 2. Deletes all versions
-          // TO-DO: Move this to cloud function
+          // Copy the currently selected version to the publishingQueue collection
+          const publishingQueueRef = doc(
+            db,
+            "publishingQueue",
+            this.liveDraftArticle.id
+          );
+          batch.set(publishingQueueRef, {
+            ...acceptedVersion,
+            id: acceptedVersion.articleID,
+            metadata: {
+              createdTimestamp: serverTimestamp(),
+              createdBy: this.firebaseStore.auth.currentUser.uid,
+            },
+          });
+
+          // Remove from language collection
+          transaction.update(languageCollectionRef, {
+            articles: arrayRemove({
+              articleID: this.liveDraftArticle.id,
+              langCode: this.liveDraftArticle.langCode,
+            }),
+            "metadata.updatedTimestamp": serverTimestamp(),
+            "metadata.updatedBy": this.firebaseStore.auth.currentUser.uid,
+          });
+
+          // Delete all versions
           this.articleVersions.data.forEach((article) => {
             if (!article.websiteVersion || article.requestedPublication) {
               const reviewVersionRef = doc(

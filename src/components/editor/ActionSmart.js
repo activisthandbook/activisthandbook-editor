@@ -21,8 +21,10 @@ export default Node.create({
 
   renderHTML({ HTMLAttributes }) {
     return [
-      "client-only",
-      ["action-smart-small", mergeAttributes(HTMLAttributes)],
+      // "client-only",
+      // ["action-smart-small", mergeAttributes(HTMLAttributes)],
+      "action-smart-small",
+      mergeAttributes(HTMLAttributes),
     ];
   },
 

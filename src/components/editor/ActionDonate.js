@@ -22,8 +22,11 @@ export default Node.create({
 
   renderHTML({ HTMLAttributes }) {
     return [
-      "client-only",
-      ["action-donate", mergeAttributes(HTMLAttributes), 0],
+      // "client-only",
+      // ["action-donate", mergeAttributes(HTMLAttributes), 0],
+      "action-donate",
+      mergeAttributes(HTMLAttributes),
+      0,
     ];
   },
 

@@ -377,20 +377,10 @@ export default {
       // 2. Reverts the live edit to the last published version.
       const liveArticleRef = doc(db, "articles", this.liveDraftArticle.id);
       batch.update(liveArticleRef, {
-        title: lastPublishedArticle.title,
-        description: lastPublishedArticle.description,
-        tags: lastPublishedArticle.tags,
-        path: lastPublishedArticle.path,
-        content: lastPublishedArticle.content,
-        id: lastPublishedArticle.articleID,
-        languageCollectionID: lastPublishedArticle.languageCollectionID,
-        deleteArticle: lastPublishedArticle.deleteArticle,
-        langCode: lastPublishedArticle.langCode,
-        wordCount: lastPublishedArticle.wordCount,
+        ...lastPublishedArticle,
         requestedPublication: false,
         reverted: true,
-
-        "metadata:updatedTimestamp": serverTimestamp(),
+        "metadata.updatedTimestamp": serverTimestamp(),
         "metadata.updatedBy": this.firebaseStore.auth.currentUser.uid,
       });
       // Commit the batch

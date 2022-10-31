@@ -19,7 +19,7 @@
           <q-list class="q-ma-sm q-gutter-y-sm">
             <!-- 👉 TODO: Switch between versions -->
             <q-item
-              v-if="publishedFullPath"
+              v-if="editorStore.article.publishedFullPath"
               clickable
               v-close-popup
               class="rounded-borders bg-grey-2"
@@ -32,7 +32,7 @@
               </q-item-section>
             </q-item>
             <q-item
-              v-if="publishedFullPath"
+              v-if="editorStore.article.publishedFullPath"
               clickable
               v-close-popup
               class="rounded-borders bg-grey-2"
@@ -342,23 +342,26 @@ export default {
         return false;
       } else return true;
     },
-    publishedFullPath: function () {
-      let fullPath = "";
-      if (this.editorStore.article.publishedPath) {
-        if (this.editorStore.article.langCode !== "en") {
-          fullPath += this.editorStore.article.langCode + "/";
-        }
-        fullPath += this.editorStore.article.publishedPath;
-      }
-      return fullPath;
-    },
+    // publishedFullPath: function () {
+    //   let fullPath = "";
+    //   if (this.editorStore.article.publishedFullPath) {
+    //     if (this.editorStore.article.langCode !== "en") {
+    //       fullPath += this.editorStore.article.langCode + "/";
+    //     }
+    //     fullPath += this.editorStore.article.publishedFullPath;
+    //   }
+    //   return fullPath;
+    // },
     websiteURL: function () {
-      return "https://new.activisthandbook.org/" + this.publishedFullPath;
+      return (
+        "https://new.activisthandbook.org/" +
+        this.editorStore.article.publishedFullPath
+      );
     },
     versionHistoryURL: function () {
       return (
         "https://github.com/activisthandbook/activisthandbook/commits/main/articles/" +
-        this.publishedFullPath +
+        this.editorStore.article.publishedFullPath +
         ".md"
       );
     },
@@ -422,17 +425,9 @@ export default {
       );
 
       const versionContent = {
-        title: this.editorStore.article.title,
-        description: this.editorStore.article.description,
-        tags: this.editorStore.article.tags,
-        path: this.editorStore.article.path,
-        content: this.editorStore.article.content,
-        articleID: this.editorStore.article.id,
+        ...this.editorStore.article,
         id: versionID,
-        languageCollectionID: this.editorStore.article.languageCollectionID,
-        deleteArticle: this.editorStore.article.deleteArticle,
-        langCode: this.editorStore.article.langCode,
-        wordCount: this.editorStore.article.wordCount,
+        articleID: this.editorStore.article.id,
         status: "review",
         metadata: {
           createdTimestamp: serverTimestamp(),

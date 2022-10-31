@@ -25,7 +25,7 @@ turndownService.keep([
   "div",
   "figure",
   "iframe",
-  "client-only",
+  // "client-only",
   "action-custom",
   "action-donate",
   "action-smart-small",
@@ -44,6 +44,9 @@ exports.publishArticles = functions
   // https://firebase.google.com/docs/functions/config-env
   .runWith({ secrets: ["GITHUB_API"] })
   .https.onCall(async (data, context) => {
+    // Reset variables
+    languageCollections = {};
+
     // Checking that the user is authenticated.
     if (!context.auth.token.email_verified) {
       // Throwing an HttpsError so that the client gets the error details.
@@ -173,6 +176,20 @@ async function fetchPublishingQueueMenu() {
 
 // STEP 2 _________________________________
 
+function generateFullPath(article) {
+  let fullPath = "";
+  if (article.langCode == "en") {
+    fullPath = article.path;
+  } else {
+    fullPath = article.langCode + "/" + article.path;
+  }
+  return fullPath;
+}
+
+function generateGitHubPath(fullPath) {
+  return "articles/" + fullPath + ".md";
+}
+
 async function updatePublishedArticles(articles) {
   // Get a new write batch
   const batch = db.batch();
@@ -180,6 +197,7 @@ async function updatePublishedArticles(articles) {
   // 🔁 LOOP THROUGH ALL ARTICLES
   for (const article of articles) {
     // References for docs we want to edit later
+    const draftArticleRef = db.collection("articles").doc(article.id);
     const publishedArticleRef = db
       .collection("publishedArticles")
       .doc(article.id);
@@ -221,7 +239,7 @@ async function updatePublishedArticles(articles) {
     // 📝 EDIT ARTICLE
     // Actions:
     // 1. Update publishedArticles collection
-    // 2. Build full link from languageCode and path
+    // 2. Build fullPublishedPath from languageCode and path
     // 3. Get details on this language based on the languageCode
     // 4. Define object to add or update in the languageCollection 'publishedArticles' array.
     // 5. Check if this languageCollection already contains any published articles & find index
@@ -232,13 +250,14 @@ async function updatePublishedArticles(articles) {
       batch.set(publishedArticleRef, article);
 
       // 2. Build full link from languageCode and path
-      let link = null;
-      if (article.langCode === "en") {
-        link = `/${article.path}`;
-      } else {
-        link = `/${article.langCode}/${article.path}`;
-      }
-      log("⚪️ link article", link);
+      const fullPublishedPath = generateFullPath(article);
+
+      log("⚪️ fullPublishedPath article", fullPublishedPath);
+
+      // Update full published path in live draft
+      batch.update(draftArticleRef, {
+        publishedFullPath: fullPublishedPath,
+      });
 
       // 3. Get details on this language based on the languageCode
       const languageDetails = languages.find(
@@ -250,7 +269,7 @@ async function updatePublishedArticles(articles) {
       const languageToAdd = {
         articleID: article.id,
         langCode: article.langCode,
-        link: link,
+        fullPublishedPath: fullPublishedPath,
         localName: languageDetails.localName,
       };
       log("⚪️ languageToAdd", languageToAdd);
@@ -338,18 +357,23 @@ async function syncWithGithub(token, articles, menu) {
 
   if (articles) {
     for (const article of articles) {
-      let githubPath = "";
-      if (article.langCode == "en") {
-        githubPath = "articles/" + article.path + ".md";
-      } else {
-        githubPath =
-          "articles/" + article.langCode + "/" + article.path + ".md";
+      const newFullPath = generateFullPath(article);
+
+      // Delete previously published article if it is in bin, or if the path has changed
+      if (
+        article.deleteArticle ||
+        (article.publishedFullPath && article.publishedFullPath !== newFullPath)
+      ) {
+        const publishedGithubPath = generateGitHubPath(
+          article.publishedFullPath
+        );
+        filesToDelete.push(publishedGithubPath);
       }
 
-      if (article.deleteArticle) {
-        filesToDelete.push(githubPath);
-      } else {
-        files[githubPath] = generateFileContent(article);
+      // If this article is not in the bin, we update the file on its new github path (this may be the same as previously)
+      if (!article.deleteArticle) {
+        const newGithubPath = generateGitHubPath(newFullPath);
+        files[newGithubPath] = generateFileContent(article);
       }
     }
     for (const languageCollectionID in languageCollections) {
@@ -364,6 +388,7 @@ async function syncWithGithub(token, articles, menu) {
           languageCollections[languageCollectionID].publishedArticles
         );
       } else {
+        // If no published articles exist in this language collection, we'll delete it's JSON file
         filesToDelete.push(githubPath);
       }
     }
@@ -424,7 +449,7 @@ ${turndownService.turndown(
       "figure",
       "figcaption",
       // Custom elements (make sure these are also included in TurndownService!!!)
-      "client-only",
+      // "client-only",
       "action-donate",
       "action-volunteer",
       "action-custom",

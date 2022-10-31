@@ -87,6 +87,7 @@ export default {
         title: this.title,
         languageCollectionID: newLanguageCollectionID,
         lastPublishedServerTimestamp: null,
+        publishedFullPath: null,
         id: newArticleID,
         metadata: {
           updatedTimestamp: null,

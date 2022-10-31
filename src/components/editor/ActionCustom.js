@@ -22,8 +22,11 @@ export default Node.create({
 
   renderHTML({ HTMLAttributes }) {
     return [
-      "client-only",
-      ["action-custom", mergeAttributes(HTMLAttributes), 0],
+      // "client-only",
+      // ["action-custom", mergeAttributes(HTMLAttributes), 0],
+      "action-custom",
+      mergeAttributes(HTMLAttributes),
+      0,
     ];
   },
 

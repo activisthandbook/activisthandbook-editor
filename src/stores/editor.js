@@ -30,9 +30,6 @@ export const useEditorStore = defineStore("editor", {
       lastEditTimestamp: null,
     },
     tiptap: {
-      // tiptap docs
-      // title: null,
-      // description: null,
       content: null,
     },
 
@@ -42,9 +39,9 @@ export const useEditorStore = defineStore("editor", {
       description: null,
 
       path: null,
-      pathTags: null,
-      pathDepth: null,
-      publishedPath: null,
+      pathTags: null, // Must sync with path
+      pathDepth: null, // Must sync with path
+      publishedFullPath: null, // May only be changed by cloud function
 
       tags: null,
       focusMode: {
@@ -55,13 +52,15 @@ export const useEditorStore = defineStore("editor", {
       },
 
       content: null,
-      contentHeaders: null,
-      contentImages: null,
+      contentHeaders: null, // Syncs with content
+      contentImages: null, // Syncs with content
 
       deleteArticle: null,
+
       requestedPublication: null,
       requestedPublicationTimestamp: null,
-      langCode: null,
+
+      langCode: null, // Cannot change
 
       // https://medium.com/feedflood/update-data-in-cloud-firestore-merge-true-in-set-operation-166703040de
       metadata: {
@@ -142,7 +141,7 @@ export const useEditorStore = defineStore("editor", {
                     "figure",
                     "figcaption",
                     // Custom elements
-                    "client-only",
+                    // "client-only",
                     "action-donate",
                     "action-volunteer",
                     "action-custom",

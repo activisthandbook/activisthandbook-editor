@@ -108,6 +108,7 @@ export default {
       batch.set(doc(db, "articles", newArticleID), {
         langCode: this.lang.code,
         languageCollectionID: this.$route.params.languageCollectionID,
+        publishedFullPath: null,
         metadata: {
           updatedTimestamp: null,
           updatedBy: null,
@@ -123,7 +124,7 @@ export default {
             articleID: newArticleID,
             langCode: this.lang.code,
           }),
-          "metadata:updatedTimestamp": serverTimestamp(),
+          "metadata.updatedTimestamp": serverTimestamp(),
           "metadata.updatedBy": this.firebaseStore.auth.currentUser.uid,
         }
       );
