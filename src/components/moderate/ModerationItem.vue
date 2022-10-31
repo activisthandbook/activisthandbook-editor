@@ -469,7 +469,7 @@ export default {
           const acceptedVersion =
             this.articleVersions.data[this.articleVersionSelected];
 
-          // 1. Read the language collection that this article is member of
+          // Read the language collection that this article is member of
           const languageCollectionRef = doc(
             db,
             "languageCollections",
@@ -489,7 +489,7 @@ export default {
             "publishingQueue",
             this.liveDraftArticle.id
           );
-          batch.set(publishingQueueRef, {
+          transaction.set(publishingQueueRef, {
             ...acceptedVersion,
             id: acceptedVersion.articleID,
             metadata: {
@@ -508,23 +508,13 @@ export default {
             "metadata.updatedBy": this.firebaseStore.auth.currentUser.uid,
           });
 
-          // Delete all versions
-          this.articleVersions.data.forEach((article) => {
-            if (!article.websiteVersion || article.requestedPublication) {
-              const reviewVersionRef = doc(
-                db,
-                "articles",
-                this.liveDraftArticle.id,
-                "versions",
-                article.id
-              );
-              transaction.delete(reviewVersionRef);
-            }
-          });
-
+          // Delete live draft article. Versions are automatically deleted
           const liveArticleRef = doc(db, "articles", this.liveDraftArticle.id);
           transaction.delete(liveArticleRef);
         });
+
+        // update analytics locally (it will be updated on server automatically with a counter, but this way we prevent a delay)
+        this.analyticsStore.data.articlePublishingQueueCount++;
       } catch (e) {
         console.log("Transaction failed: ", e);
       }

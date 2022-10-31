@@ -96,6 +96,8 @@ export const useEditorStore = defineStore("editor", {
 
               this.article = { ...this.article, ...snapshot.data(), lang };
 
+              document.title = `Edit | ${this.article.title}`;
+
               // Load the language collection data
               const languageCollectionID = snapshot.data().languageCollectionID;
               await getDoc(

@@ -5,6 +5,8 @@ const functions = require("firebase-functions");
 let { Octokit } = require("@octokit/rest");
 Octokit = Octokit.plugin(require("octokit-commit-multiple-files"));
 
+var sortBy = require("lodash/sortBy");
+
 const { Base64 } = require("js-base64");
 
 const sanitizeHtml = require("sanitize-html");
@@ -206,6 +208,7 @@ async function updatePublishedArticles(articles) {
       .doc(article.languageCollectionID);
 
     let publishedArticlesIndex = null;
+
     if (languageCollections[article.languageCollectionID].publishedArticles) {
       // Find the index of the current article language in the publishedArticles of this article's languageCollection
       publishedArticlesIndex = languageCollections[
@@ -218,7 +221,7 @@ async function updatePublishedArticles(articles) {
     // 🗑 DELETE ARTICLE
     // Actions:
     // - remove from language collection
-    if (article.deleteArticle) {
+    if (article.deleteArticle && article.publishedFullPath) {
       log("⚪️ delete article", article);
       batch.delete(publishedArticleRef);
 
@@ -244,7 +247,7 @@ async function updatePublishedArticles(articles) {
     // 4. Define object to add or update in the languageCollection 'publishedArticles' array.
     // 5. Check if this languageCollection already contains any published articles & find index
     // 6. Create, add to or update publishedArticles array
-    else {
+    else if (!article.deleteArticle) {
       log("⚪️ edit article", article);
       // 1. Update publishedArticles collection
       batch.set(publishedArticleRef, article);
@@ -321,19 +324,34 @@ async function updatePublishedArticles(articles) {
     } // 📝 END EDIT ARTICLE
 
     // 🔤 SORT LANGUAGE COLLECTION ALPHABETICALLY
-    languageCollections[article.languageCollectionID].publishedArticles.sort(
-      (a, b) => a.localName - b.localName
-    ); // b - a for reverse sort
+    languageCollections[article.languageCollectionID].publishedArticles =
+      sortBy(
+        languageCollections[article.languageCollectionID].publishedArticles,
+        ["localName"]
+      );
+
     log(
       "⚪️sort publishedArticles",
       languageCollections[article.languageCollectionID].publishedArticles
     );
 
-    // 🔥 UPDATE LANGUAGE COLLECTION IN FIRESTORE
-    batch.update(languageCollectionRef, {
-      publishedArticles:
-        languageCollections[article.languageCollectionID].publishedArticles,
-    });
+    if (
+      (!languageCollections[article.languageCollectionID].publishedArticles ||
+        !languageCollections[article.languageCollectionID].publishedArticles
+          .length) &&
+      (!languageCollections[article.languageCollectionID].articles ||
+        !languageCollections[article.languageCollectionID].articles.length)
+    ) {
+      // If both publishedArticles and articles are empty, delete language collection
+      batch.delete(languageCollectionRef);
+    } else {
+      // 🔥 UPDATE LANGUAGE COLLECTION IN FIRESTORE
+      batch.update(languageCollectionRef, {
+        publishedArticles:
+          languageCollections[article.languageCollectionID].publishedArticles,
+        lastPublishedServerTimestamp: FieldValue.serverTimestamp(),
+      });
+    }
   } // 🔁 END LOOP
 
   // 🔥 COMMIT THE BATCH
@@ -361,7 +379,7 @@ async function syncWithGithub(token, articles, menu) {
 
       // Delete previously published article if it is in bin, or if the path has changed
       if (
-        article.deleteArticle ||
+        (article.deleteArticle && article.publishedFullPath) ||
         (article.publishedFullPath && article.publishedFullPath !== newFullPath)
       ) {
         const publishedGithubPath = generateGitHubPath(
@@ -387,7 +405,9 @@ async function syncWithGithub(token, articles, menu) {
         files[githubPath] = JSON.stringify(
           languageCollections[languageCollectionID].publishedArticles
         );
-      } else {
+      } else if (
+        languageCollections[languageCollectionID].lastPublishedServerTimestamp
+      ) {
         // If no published articles exist in this language collection, we'll delete it's JSON file
         filesToDelete.push(githubPath);
       }
@@ -403,19 +423,21 @@ async function syncWithGithub(token, articles, menu) {
   log("🔵 files", files);
   log("🔵 filesToDelete", filesToDelete);
 
-  const commits = await octokit.rest.repos.createOrUpdateFiles({
-    owner,
-    repo,
-    branch,
-    createBranch,
-    changes: [
-      {
-        message: "Updated using Activist Handbook Editor",
-        files: files,
-        filesToDelete: filesToDelete,
-      },
-    ],
-  });
+  if (Object.keys(files).length || filesToDelete.length) {
+    const commits = await octokit.rest.repos.createOrUpdateFiles({
+      owner,
+      repo,
+      branch,
+      createBranch,
+      changes: [
+        {
+          message: "Updated using Activist Handbook Editor",
+          files: files,
+          filesToDelete: filesToDelete,
+        },
+      ],
+    });
+  }
 }
 
 function generateFileContent(article) {

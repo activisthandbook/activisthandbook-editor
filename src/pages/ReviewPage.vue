@@ -90,7 +90,7 @@
                       >
                       <span v-else> article</span>
                     </strong>
-                    waiting to be published.
+                    waiting to be updated.
                   </div>
                   <q-btn
                     color="accent"
@@ -104,7 +104,7 @@
                     }"
                     @click="publishArticles()"
                     icon="mdi-check-all"
-                    label="Publish"
+                    label="Update website"
                   />
                 </div>
               </q-card-section>

@@ -6,7 +6,10 @@ if (admin.apps.length === 0) {
 }
 
 const generateArticle = require("./openAI/generateArticle");
+
 const publishArticles = require("./articles/publishArticles");
+const article_onDelete = require("./articles/article_onDelete");
+
 const publishedArticlesCount = require("./articles/publishedArticlesCount");
 const articlePublishingQueueCount = require("./articles/articleQueueCount");
 const getImageUploadURL = require("./images/getImageUploadURL");
@@ -19,6 +22,9 @@ exports.generateArticle = generateArticle.generateArticle;
 
 // Publish articles
 exports.publishArticles = publishArticles.publishArticles;
+
+// Article: On delete
+exports.article_onDelete = article_onDelete.article_onDelete;
 
 // Published article count
 exports.publishedArticlesOnCreate =
