@@ -16,11 +16,10 @@ service cloud.firestore {
         return signedIn() && (role in userRoles);
       }
 
-      // function isModerator() {
-      //   return
-      //     request.auth != null &&
-      //     get(/databases/$(database)/documents/userProfiles/$(request.auth.uid)).data.roles.includes("") == true;
-      // }
+      function doesNotContainFields(fieldsArray){
+        return !request.resource.data.keys().hasAny(fieldsArray)
+      }
+
 
       match /app/{settingID} {
         allow read, write: if hasRole(getRoles(), "moderator");
@@ -33,6 +32,12 @@ service cloud.firestore {
 
       match /userProfiles/{userID} {
         allow read: if signedIn();
+        allow create:
+          if signedIn() &&
+          // User can only edit their own document
+          request.auth.uid == userID &&
+          // Users cannot set their roles
+          doesNotContainFields(['roles']);
         allow write:
           if signedIn() &&
           // User can only edit their own document

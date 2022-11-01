@@ -10,6 +10,8 @@ import {
 } from "firebase/firestore";
 const db = getFirestore();
 
+import { Notify } from "quasar";
+
 export const useUsersStore = defineStore("users", {
   state: () => ({
     profile: {
