@@ -2,8 +2,8 @@
   <q-layout view="hhh lpR fFf">
     <q-header class="bg-accent text-black" bordered>
       <q-toolbar class="flex q-py-md">
-        <q-toolbar-title>Activist Handbook</q-toolbar-title>
         <AppSwitcher />
+        <q-toolbar-title>Activist Handbook</q-toolbar-title>
       </q-toolbar>
     </q-header>
     <q-page-container>

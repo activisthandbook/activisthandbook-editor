@@ -190,9 +190,14 @@ export default {
       },
     };
   },
-  // created() {
-  //   this.firebaseStore.signInWithEmailLink();
-  // },
+  created() {
+    if (
+      this.usersStore.profile.data[this.firebaseStore.auth.currentUser.uid]
+        .firstName
+    ) {
+      this.next();
+    }
+  },
   methods: {
     async submit() {
       try {

@@ -9,7 +9,6 @@
     label="Language"
     :options="searchResults"
     @filter="searchLanguage"
-    dense
     color="secondary"
     popup-content-class="bg-accent"
     virtual-scroll-item-size="53.59"
@@ -20,6 +19,18 @@
   >
     <template v-slot:prepend>
       <q-icon name="mdi-translate" />
+    </template>
+    <template v-slot:append>
+      <q-btn
+        v-if="this.languageCollectionID"
+        label="Translate"
+        color="secondary"
+        no-caps
+        :to="{
+          name: 'Translate article',
+          params: { languageCollectionID: languageCollectionID },
+        }"
+      />
     </template>
     <template v-slot:selected-item="scope">
       <span :class="{ focussed: focus }"

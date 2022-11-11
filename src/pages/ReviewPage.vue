@@ -2,10 +2,8 @@
   <q-layout view="hhh lpR fFf">
     <q-header class="bg-accent text-black" bordered>
       <q-toolbar class="flex q-py-md">
-        <q-icon name="mdi-shield-check" size="24px" class="gt-xs" />
-        <q-toolbar-title>Review</q-toolbar-title>
-
         <AppSwitcher />
+        <q-toolbar-title>Review</q-toolbar-title>
       </q-toolbar>
     </q-header>
 
@@ -13,7 +11,7 @@
       v-if="
         !usersStore.profile.data[
           firebaseStore.auth.currentUser.uid
-        ].roles.includes('moderator')
+        ].roles?.includes('moderator')
       "
     />
     <div v-else>

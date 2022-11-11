@@ -34,34 +34,38 @@ export const useUsersStore = defineStore("users", {
     // USER
     async fetchUser(userID, settings) {
       if (!this.profile.loadStarted[userID]) {
-        this.profile.loadStarted[userID] = true;
+        return new Promise(async (resolve, reject) => {
+          this.profile.loadStarted[userID] = true;
 
-        const userRef = doc(db, "userProfiles", userID);
+          const userRef = doc(db, "userProfiles", userID);
 
-        this.profile.unsubscribe[userID] = await onSnapshot(
-          userRef,
-          async (docSnapshot) => {
-            if (docSnapshot.exists()) {
-              this.profile.data[userID] = docSnapshot.data();
-            } else {
-              this.profile.data[userID] = {};
-              this.profile.doesNotExist[userID] = true;
-              let query = null;
-              if (this.router.currentRoute.value.path !== "/start") {
-                query = { next: this.router.currentRoute.value.fullPath };
+          this.profile.unsubscribe[userID] = await onSnapshot(
+            userRef,
+            async (docSnapshot) => {
+              if (docSnapshot.exists()) {
+                this.profile.data[userID] = docSnapshot.data();
+              } else {
+                this.profile.data[userID] = {};
+                this.profile.doesNotExist[userID] = true;
+                let query = null;
+                if (this.router.currentRoute.value.path !== "/start") {
+                  query = { next: this.router.currentRoute.value.fullPath };
+                }
+                await this.router.push({
+                  name: "Start",
+                  query: query,
+                });
               }
-              await this.router.push({
-                name: "Start",
-                query: query,
-              });
+              this.profile.dataLoaded[userID] = true;
+              resolve();
+            },
+            (error) => {
+              this.profile.error[userID] = error;
+              console.log(error);
+              reject(error);
             }
-            this.profile.dataLoaded[userID] = true;
-          },
-          (error) => {
-            this.profile.error[userID] = error;
-            console.log(error);
-          }
-        );
+          );
+        });
       }
     },
     async unsubscribeUser(userID) {
@@ -81,14 +85,21 @@ export const useUsersStore = defineStore("users", {
       delete this.profile.unsubscribe[userID];
     },
     async saveUser(userID) {
-      await setDoc(
-        doc(db, "userProfiles", userID),
-        {
-          ...this.profile.data[userID],
-          lastUpdatedServerTimestamp: serverTimestamp(),
+      let data = {
+        ...this.profile.data[userID],
+        metadata: {
+          updatedTimestamp: serverTimestamp(),
+          updatedBy: userID,
         },
-        { merge: true }
-      ).catch((error) => {
+      };
+      if (!this.profile.data[userID].metadata?.createdTimestamp) {
+        console.log("created");
+        data.metadata.createdTimestamp = serverTimestamp();
+        data.metadata.createdBy = userID;
+      }
+      await setDoc(doc(db, "userProfiles", userID), data, {
+        merge: true,
+      }).catch((error) => {
         Notify.create("Saving user failed");
         console.error(error);
       });
@@ -100,28 +111,6 @@ export const useUsersStore = defineStore("users", {
 
         this.recentArticles.data[userID] = [];
         this.recentArticles.unsubscribe[userID] = [];
-
-        if (this.profile.data[userID].recentlyEditedArticles.length > 10) {
-          const numberTooMany =
-            this.profile.data[userID].recentlyEditedArticles.length - 10;
-
-          this.profile.data[userID].recentlyEditedArticles.splice(
-            0,
-            numberTooMany
-          );
-
-          await setDoc(
-            doc(db, "userProfiles", userID),
-            {
-              recentlyEditedArticles:
-                this.profile.data[userID].recentlyEditedArticles,
-            },
-            { merge: true }
-          ).catch((error) => {
-            Notify.create("Saving recent edits failed");
-            console.error(error);
-          });
-        }
 
         let articlesToAdd = [];
 
@@ -153,6 +142,28 @@ export const useUsersStore = defineStore("users", {
             }
           });
 
+        // if (this.profile.data[userID].recentlyEditedArticles.length > 10) {
+        //   const numberTooMany =
+        //     this.profile.data[userID].recentlyEditedArticles.length - 10;
+
+        //   this.profile.data[userID].recentlyEditedArticles.splice(
+        //     0,
+        //     numberTooMany
+        //   );
+
+        //   await setDoc(
+        //     doc(db, "userProfiles", userID),
+        //     {
+        //       recentlyEditedArticles:
+        //         this.profile.data[userID].recentlyEditedArticles,
+        //     },
+        //     { merge: true }
+        //   ).catch((error) => {
+        //     Notify.create("Saving recent edits failed");
+        //     console.error(error);
+        //   });
+        // }
+
         // console.log(articlesToAdd);
 
         // console.log("test", articlesToAdd);
@@ -160,6 +171,9 @@ export const useUsersStore = defineStore("users", {
         // this.recentArticles.data[userID] = articlesToAdd;
 
         // this.recentArticles.dataLoaded[userID] = true;
+      } else {
+        this.recentArticles.dataLoaded[userID] = true;
+        this.recentArticles.error[userID] = new Error("No articles found");
       }
     },
     destroyRecentArticles(userID) {

@@ -2,10 +2,8 @@
   <q-layout view="hhh lpR fFf">
     <q-header class="bg-accent text-black" bordered>
       <q-toolbar class="flex q-py-md">
-        <q-icon name="mdi-account-circle" size="24px" />
-        <q-toolbar-title>Account</q-toolbar-title>
-
         <AppSwitcher />
+        <q-toolbar-title>Account</q-toolbar-title>
       </q-toolbar>
     </q-header>
 
@@ -50,6 +48,15 @@
                   @blur="
                     usersStore.saveUser(firebaseStore.auth.currentUser.uid)
                   "
+                />
+                <q-btn
+                  label="View my profile"
+                  :to="{
+                    name: 'Author',
+                    params: { authorID: firebaseStore.auth.currentUser.uid },
+                  }"
+                  no-caps
+                  color="secondary"
                 />
               </div>
             </q-card-section>

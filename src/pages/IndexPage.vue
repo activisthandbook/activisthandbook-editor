@@ -2,8 +2,8 @@
   <q-layout view="hhh lpR fFf">
     <q-header class="bg-accent text-black" bordered>
       <q-toolbar class="flex q-py-md">
-        <q-toolbar-title>Activist Handbook</q-toolbar-title>
         <AppSwitcher />
+        <q-toolbar-title>Activist Handbook</q-toolbar-title>
       </q-toolbar>
     </q-header>
     <q-page-container>
@@ -52,6 +52,7 @@
                 disable
               />
             </q-tabs>
+
             <q-card
               class="bg-accent q-py-sm"
               v-if="
@@ -68,6 +69,18 @@
                   <q-item-section class="text-h5">
                     My recent edits
                   </q-item-section>
+                  <q-item-section side>
+                    <q-btn
+                      round
+                      flat
+                      icon="mdi-reload"
+                      @click="
+                        usersStore.fetchRecentArticles(
+                          this.firebaseStore.auth.currentUser.uid
+                        )
+                      "
+                    />
+                  </q-item-section>
                 </q-item>
               </q-list>
               <!-- <q-card-section>
@@ -80,12 +93,20 @@
                 </h3>
               </q-card-section> -->
               <ArticleList
+                v-if="
+                  usersStore.recentArticles.data[
+                    firebaseStore.auth.currentUser.uid
+                  ]
+                "
                 :articles="
                   usersStore.recentArticles.data[
                     firebaseStore.auth.currentUser.uid
                   ]
                 "
               />
+              <q-card-section v-else>
+                No articles found. Start editing and they will appear here!
+              </q-card-section>
             </q-card>
             <q-card class="bg-secondary" dark>
               <q-card-section>
@@ -111,17 +132,28 @@
                   </div>
                   <div>
                     Need help getting started? Our team of volunteers is happy
-                    to assist:
+                    to assist.
                   </div>
-                  <q-btn
-                    label="Support page"
-                    no-caps
-                    color="accent"
-                    text-color="black"
-                    icon-right="mdi-arrow-right"
-                    href="https://activisthandbook.org/en/support/writers"
-                    target="_blank"
-                  />
+                  <div class="q-gutter-sm">
+                    <q-btn
+                      label="Support page"
+                      no-caps
+                      color="accent"
+                      text-color="black"
+                      icon="mdi-help-circle"
+                      href="https://activisthandbook.org/en/support/writers"
+                      target="_blank"
+                    />
+                    <q-btn
+                      label="Donate"
+                      href="https://activisthandbook.org/donate"
+                      target="_blank"
+                      color="accent"
+                      text-color="black"
+                      no-caps
+                      icon="mdi-heart"
+                    />
+                  </div>
                 </div>
               </q-card-section>
             </q-card>

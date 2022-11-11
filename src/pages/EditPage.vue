@@ -2,7 +2,8 @@
   <q-layout view="hhh lpR fFf">
     <q-header class="bg-accent text-black" bordered>
       <q-toolbar class="q-py-md">
-        <q-icon name="mdi-file-document-edit" size="24px" class="gt-xs" />
+        <!-- <q-icon name="mdi-file-document-edit" size="24px" class="gt-xs" /> -->
+        <AppSwitcher> </AppSwitcher>
         <q-toolbar-title>Edit</q-toolbar-title>
 
         <!-- <q-btn
@@ -14,50 +15,6 @@
           no-caps
           @click="share()"
         /> -->
-
-        <AppSwitcher>
-          <q-list class="q-ma-sm q-gutter-y-sm">
-            <!-- 👉 TODO: Switch between versions -->
-            <q-item
-              v-if="editorStore.article.publishedFullPath"
-              clickable
-              v-close-popup
-              class="rounded-borders bg-grey-2"
-              :href="websiteURL"
-              target="_blank"
-            >
-              <q-item-section>View on website</q-item-section>
-              <q-item-section side>
-                <q-icon name="mdi-eye" />
-              </q-item-section>
-            </q-item>
-            <q-item
-              v-if="editorStore.article.publishedFullPath"
-              clickable
-              v-close-popup
-              class="rounded-borders bg-grey-2"
-              :href="versionHistoryURL"
-              target="_blank"
-            >
-              <q-item-section>Version history</q-item-section>
-              <q-item-section side>
-                <q-icon name="mdi-history" />
-              </q-item-section>
-            </q-item>
-            <q-item
-              clickable
-              v-close-popup
-              class="rounded-borders bg-grey-2"
-              @click="deleteAndPublish()"
-            >
-              <q-item-section>Delete</q-item-section>
-              <q-item-section side>
-                <q-icon name="mdi-delete" />
-              </q-item-section>
-            </q-item>
-          </q-list>
-        </AppSwitcher>
-
         <q-btn
           color="primary"
           text-color="accent"
@@ -65,12 +22,62 @@
           @click="validateThenPublish()"
           :disable="!allowedToPublish"
           :icon="!allowedToPublish ? 'mdi-check' : 'mdi-send'"
-          class="q-px-lg q-ml-sm"
+          class="q-px-lg q-mr-sm"
         >
           <span class="q-ml-sm">
             <span v-if="allowedToPublish">Publish</span>
             <span v-else>Done</span>
           </span>
+        </q-btn>
+
+        <q-btn icon="mdi-dots-vertical" round color="black" flat>
+          <q-menu
+            :offset="[0, 8]"
+            class="shadow-10 bg-accent q-pa-sm"
+            style="width: 292px"
+            max-height="calc(100vh - 70px)"
+          >
+            <q-list class="q-ma-sm q-gutter-y-sm">
+              <!-- 👉 TODO: Switch between versions -->
+              <q-item
+                v-if="editorStore.article.publishedFullPath"
+                clickable
+                v-close-popup
+                class="rounded-borders bg-grey-2"
+                :href="websiteURL"
+                target="_blank"
+              >
+                <q-item-section>View on website</q-item-section>
+                <q-item-section side>
+                  <q-icon name="mdi-eye" />
+                </q-item-section>
+              </q-item>
+              <q-item
+                v-if="editorStore.article.publishedFullPath"
+                clickable
+                v-close-popup
+                class="rounded-borders bg-grey-2"
+                :href="versionHistoryURL"
+                target="_blank"
+              >
+                <q-item-section>Version history</q-item-section>
+                <q-item-section side>
+                  <q-icon name="mdi-history" />
+                </q-item-section>
+              </q-item>
+              <q-item
+                clickable
+                v-close-popup
+                class="rounded-borders bg-grey-2"
+                @click="deleteAndPublish()"
+              >
+                <q-item-section>Delete</q-item-section>
+                <q-item-section side>
+                  <q-icon name="mdi-delete" />
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </q-menu>
         </q-btn>
       </q-toolbar>
     </q-header>
@@ -109,7 +116,7 @@
       <q-page padding style="max-width: 720px; margin: auto; width: 100%">
         <div class="q-gutter-y-md q-mt-md q-mb-xl">
           <!-- GUIDE -->
-          <q-card class="bg-secondary text-accent q-mb-md" flat>
+          <q-card class="bg-grey-2 q-mb-md text-body2" flat>
             <q-card-section>
               <div class="q-gutter-y-sm">
                 <div>
@@ -121,7 +128,6 @@
                   <a
                     href="https://creativecommons.org/licenses/by-nc-sa/4.0/"
                     target="_blank"
-                    class="text-accent"
                     >Creative Commons BY-NC-SA 4.0 licence</a
                   >.
                 </div>
@@ -247,7 +253,7 @@
               v-if="
                 usersStore.profile.data[
                   firebaseStore.auth.currentUser.uid
-                ].roles.includes('moderator')
+                ].roles?.includes('moderator')
               "
               label="Review"
               no-caps

@@ -1,17 +1,10 @@
 <template>
-  <q-btn
-    label="Tools"
-    icon-right="mdi-apps"
-    no-caps
-    color="grey-2"
-    text-color="black"
-    unelevated
-    class="q-px-lg"
-  >
+  <q-btn icon="mdi-apps" round color="grey-2" text-color="primary" unelevated>
     <q-menu
       :offset="[0, 8]"
       class="shadow-10 bg-accent q-pa-sm"
       style="width: 292px"
+      max-height="calc(100vh - 70px)"
     >
       <slot></slot>
 

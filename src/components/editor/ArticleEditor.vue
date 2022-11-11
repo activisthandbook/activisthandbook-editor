@@ -116,7 +116,10 @@
           <q-item-label>Landing page</q-item-label>
         </q-item-section>
         <q-item-section avatar>
-          <q-toggle color="secondary" />
+          <q-toggle
+            color="secondary"
+            v-model="editorStore.article.landingPage.isOn"
+          />
         </q-item-section>
       </q-item>
       <q-item tag="label" clickable>
@@ -742,12 +745,12 @@ div[data-youtube-video].ProseMirror-selectednode {
 
 // Preview
 .action-button-preview {
-  background: white;
+  background: $grey-3;
   cursor: default;
   padding-bottom: 16px;
   // margin: 16px 0;
   font-size: 12px;
-  color: white;
+  color: $accent;
 
   .header {
     display: flex;
@@ -773,7 +776,7 @@ div[data-youtube-video].ProseMirror-selectednode {
   }
 
   .article {
-    background: lightgrey;
+    background: $grey-4;
     height: 150px;
     width: 60%;
     margin: auto;

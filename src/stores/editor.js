@@ -18,6 +18,7 @@ import {
   serverTimestamp,
   arrayRemove,
   arrayUnion,
+  increment,
 } from "firebase/firestore";
 const db = getFirestore();
 
@@ -46,9 +47,13 @@ export const useEditorStore = defineStore("editor", {
       tags: null,
       focusMode: {
         isOn: false,
-        buttonLabel: null,
+        buttonLabel: "",
         buttonAnchor: "primary-action",
-        buttonLink: null,
+        buttonLink: "",
+      },
+
+      landingPage: {
+        isOn: false,
       },
 
       content: null,
@@ -245,6 +250,7 @@ export const useEditorStore = defineStore("editor", {
           doc(db, "userProfiles", userID),
           {
             recentlyEditedArticles: arrayUnion(this.article.id),
+            editCount: increment(1),
             metadata: {
               updatedTimestamp: serverTimestamp(),
               updatedBy: userID,

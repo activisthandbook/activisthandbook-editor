@@ -5,7 +5,7 @@ const functions = require("firebase-functions");
 let { Octokit } = require("@octokit/rest");
 Octokit = Octokit.plugin(require("octokit-commit-multiple-files"));
 
-var sortBy = require("lodash/sortBy");
+var _ = require("lodash");
 
 const { Base64 } = require("js-base64");
 
@@ -35,6 +35,9 @@ turndownService.keep([
 
 const languagesFile = require("./languages");
 const languages = languagesFile.languages;
+
+const newLine = `
+`;
 
 let languageCollections = {};
 
@@ -70,7 +73,7 @@ exports.publishArticles = functions
       } else {
         const userDocData = userDoc.data();
 
-        if (!userDocData.roles.includes("moderator")) {
+        if (!userDocData.roles?.includes("moderator")) {
           throw new functions.https.HttpsError(
             "failed-precondition",
             "You are not a moderator."
@@ -324,7 +327,7 @@ async function updatePublishedArticles(articles) {
 
     // 🔤 SORT LANGUAGE COLLECTION ALPHABETICALLY
     languageCollections[article.languageCollectionID].publishedArticles =
-      sortBy(
+      _.sortBy(
         languageCollections[article.languageCollectionID].publishedArticles,
         ["localName"]
       );
@@ -441,50 +444,162 @@ async function syncWithGithub(token, articles, menu) {
 
 function generateFileContent(article) {
   // Prevent undefined errors
-  if (!article.title) article.title = "";
-  if (!article.description) article.description = "";
-  if (!article.tags) article.tags = "";
-  if (!article.id) article.id = "";
-  if (!article.languageCollectionID) article.languageCollectionID = "";
-  if (!article.content) article.content = "";
-  if (!article.wordCount) article.wordCount = "";
+  const title = article.title || null;
+  const description = article.description || null;
+  const tags = article.tags || null;
+  const id = article.id || null;
 
-  // IMPORTANT: this sanitisation must match the one locally!
-  // The ugly identation is to avoid everything being interpeted as markdown quote...
-  const fileContents = `---
-title: ${sanitizeHtml(article.title)}
-description: ${sanitizeHtml(article.description)}
-tags: ${sanitizeHtml(article.tags)}
-langCode: ${sanitizeHtml(article.langCode)}
-articleID: ${sanitizeHtml(article.id)}
-wordCount: ${sanitizeHtml(article.wordCount)}
-lastUpdated: ${article.metadata.createdTimestamp.toMillis()}
-languageCollectionID: ${sanitizeHtml(article.languageCollectionID)}
----
+  let frontmatter = [];
 
-${turndownService.turndown(
-  sanitizeHtml(article.content, {
-    allowedTags: sanitizeHtml.defaults.allowedTags.concat([
-      "iframe",
-      // Custom elements (make sure these are also included in TurndownService!!!)
-      // "client-only",
-      "dynamic-image",
-      "action-donate",
-      "action-volunteer",
-      "action-custom",
-      "action-smart-small",
-    ]),
-    allowedAttributes: {
-      ...sanitizeHtml.defaults.allowedAttributes,
-      iframe: ["src", "allowfullscreen", "start", "width", "height"],
-      div: ["data-youtube-video"],
-      "dynamic-image": ["alt", "imageid", "title"],
-      "action-custom": ["buttonlink", "buttonlabel"],
-    },
-    allowedIframeHostnames: ["www.youtube-nocookie.com"],
-  })
-)}
-`;
+  function sanitize(value) {
+    return sanitizeHtml(value, {});
+  }
+
+  function addToFrontmatter(options) {
+    const { key, type, value } = options;
+
+    if (value) {
+      let hasCorrectType = null;
+      let sanitizedValue = null;
+
+      switch (type) {
+        case "string":
+          hasCorrectType = _.isString(value);
+          sanitizedValue = sanitize(value);
+          break;
+        case "array":
+          hasCorrectType = _.isArray(value);
+          sanitizedValue = sanitize(JSON.stringify(value));
+          break;
+        case "number":
+          hasCorrectType = _.isInteger(value);
+          sanitizedValue = value;
+          break;
+        case "focusMode":
+          hasCorrectType =
+            value &&
+            _.isPlainObject(value) &&
+            value.isOn &&
+            _.isBoolean(value.isOn) &&
+            _.isString(value.buttonLabel) &&
+            (value.buttonAnchor === null || _.isString(value.buttonAnchor)) &&
+            (value.buttonLink === null || _.isString(value.buttonLink));
+
+          sanitizedValue =
+            newLine +
+            `  isOn: ${value.isOn}` +
+            newLine +
+            `  buttonLabel: ${sanitize(value.buttonLabel)}`;
+
+          if (value.buttonAnchor) {
+            sanitizedValue =
+              sanitizedValue +
+              newLine +
+              `  buttonAnchor: ${sanitize(value.buttonAnchor)}`;
+          }
+
+          if (value.buttonLink) {
+            sanitizedValue =
+              sanitizedValue +
+              newLine +
+              `  buttonLink: ${sanitize(value.buttonLink)}`;
+          }
+          sanitizedValue =
+            sanitizedValue +
+            newLine +
+            `sidebar: false` +
+            newLine +
+            `aside: false`;
+          break;
+        case "timestamp":
+          hasCorrectType = true;
+          sanitizedValue = value.toMillis();
+
+          break;
+        default:
+          hasCorrectType = true;
+          sanitizedValue = sanitize(value);
+          break;
+      }
+
+      if (hasCorrectType) {
+        frontmatter.push(`${key}: ${sanitizedValue}`);
+      }
+    }
+  }
+
+  // Build frontmatter arry
+  addToFrontmatter({ key: "title", type: "string", value: article.title });
+  addToFrontmatter({
+    key: "description",
+    type: "string",
+    value: article.description,
+  });
+
+  addToFrontmatter({
+    key: "langCode",
+    type: "strubg",
+    value: article.langCode,
+  });
+  addToFrontmatter({ key: "articleID", type: "string", value: article.id });
+  addToFrontmatter({
+    key: "languageCollectionID",
+    type: "string",
+    value: article.languageCollectionID,
+  });
+  addToFrontmatter({
+    key: "lastUpdated",
+    type: "timestamp",
+    value: article.metadata.createdTimestamp,
+  });
+  addToFrontmatter({
+    key: "wordCount",
+    type: "number",
+    value: article.wordCount,
+  });
+  addToFrontmatter({ key: "tags", type: "array", value: article.tags });
+  addToFrontmatter({
+    key: "focusMode",
+    type: "focusMode",
+    value: article.focusMode,
+  });
+
+  // Create string from all frontmatter items, separated with an enter.
+  frontmatterString = frontmatter.join(newLine);
+
+  const sanitizedContent = turndownService.turndown(
+    sanitizeHtml(article.content, {
+      allowedTags: sanitizeHtml.defaults.allowedTags.concat([
+        "iframe",
+        // Custom elements (make sure these are also included in TurndownService!!!)
+        // "client-only",
+        "dynamic-image",
+        "action-donate",
+        "action-volunteer",
+        "action-custom",
+        "action-smart-small",
+      ]),
+      allowedAttributes: {
+        ...sanitizeHtml.defaults.allowedAttributes,
+        iframe: ["src", "allowfullscreen", "start", "width", "height"],
+        div: ["data-youtube-video"],
+        "dynamic-image": ["alt", "imageid", "title"],
+        "action-custom": ["buttonlink", "buttonlabel"],
+      },
+      allowedIframeHostnames: ["www.youtube-nocookie.com"],
+    })
+  );
+
+  const fileContents =
+    `---` +
+    newLine +
+    `${frontmatterString}` +
+    newLine +
+    `---` +
+    newLine +
+    newLine +
+    sanitizedContent;
+
   log("⚪️ fileContents", fileContents);
 
   return fileContents;

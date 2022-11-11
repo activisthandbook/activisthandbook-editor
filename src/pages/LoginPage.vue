@@ -112,10 +112,9 @@
             <div class="q-gutter-y-md q-ma-md">
               <h2>Check your email!</h2>
               <div>
-                <strong>We have sent you a sign-in link.</strong> Open the link
-                in your email to sign in without a password.
+                <strong>We have sent you a sign-in link.</strong>
+                Open the link in your email to sign in without a password.
               </div>
-
               <q-btn
                 v-if="
                   email.endsWith('@gmail.com') ||
@@ -164,16 +163,33 @@
                 target="_blank"
               />
               <div class="text-caption">
-                It might take a few minutes for the email to arrive. Also check
-                your spam.
+                <div>
+                  It's on its way to {{ email }}. It might take a few minutes
+                  for the email to arrive. Also check your spam.
+                </div>
               </div>
+              <div class="text-caption text-italic" v-if="countdown > 1">
+                Should arrive within {{ countdown }} seconds.
+              </div>
+              <q-btn
+                v-else
+                dense
+                label="Send again"
+                no-caps
+                class="full-width bg-grey-2"
+                flat
+                @click="fakeResend()"
+              />
             </div>
           </q-card-section>
         </q-card>
         <q-card class="bg-accent" flat bordered>
           <q-card-section>
             <div class="q-gutter-y-sm">
-              <div class="text-bold">Important security reminders 🔒</div>
+              <div class="text-bold">
+                Waiting for the email to arrive? In the meantime, read these
+                security tips:
+              </div>
               <div>
                 As activists, we are at high risk of being hacked! Protect
                 yourself and your fellow change-makers:
@@ -183,8 +199,14 @@
                   Never fill in your password after clicking on an email link.
                 </li>
                 <li>
-                  Always check if the website domain is correct. It should end
-                  with <strong>activisthandbook.org</strong>.
+                  Always check if the website domain is correct. For Activist
+                  Handbook, it should end with
+                  <strong>activisthandbook.org</strong>.
+                </li>
+                <li>Use two-step authentication if possible.</li>
+                <li>
+                  Always use passcode for your phone and laptop. Turn off Touch
+                  ID and Face ID before going to a protest.
                 </li>
               </ul>
               <q-btn
@@ -213,6 +235,7 @@ export default {
       step: 1,
       loading: false,
       email: "",
+      countdown: 60,
     };
   },
   computed: {
@@ -224,6 +247,23 @@ export default {
       await this.firebaseStore.sendVerificationEmail(this.email);
       this.loading = false;
       this.step = 2;
+      this.startCountdown();
+    },
+    async startCountdown() {
+      this.countdown = 60;
+      const interval = setInterval(() => {
+        this.countdown = this.countdown - 1;
+        if (this.countdown === 1) {
+          clearInterval(interval);
+        }
+      }, 1000);
+    },
+    fakeResend() {
+      this.startCountdown();
+      this.$q.notify({
+        message: "Verification email sent",
+        icon: "mdi-email-check",
+      });
     },
   },
 };

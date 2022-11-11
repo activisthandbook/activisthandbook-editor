@@ -2,11 +2,10 @@
   <q-layout view="hhh lpR fFf">
     <q-header class="bg-accent text-black" bordered>
       <q-toolbar class="flex q-py-md">
-        <q-icon name="mdi-folder-text" size="24px" class="gt-xs" />
+        <AppSwitcher />
         <q-toolbar-title>Menu</q-toolbar-title>
         <!-- <q-space /> -->
 
-        <AppSwitcher />
         <q-btn
           no-caps
           color="primary"
