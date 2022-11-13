@@ -16,147 +16,29 @@
               align="justify"
               active-color="secondary"
             >
-              <q-tab
-                name="my-files"
-                icon="mdi-account-circle"
-                label="My files"
-                no-caps
-              />
+              <q-tab name="me" icon="mdi-account-circle" label="Me" no-caps />
 
-              <q-tab
-                name="new"
-                icon="mdi-star-outline"
-                label="New"
-                no-caps
-                disable
-              />
+              <q-tab name="new" icon="mdi-star-outline" label="New" no-caps />
               <q-tab
                 name="published"
                 icon="mdi-check-circle-outline"
                 label="Published"
                 no-caps
-                disable
               />
-              <q-tab
-                name="tree"
-                icon="mdi-file-tree"
-                label="Tree"
-                no-caps
-                disable
-              />
+              <q-tab name="tree" icon="mdi-file-tree" label="Tree" no-caps />
               <q-tab
                 name="import"
                 icon="mdi-database-import-outline"
                 label="Imported"
                 no-caps
-                disable
               />
             </q-tabs>
 
-            <q-card
-              class="bg-accent q-py-sm"
-              v-if="
-                usersStore.recentArticles.dataLoaded[
-                  firebaseStore.auth.currentUser.uid
-                ]
-              "
-            >
-              <q-list>
-                <q-item class="q-py-md bg-grey-1 q-mb-sm">
-                  <q-item-section avatar>
-                    <q-icon name="mdi-file-document-edit-outline" size="32px" />
-                  </q-item-section>
-                  <q-item-section class="text-h5">
-                    My recent edits
-                  </q-item-section>
-                  <q-item-section side>
-                    <q-btn
-                      round
-                      flat
-                      icon="mdi-reload"
-                      @click="
-                        usersStore.fetchRecentArticles(
-                          this.firebaseStore.auth.currentUser.uid
-                        )
-                      "
-                    />
-                  </q-item-section>
-                </q-item>
-              </q-list>
-              <!-- <q-card-section>
-                <h3 class="flex items-center">
-                  <q-icon
-                    name="mdi-file-document-edit-outline"
-                    class="q-mr-sm"
-                  />
-                  <span>My recent edits</span>
-                </h3>
-              </q-card-section> -->
-              <ArticleList
-                v-if="
-                  usersStore.recentArticles.data[
-                    firebaseStore.auth.currentUser.uid
-                  ]
-                "
-                :articles="
-                  usersStore.recentArticles.data[
-                    firebaseStore.auth.currentUser.uid
-                  ]
-                "
-              />
-              <q-card-section v-else>
-                No articles found. Start editing and they will appear here!
-              </q-card-section>
-            </q-card>
-            <q-card class="bg-secondary" dark>
-              <q-card-section>
-                <div class="q-gutter-y-md">
-                  <div>
-                    <strong
-                      >Thank you for making Activist Handbook better<span
-                        v-if="
-                          usersStore.profile.dataLoaded[
-                            firebaseStore.auth.currentUser.uid
-                          ]
-                        "
-                        >,
-                        {{
-                          usersStore.profile.data[
-                            firebaseStore.auth.currentUser.uid
-                          ].firstName
-                        }} </span
-                      >.</strong
-                    >
-                    Our team trains 4000 activists every month. And we couldn't
-                    do it without you.
-                  </div>
-                  <div>
-                    Need help getting started? Our team of volunteers is happy
-                    to assist.
-                  </div>
-                  <div class="q-gutter-sm">
-                    <q-btn
-                      label="Support page"
-                      no-caps
-                      color="accent"
-                      text-color="black"
-                      icon="mdi-help-circle"
-                      href="https://activisthandbook.org/en/support/writers"
-                      target="_blank"
-                    />
-                    <q-btn
-                      label="Donate"
-                      href="https://activisthandbook.org/donate"
-                      target="_blank"
-                      color="accent"
-                      text-color="black"
-                      no-caps
-                      icon="mdi-heart"
-                    />
-                  </div>
-                </div>
-              </q-card-section>
-            </q-card>
+            <MyArticles v-if="tab === 'me'" />
+            <NewArticles v-if="tab === 'new'" />
+            <PublishedArticles v-if="tab === 'published'" />
+            <TreeArticles v-if="tab === 'tree'" />
+            <ImportedArticles v-if="tab === 'import'" />
           </div>
         </div>
       </q-page>
@@ -188,28 +70,31 @@ import { useUsersStore } from "src/stores/users";
 import { useFirebaseStore } from "src/stores/firebase";
 
 import AppSwitcher from "components/AppSwitcher.vue";
-import ArticleList from "components/ArticleList.vue";
+
+// Subpages
+import MyArticles from "src/pages/index/MyArticles.vue";
+import NewArticles from "src/pages/index/NewArticles.vue";
+import PublishedArticles from "src/pages/index/PublishedArticles.vue";
+import TreeArticles from "src/pages/index/TreeArticles.vue";
+import ImportedArticles from "src/pages/index/ImportedArticles.vue";
 
 export default {
   name: "IndexPage",
-  components: { AppSwitcher, ArticleList },
+  components: {
+    AppSwitcher,
+    MyArticles,
+    NewArticles,
+    PublishedArticles,
+    TreeArticles,
+    ImportedArticles,
+  },
   data() {
     return {
-      tab: "my-files",
+      tab: "me",
     };
   },
   computed: {
     ...mapStores(useUsersStore, useFirebaseStore),
-  },
-  created() {
-    this.usersStore.fetchRecentArticles(
-      this.firebaseStore.auth.currentUser.uid
-    );
-  },
-  unmounted() {
-    this.usersStore.destroyRecentArticles(
-      this.firebaseStore.auth.currentUser.uid
-    );
   },
 };
 </script>
