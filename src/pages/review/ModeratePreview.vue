@@ -6,30 +6,9 @@
         will be permanently deleted!</q-card-section
       >
     </q-card>
-
-    <q-btn
-      label="Show content"
-      v-show="quickReview && !showContent"
-      @click="showContent = true"
-      class="full-width"
-      no-caps
-      color="grey-2"
-      text-color="black"
-      unelevated
-    />
-    <q-btn
-      label="Hide content"
-      v-show="quickReview && showContent"
-      @click="showContent = false"
-      class="full-width"
-      no-caps
-      color="grey-2"
-      text-color="black"
-      unelevated
-    />
   </q-card-section>
 
-  <div v-show="!quickReview || showContent">
+  <div v-show="showContent">
     <q-card-section
       v-if="article.content !== '<p></p>'"
       v-html="sanitize(article.content)"
@@ -43,7 +22,7 @@
 import sanitizeHtml from "sanitize-html";
 
 export default {
-  props: ["article", "quickReview"],
+  props: ["article"],
   data() {
     return {
       showContent: false,

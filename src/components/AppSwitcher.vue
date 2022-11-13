@@ -1,5 +1,5 @@
 <template>
-  <q-btn icon="mdi-apps" round color="grey-2" text-color="primary" unelevated>
+  <q-btn icon="mdi-apps" round color="primary" text-color="accent" unelevated>
     <q-menu
       :offset="[0, 8]"
       class="shadow-10 bg-accent q-pa-sm"
@@ -9,21 +9,6 @@
       <slot></slot>
 
       <div class="q-gutter-sm text-center q-mb-sm q-pt-sm">
-        <!-- <q-btn
-          label="Home"
-          icon="mdi-home"
-          no-caps
-          style="width: 256px"
-          padding="16px 8px"
-          size="13px"
-          v-close-popup
-          :to="{ name: 'Home' }"
-          exact
-          color="primary"
-          v-if="$route.name !== 'Home'"
-          text-color="accent"
-          unelevated
-        /> -->
         <q-btn
           icon="mdi-home"
           padding="0"
@@ -33,7 +18,7 @@
           style="width: 80px; height: 72px"
           size="13px"
           v-close-popup
-          :to="{ name: 'Home' }"
+          :to="{ name: 'Home', params: { tab: 'me' } }"
           exact
           flat
           color="primary"
@@ -61,7 +46,7 @@
           style="width: 80px; height: 72px"
           size="13px"
           v-close-popup
-          :to="{ name: 'Review' }"
+          :to="{ name: 'Review', params: { tab: 'articles' } }"
           flat
           color="primary"
         />

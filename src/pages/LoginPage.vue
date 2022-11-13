@@ -13,6 +13,7 @@
               label="Home"
               :to="{
                 name: 'Home',
+                params: { tab: 'me' },
               }"
               color="secondary"
               no-caps

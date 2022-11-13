@@ -8,15 +8,34 @@
       <q-expansion-item class="bg-accent">
         <template v-slot:header>
           <q-item-section
-            class="q-py-md text-bold"
+            class="q-py-sm"
             v-if="
               articleVersions.data[this.articleVersionSelected].websiteVersion
             "
           >
-            <q-item-label class="q-pt-sm">Website version</q-item-label>
+            <!-- <q-item-label class="q-pt-sm">Website version</q-item-label>
             <q-item-label caption class="q-py-sm"
               >Preview unavailable</q-item-label
-            >
+            > -->
+
+            <q-item-label caption>
+              {{
+                mixin_humanDate(
+                  articleVersions.data[this.articleVersionSelected]
+                    .lastPublishedServerTimestamp
+                )
+              }}
+            </q-item-label>
+            <q-item-label class="text-bold"> Website version </q-item-label>
+
+            <q-item-label> Preview unavailable </q-item-label>
+
+            <q-item-label class="text-caption">
+              <q-icon
+                name="mdi-link"
+                class="q-mr-xs"
+              />activisthandbook.org/path-unknown
+            </q-item-label>
           </q-item-section>
           <q-item-section class="q-py-sm" v-else>
             <q-item-label caption>
@@ -221,7 +240,6 @@
 
           <ModeratePreview
             :article="articleVersions.data[articleVersionSelected]"
-            :quickReview="false"
           />
         </div>
       </q-expansion-item>
@@ -229,7 +247,7 @@
   </div>
 </template>
 <script>
-import ModeratePreview from "components/moderate/ModeratePreview.vue";
+import ModeratePreview from "src/pages/review/ModeratePreview.vue";
 
 import {
   getFirestore,
@@ -251,7 +269,7 @@ import { useFirebaseStore } from "src/stores/firebase";
 const db = getFirestore();
 
 export default {
-  props: ["liveDraftArticle", "quickReview"],
+  props: ["liveDraftArticle"],
   components: { ModeratePreview },
   data() {
     return {

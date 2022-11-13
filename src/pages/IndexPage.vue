@@ -16,29 +16,44 @@
               align="justify"
               active-color="secondary"
             >
-              <q-tab name="me" icon="mdi-account-circle" label="Me" no-caps />
+              <q-route-tab
+                :to="{ params: { tab: 'me' } }"
+                icon="mdi-account-circle"
+                label="Me"
+                no-caps
+              />
 
-              <q-tab name="new" icon="mdi-star-outline" label="New" no-caps />
-              <q-tab
-                name="published"
+              <q-route-tab
+                :to="{ params: { tab: 'new' } }"
+                icon="mdi-star-outline"
+                label="New"
+                no-caps
+              />
+              <q-route-tab
+                :to="{ params: { tab: 'published' } }"
                 icon="mdi-check-circle-outline"
                 label="Published"
                 no-caps
               />
-              <q-tab name="tree" icon="mdi-file-tree" label="Tree" no-caps />
-              <q-tab
-                name="import"
+              <q-route-tab
+                :to="{ params: { tab: 'tree' } }"
+                icon="mdi-file-tree"
+                label="Tree"
+                no-caps
+              />
+              <q-route-tab
+                :to="{ params: { tab: 'import' } }"
                 icon="mdi-database-import-outline"
                 label="Imported"
                 no-caps
               />
             </q-tabs>
 
-            <MyArticles v-if="tab === 'me'" />
-            <NewArticles v-if="tab === 'new'" />
-            <PublishedArticles v-if="tab === 'published'" />
-            <TreeArticles v-if="tab === 'tree'" />
-            <ImportedArticles v-if="tab === 'import'" />
+            <MyArticles v-if="$route.params.tab === 'me'" />
+            <NewArticles v-if="$route.params.tab === 'new'" />
+            <PublishedArticles v-if="$route.params.tab === 'published'" />
+            <TreeArticles v-if="$route.params.tab === 'tree'" />
+            <ImportedArticles v-if="$route.params.tab === 'import'" />
           </div>
         </div>
       </q-page>

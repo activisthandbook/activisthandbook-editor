@@ -15,6 +15,7 @@
           <q-btn
             round
             flat
+            dense
             icon="mdi-reload"
             @click="
               usersStore.fetchRecentArticles(

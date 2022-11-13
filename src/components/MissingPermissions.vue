@@ -16,7 +16,7 @@
               no-caps
               color="secondary"
               icon="mdi-home"
-              :to="{ name: 'Home' }"
+              :to="{ name: 'Home', params: { tab: 'me' } }"
             />
           </div>
         </q-card-section>

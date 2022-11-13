@@ -4,7 +4,16 @@ const routes = [
     component: () => import("src/layouts/DefaultLayout.vue"),
     children: [
       {
+        // /search/screens -> /search?q=screens
         path: "",
+        redirect: (to) => {
+          // the function receives the target route as the argument
+          // we return a redirect path/location here.
+          return { path: "/dashboard/me" };
+        },
+      },
+      {
+        path: "dashboard/:tab",
         component: () => import("pages/IndexPage.vue"),
         name: "Home",
       },
@@ -82,7 +91,7 @@ const routes = [
         name: "Import",
       },
       {
-        path: "/review",
+        path: "/review/:tab",
         component: () => import("pages/ReviewPage.vue"),
         name: "Review",
         meta: {

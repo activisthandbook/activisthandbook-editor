@@ -229,7 +229,7 @@
               no-caps
               color="secondary"
               icon="mdi-home"
-              :to="{ name: 'Home' }"
+              :to="{ name: 'Home', params: { tab: 'me' } }"
               autofocus
             />
           </div>
@@ -259,7 +259,7 @@
               no-caps
               color="secondary"
               icon="mdi-shield-check"
-              :to="{ name: 'Review' }"
+              :to="{ name: 'Review', params: { tab: 'articles' } }"
               outline
             />
             <q-btn
@@ -268,7 +268,7 @@
               no-caps
               color="secondary"
               icon="mdi-home"
-              :to="{ name: 'Home' }"
+              :to="{ name: 'Home', params: { tab: 'me' } }"
               outline
             />
 
