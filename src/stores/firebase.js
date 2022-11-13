@@ -23,7 +23,21 @@ import { getPerformance } from "firebase/performance";
 import { Notify } from "quasar";
 
 // SELF-HOSTING CONFIG: When hosting yourself, make sure to edit this configuration
-const firebaseConfig = {
+
+// Dev environment
+const firebaseConfigDev = {
+  apiKey: "AIzaSyD9JdsMNlyu_10H7JU5M-nft_EVnoq8OOw",
+  authDomain: "rebeltools-write.firebaseapp.com",
+  projectId: "rebeltools-write",
+  databaseURL:
+    "https://rebeltools-write-default-rtdb.europe-west1.firebasedatabase.app",
+  storageBucket: "rebeltools-write.appspot.com",
+  messagingSenderId: "901019837865",
+  appId: "1:901019837865:web:62160cdfcc47fe960f10b8",
+};
+
+// Production environment
+const firebaseConfigProduction = {
   apiKey: "AIzaSyD9JdsMNlyu_10H7JU5M-nft_EVnoq8OOw",
   authDomain: "rebeltools-write.firebaseapp.com",
   projectId: "rebeltools-write",
@@ -50,7 +64,13 @@ export const useFirebaseStore = defineStore("firebase", {
       /* 🔥 INITIALISE FIREBASE
       Docs: https://firebase.google.com/docs/web/setup
       */
-      const firebaseApp = initializeApp(firebaseConfig);
+      let firebaseApp = null;
+      if (process.env.DEV) {
+        console.log(`DEV SERVER`);
+        firebaseApp = initializeApp(firebaseConfigDev);
+      } else {
+        firebaseApp = initializeApp(firebaseConfigProduction);
+      }
 
       // 🔥 INITIALISE REALTIME DATABASE
       // this.database = getDatabase(firebaseApp);
@@ -232,7 +252,7 @@ export const useFirebaseStore = defineStore("firebase", {
             });
           });
       } else {
-        console.log("not a sign in link");
+        // console.log("not a sign in link");
       }
     },
   },

@@ -18,12 +18,10 @@ const db = getFirestore();
 // Yeah, I know, it's a bit stupid, because vitepress will convert the markdown back to HTML. But we need it to be markdown first so vitepress can process everything correctly, e.g. adding a table of contents and heading anchors). And the TipTap editor doesn't support markdown.
 // https://github.com/valeriangalliat/markdown-it-anchor
 // https://github.com/mdit-vue/mdit-vue/tree/main/packages/plugin-toc
+// var TurndownService = require("turndown");
+
 var TurndownService = require("turndown");
-var turndownService = new TurndownService({
-  headingStyle: "atx",
-  bulletListMarker: "-",
-});
-turndownService.keep([
+const elementsToKeep = [
   "div",
   "iframe",
   "dynamic-image",
@@ -31,7 +29,54 @@ turndownService.keep([
   "action-donate",
   "action-smart-small",
   "action-volunteer",
-]);
+  "action-button",
+];
+function isOneOfElements(node, array) {
+  log("isOneOfElements node", node);
+  log("isOneOfElements localName", node.localName);
+  log("isOneOfElements array", array);
+
+  for (const item of array) {
+    if (node.localName === item) {
+      log("isOneOfElements inArray!");
+      return true;
+    }
+  }
+  return false;
+}
+var turndownService = new TurndownService({
+  headingStyle: "atx",
+  bulletListMarker: "-",
+  blankReplacement: function (content, node) {
+    if (isOneOfElements(node, elementsToKeep)) {
+      log("isOneOfElements true");
+      return node.outerHTML;
+    } else {
+      log("isOneOfElements false");
+      return node.isBlock ? "\n\n" : "";
+    }
+  },
+});
+turndownService.keep(elementsToKeep);
+
+// const {
+//   NodeHtmlMarkdown,
+//   NodeHtmlMarkdownOptions,
+// } = require("node-html-markdown");
+
+// const htmlToMarkdown = new NodeHtmlMarkdown({
+//   bulletMarker: "-",
+//   ignore: [
+//     "div",
+//     "iframe",
+//     "dynamic-image",
+//     "action-custom",
+//     "action-donate",
+//     "action-smart-small",
+//     "action-volunteer",
+//     "action-button",
+//   ],
+// });
 
 const languagesFile = require("./languages");
 const languages = languagesFile.languages;
@@ -44,8 +89,9 @@ let languageCollections = {};
 exports.publishArticles = functions
   .region("europe-west1")
   // Not working (eg. getting branch error)? Make sure to check that the API token is still valid:
-  // https://github.com/settings/tokens
-  // https://firebase.google.com/docs/functions/config-env
+  // STEP 1: Generate new token (https://github.com/settings/tokens)
+  // STEP 2: Save the token (https://firebase.google.com/docs/functions/config-env):
+  //  firebase functions:secrets:set GITHUB_API
   .runWith({ secrets: ["GITHUB_API"] })
   .https.onCall(async (data, context) => {
     // Reset variables
@@ -567,28 +613,54 @@ function generateFileContent(article) {
   // Create string from all frontmatter items, separated with an enter.
   frontmatterString = frontmatter.join(newLine);
 
-  const sanitizedContent = turndownService.turndown(
-    sanitizeHtml(article.content, {
-      allowedTags: sanitizeHtml.defaults.allowedTags.concat([
-        "iframe",
-        // Custom elements (make sure these are also included in TurndownService!!!)
-        // "client-only",
-        "dynamic-image",
-        "action-donate",
-        "action-volunteer",
-        "action-custom",
-        "action-smart-small",
-      ]),
-      allowedAttributes: {
-        ...sanitizeHtml.defaults.allowedAttributes,
-        iframe: ["src", "allowfullscreen", "start", "width", "height"],
-        div: ["data-youtube-video"],
-        "dynamic-image": ["alt", "imageid", "title"],
-        "action-custom": ["buttonlink", "buttonlabel"],
-      },
-      allowedIframeHostnames: ["www.youtube-nocookie.com"],
-    })
-  );
+  // let turndownService = new TurndownService({
+  //   headingStyle: "atx",
+  //   bulletListMarker: "-",
+  // });
+  // turndownService.keep([
+  //   "div",
+  //   "iframe",
+  //   "dynamic-image",
+  //   "action-custom",
+  //   "action-donate",
+  //   "action-smart-small",
+  //   "action-volunteer",
+  //   "action-button",
+  // ]);
+
+  const sanitizedContentHTML = sanitizeHtml(article.content, {
+    allowedTags: sanitizeHtml.defaults.allowedTags.concat([
+      "iframe",
+      // Custom elements (make sure these are also included in TurndownService!!!)
+      // "client-only",
+      "dynamic-image",
+      "action-donate",
+      "action-volunteer",
+      "action-custom",
+      "action-smart-small",
+      "action-button",
+    ]),
+    allowedAttributes: {
+      ...sanitizeHtml.defaults.allowedAttributes,
+      iframe: ["src", "allowfullscreen", "start", "width", "height"],
+      div: ["data-youtube-video"],
+      "dynamic-image": ["alt", "imageid", "title"],
+      "action-custom": ["buttonlink", "buttonlabel"],
+      "action-button": ["buttonlink", "buttonanchor", "buttonlabel"],
+    },
+
+    allowedIframeHostnames: ["www.youtube-nocookie.com"],
+  });
+
+  log("⚪️ sanitizedContentHTML", sanitizedContentHTML);
+
+  const sanitizedContentMarkdown =
+    turndownService.turndown(sanitizedContentHTML);
+
+  // const sanitizedContentMarkdown =
+  //   htmlToMarkdown.translate(sanitizedContentHTML);
+
+  log("⚪️ sanitizedContentMarkdown 2", sanitizedContentMarkdown);
 
   const fileContents =
     `---` +
@@ -598,7 +670,7 @@ function generateFileContent(article) {
     `---` +
     newLine +
     newLine +
-    sanitizedContent;
+    sanitizedContentMarkdown;
 
   log("⚪️ fileContents", fileContents);
 

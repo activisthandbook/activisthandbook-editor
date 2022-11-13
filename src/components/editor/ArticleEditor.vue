@@ -291,6 +291,7 @@ import ActionDonate from "./ActionDonate";
 import ActionVolunteer from "./ActionVolunteer";
 import ActionCustom from "./ActionCustom";
 import ActionSmart from "./ActionSmart";
+import ActionButton from "./ActionButton";
 
 import Focus from "@tiptap/extension-focus";
 import Placeholder from "@tiptap/extension-placeholder";
@@ -465,6 +466,7 @@ export default {
           ActionVolunteer,
           ActionCustom,
           ActionSmart,
+          ActionButton,
 
           Youtube.configure({
             nocookie: true,
