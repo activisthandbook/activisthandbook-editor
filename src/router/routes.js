@@ -28,11 +28,6 @@ const routes = [
         name: "Signout",
       },
       {
-        path: "browse",
-        component: () => import("pages/BrowsePage.vue"),
-        name: "Browse",
-      },
-      {
         path: "new",
         component: () => import("src/dialogs/NewPage.vue"),
         name: "New",
