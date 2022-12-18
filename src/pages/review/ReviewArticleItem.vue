@@ -445,7 +445,7 @@ export default {
       }
 
       // update analytics locally (it will be updated on server automatically with a counter, but this way we prevent a delay)
-      this.analyticsStore.data.articlePublishingQueueCount++;
+      this.analyticsStore.data.articlesInQueueCount++;
     },
     revertToLastPublished: async function () {
       // Get a new write batch
@@ -532,7 +532,7 @@ export default {
         });
 
         // update analytics locally (it will be updated on server automatically with a counter, but this way we prevent a delay)
-        this.analyticsStore.data.articlePublishingQueueCount++;
+        this.analyticsStore.data.articlesInQueueCount++;
       } catch (e) {
         console.log("Transaction failed: ", e);
       }

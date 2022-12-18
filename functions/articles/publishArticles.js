@@ -49,6 +49,7 @@ var turndownService = new TurndownService({
   bulletListMarker: "-",
   blankReplacement: function (content, node) {
     if (isOneOfElements(node, elementsToKeep)) {
+      ("");
       log("isOneOfElements true");
       return node.outerHTML;
     } else {

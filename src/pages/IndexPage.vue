@@ -11,49 +11,57 @@
         <div class="q-gutter-y-md q-mt-md q-mb-xl">
           <div class="q-gutter-y-md">
             <q-tabs
-              v-model="tab"
               class="bg-grey-3 rounded-borders"
               align="justify"
               active-color="secondary"
             >
               <q-route-tab
-                :to="{ params: { tab: 'me' } }"
-                icon="mdi-account-circle"
+                :to="{ params: { homeTab: 'home' } }"
+                icon="mdi-home"
+                label="Home"
+                no-caps
+              />
+              <q-route-tab
+                :to="{ params: { homeTab: 'me' } }"
+                icon="mdi-account-heart"
                 label="Me"
                 no-caps
               />
 
               <q-route-tab
-                :to="{ params: { tab: 'new' } }"
-                icon="mdi-star-outline"
-                label="New"
-                no-caps
-              />
-              <q-route-tab
-                :to="{ params: { tab: 'published' } }"
-                icon="mdi-check-circle-outline"
-                label="Published"
-                no-caps
-              />
-              <q-route-tab
-                :to="{ params: { tab: 'tree' } }"
+                :to="{ params: { homeTab: 'tree' } }"
                 icon="mdi-file-tree"
                 label="Tree"
                 no-caps
               />
+
               <q-route-tab
-                :to="{ params: { tab: 'import' } }"
+                :to="{ params: { homeTab: 'new' } }"
+                icon="mdi-file-star-outline"
+                label="Drafts"
+                no-caps
+              />
+              <q-route-tab
+                :to="{ params: { homeTab: 'published' } }"
+                icon="mdi-file-check"
+                label="Published"
+                no-caps
+              />
+
+              <!-- <q-route-tab
+                :to="{ params: { homeTab: 'import' } }"
                 icon="mdi-database-import-outline"
                 label="Imported"
                 no-caps
-              />
+              /> -->
             </q-tabs>
 
-            <MyArticles v-if="$route.params.tab === 'me'" />
-            <NewArticles v-if="$route.params.tab === 'new'" />
-            <PublishedArticles v-if="$route.params.tab === 'published'" />
-            <TreeArticles v-if="$route.params.tab === 'tree'" />
-            <ImportedArticles v-if="$route.params.tab === 'import'" />
+            <HomeView v-if="tab === 'home'" />
+            <MyArticles v-if="tab === 'me'" />
+            <NewArticles v-if="tab === 'new'" />
+            <PublishedArticles v-if="tab === 'published'" />
+            <TreeArticles v-if="tab === 'tree'" />
+            <ImportedArticles v-if="tab === 'import'" />
           </div>
         </div>
       </q-page>
@@ -87,6 +95,7 @@ import { useFirebaseStore } from "src/stores/firebase";
 import AppSwitcher from "components/AppSwitcher.vue";
 
 // Subpages
+import HomeView from "src/pages/index/HomeView.vue";
 import MyArticles from "src/pages/index/MyArticles.vue";
 import NewArticles from "src/pages/index/NewArticles.vue";
 import PublishedArticles from "src/pages/index/PublishedArticles.vue";
@@ -97,6 +106,7 @@ export default {
   name: "IndexPage",
   components: {
     AppSwitcher,
+    HomeView,
     MyArticles,
     NewArticles,
     PublishedArticles,
@@ -105,8 +115,28 @@ export default {
   },
   data() {
     return {
-      tab: "me",
+      tab: null,
     };
+  },
+  watch: {
+    "$route.params.homeTab"() {
+      this.tab = this.$route.params.homeTab;
+      if (this.tab) {
+        sessionStorage.setItem("homeTab", this.tab);
+      }
+    },
+  },
+  mounted() {
+    if (this.$route.params.homeTab === "home") {
+      const previousTab = sessionStorage.getItem("homeTab");
+      if (previousTab) {
+        this.$router.push({ params: { homeTab: previousTab } });
+      }
+    }
+    this.tab = this.$route.params.homeTab;
+    if (this.tab) {
+      sessionStorage.setItem("homeTab", this.tab);
+    }
   },
   computed: {
     ...mapStores(useUsersStore, useFirebaseStore),

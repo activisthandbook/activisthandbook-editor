@@ -38,11 +38,6 @@
       No articles found. Start editing and they will appear here!
     </q-card-section>
   </q-card>
-  <ActionHome
-    v-if="
-      usersStore.recentArticles.dataLoaded[firebaseStore.auth.currentUser.uid]
-    "
-  />
 </template>
 <script>
 import { mapStores } from "pinia";
@@ -50,10 +45,9 @@ import { useUsersStore } from "src/stores/users";
 import { useFirebaseStore } from "src/stores/firebase";
 
 import ArticleList from "src/components/ArticleList.vue";
-import ActionHome from "src/components/actions/ActionHome.vue";
 
 export default {
-  components: { ArticleList, ActionHome },
+  components: { ArticleList },
   computed: {
     ...mapStores(useUsersStore, useFirebaseStore),
   },

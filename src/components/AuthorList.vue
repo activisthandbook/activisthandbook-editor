@@ -9,6 +9,9 @@
       }"
       class="q-py-md"
     >
+      <q-item-section avatar>
+        <q-avatar icon="mdi-account" color="grey-2" text-color="grey" />
+      </q-item-section>
       <q-item-section>
         <q-item-label class="text-bold">
           {{ author.firstName }} {{ author.lastName }}
@@ -16,7 +19,7 @@
         <q-item-label>
           <q-chip
             color="primary"
-            dark
+            text-color="accent"
             icon="mdi-file-document-edit"
             v-if="author.editCount"
           >

@@ -9,11 +9,11 @@ const routes = [
         redirect: (to) => {
           // the function receives the target route as the argument
           // we return a redirect path/location here.
-          return { path: "/dashboard/me" };
+          return { path: "/dashboard/home" };
         },
       },
       {
-        path: "dashboard/:tab",
+        path: "dashboard/:homeTab",
         component: () => import("pages/IndexPage.vue"),
         name: "Home",
       },
@@ -91,7 +91,7 @@ const routes = [
         name: "Import",
       },
       {
-        path: "/review/:tab",
+        path: "/review/:reviewTab",
         component: () => import("pages/ReviewPage.vue"),
         name: "Review",
         meta: {

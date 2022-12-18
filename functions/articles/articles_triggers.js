@@ -1,16 +1,29 @@
 const functions = require("firebase-functions");
 const firebase_tools = require("firebase-tools");
+const admin = require("firebase-admin");
+const db = admin.firestore();
 
-exports.article_onDelete = functions
+// Create a counter
+const Counter = require("./../distributedCounter");
+const articlesCount = new Counter(
+  db.collection("app").doc("analytics"),
+  "articlesCount"
+);
+
+exports.onCreate = functions
+  .region("europe-west1")
+  .firestore.document("articles/{articleID}")
+  .onCreate(async (snap, context) => {
+    // Trigger the counter
+    articlesCount.incrementBy(1);
+  });
+
+exports.onDelete = functions
   .region("europe-west1")
   .firestore.document("articles/{articleID}")
   .onDelete(async (snap, context) => {
-    // const publishedArticlesCount = new Counter(
-    //   db.collection("app").doc("analytics"),
-    //   "publishedArticlesCount"
-    // );
-
-    // publishedArticlesCount.incrementBy(-1);
+    // Trigger the counter
+    articlesCount.incrementBy(-1);
 
     const articleID = context.params.articleID;
 

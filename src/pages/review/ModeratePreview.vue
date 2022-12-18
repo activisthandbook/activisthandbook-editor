@@ -17,6 +17,7 @@
     </q-card-section>
     <q-card-section v-else class="text-grey"> Empty document </q-card-section>
   </div>
+  <div v-html="sanitize(article.content)" class="q-ma-md"></div>
 </template>
 <script>
 import sanitizeHtml from "sanitize-html";

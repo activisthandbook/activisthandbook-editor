@@ -175,7 +175,8 @@ export default {
   data: function () {
     return {
       localMenu: this.menu,
-      expanded: this.touched,
+      // expanded: this.touched,
+      expanded: false,
       text: null,
       link: null,
       activeMatchPatern: null,

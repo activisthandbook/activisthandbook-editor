@@ -1,5 +1,7 @@
 <template>
-  <q-card class="bg-secondary" dark>
+  <AnalyticsDashboard />
+
+  <q-card class="bg-accent" bordered flat>
     <q-card-section>
       <div class="q-gutter-y-md">
         <div>
@@ -27,20 +29,10 @@
           <q-btn
             label="Support page"
             no-caps
-            color="accent"
-            text-color="black"
+            color="secondary"
             icon="mdi-help-circle"
             href="https://activisthandbook.org/en/support/writers"
             target="_blank"
-          />
-          <q-btn
-            label="Donate"
-            href="https://activisthandbook.org/donate"
-            target="_blank"
-            color="accent"
-            text-color="black"
-            no-caps
-            icon="mdi-heart"
           />
         </div>
       </div>
@@ -48,12 +40,21 @@
   </q-card>
 </template>
 <script>
+// import ActionHome from "src/components/actions/ActionHome.vue";
+import AnalyticsDashboard from "./AnalyticsDashboard.vue";
+
 import { mapStores } from "pinia";
-import { useFirebaseStore } from "src/stores/firebase";
+
 import { useUsersStore } from "src/stores/users";
+import { useFirebaseStore } from "src/stores/firebase";
+
 export default {
+  components: {
+    AnalyticsDashboard,
+    // ActionHome,
+  },
   computed: {
-    ...mapStores(useFirebaseStore, useUsersStore),
+    ...mapStores(useUsersStore, useFirebaseStore),
   },
 };
 </script>

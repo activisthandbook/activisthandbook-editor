@@ -6,17 +6,17 @@
           <strong v-if="analyticsStore.data.menuInPublishingQueue">Menu</strong>
           <span
             v-if="
-              analyticsStore.data.articlePublishingQueueCount &&
+              analyticsStore.data.articlesInQueueCount &&
               analyticsStore.data.menuInPublishingQueue
             "
           >
             and
           </span>
-          <strong v-if="analyticsStore.data.articlePublishingQueueCount">
+          <strong v-if="analyticsStore.data.articlesInQueueCount">
             <strong>
-              {{ analyticsStore.data.articlePublishingQueueCount }}
+              {{ analyticsStore.data.articlesInQueueCount }}
             </strong>
-            <span v-if="analyticsStore.data.articlePublishingQueueCount > 1">
+            <span v-if="analyticsStore.data.articlesInQueueCount > 1">
               articles</span
             >
             <span v-else> article</span>
@@ -31,7 +31,7 @@
           :class="{
             'draw-attention':
               analyticsStore.dataLoaded &&
-              analyticsStore.data.articlePublishingQueueCount > 0,
+              analyticsStore.data.articlesInQueueCount > 0,
           }"
           @click="publishArticles()"
           icon="mdi-check-all"
@@ -46,10 +46,11 @@ import { mapStores } from "pinia";
 import { useAnalyticsStore } from "src/stores/analytics";
 
 import { httpsCallable } from "firebase/functions";
+import { useFirebaseStore } from "src/stores/firebase";
 
 export default {
   computed: {
-    ...mapStores(useAnalyticsStore),
+    ...mapStores(useAnalyticsStore, useFirebaseStore),
   },
   methods: {
     async publishArticles() {

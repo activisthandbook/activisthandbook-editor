@@ -26,7 +26,7 @@
               v-if="
                 !this.showRenderingTime &&
                 analyticsStore.dataLoaded &&
-                (analyticsStore.data.articlePublishingQueueCount ||
+                (analyticsStore.data.articlesInQueueCount ||
                   analyticsStore.data.menuInPublishingQueue)
               "
               @published="publishedSuccesfullyDialog = true"
@@ -36,7 +36,7 @@
                 icon="mdi-file-document-edit"
                 label="Articles"
                 no-caps
-                :to="{ params: { tab: 'articles' } }"
+                :to="{ params: { reviewTab: 'articles' } }"
               >
                 <!-- <q-badge
                   floating
@@ -52,7 +52,7 @@
                 icon="mdi-folder-text"
                 label="Menu"
                 no-caps
-                :to="{ params: { tab: 'menu' } }"
+                :to="{ params: { reviewTab: 'menu' } }"
               >
                 <!-- <q-badge
                   floating
@@ -66,8 +66,8 @@
             </q-tabs>
 
             <div style="min-height: 256px">
-              <ReviewArticles v-if="$route.params.tab === 'articles'" />
-              <ReviewMenu v-if="$route.params.tab === 'menu'" />
+              <ReviewArticles v-if="$route.params.reviewTab === 'articles'" />
+              <ReviewMenu v-if="$route.params.reviewTab === 'menu'" />
             </div>
 
             <!-- <q-separator class="q-my-xl" />
@@ -116,7 +116,7 @@
                 no-caps
                 color="secondary"
                 icon="mdi-home"
-                :to="{ name: 'Home', params: { tab: 'me' } }"
+                :to="{ name: 'Home', params: { homeTab: 'home' } }"
                 outline
               />
               <q-btn

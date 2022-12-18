@@ -18,7 +18,7 @@
           style="width: 80px; height: 72px"
           size="13px"
           v-close-popup
-          :to="{ name: 'Home', params: { tab: 'me' } }"
+          :to="{ name: 'Home', params: { homeTab: 'home' } }"
           exact
           flat
           color="primary"
@@ -46,7 +46,7 @@
           style="width: 80px; height: 72px"
           size="13px"
           v-close-popup
-          :to="{ name: 'Review', params: { tab: 'articles' } }"
+          :to="{ name: 'Review', params: { reviewTab: 'articles' } }"
           flat
           color="primary"
         />

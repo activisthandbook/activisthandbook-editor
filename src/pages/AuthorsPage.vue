@@ -39,7 +39,7 @@
             </q-card-section>
           </q-card>
           <q-card class="bg-accent q-py-sm">
-            <q-list>
+            <!-- <q-list>
               <q-item class="q-py-md bg-grey-1 q-mb-sm">
                 <q-item-section avatar>
                   <q-icon name="mdi-heart" size="32px" />
@@ -48,19 +48,26 @@
                   Top contributors
                 </q-item-section>
               </q-item>
-            </q-list>
+            </q-list> -->
+            <q-card-section>
+              <h3>Top contributors</h3>
+            </q-card-section>
 
             <AuthorList :authors="topAuthors.data" />
           </q-card>
           <q-card class="bg-accent q-py-sm">
-            <q-list>
+            <!-- <q-list>
               <q-item class="q-py-md bg-grey-1 q-mb-sm">
                 <q-item-section avatar>
                   <q-icon name="mdi-star" size="32px" />
                 </q-item-section>
                 <q-item-section class="text-h5"> New editors </q-item-section>
               </q-item>
-            </q-list>
+            </q-list> -->
+
+            <q-card-section>
+              <h3>New editors</h3>
+            </q-card-section>
 
             <AuthorList :authors="newAuthors.data" />
           </q-card>
