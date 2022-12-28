@@ -123,7 +123,7 @@ export const useUsersStore = defineStore("users", {
           .forEach(async (articleID) => {
             loopCount++;
             if (loopCount <= maxRecentArticles) {
-              const docSnap = await getDoc(doc(db, "articles", articleID));
+              const docSnap = await getDoc(doc(db, "draftArticles", articleID));
 
               if (docSnap.exists()) {
                 articlesToAdd.push(docSnap.data());

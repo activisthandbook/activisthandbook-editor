@@ -27,13 +27,12 @@
         </q-card-section>
       </q-card>
     </div>
-    <div class="col-sm-4 col-xs-6">
+    <div class="col-sm-4 col-xs-6" v-if="analyticsStore.data.articlesCount">
       <q-card
         class="bg-secondary cursor-pointer"
         dark
         v-ripple
         @click="$router.push({ params: { homeTab: 'new' } })"
-        v-if="analyticsStore.data.articlesCount"
       >
         <q-card-section>
           <div class="text-caption">New drafts</div>
@@ -68,7 +67,7 @@
         </q-card-section>
       </q-card>
     </div>
-    <div class="col-sm-4 col-xs-6">
+    <div class="col-sm-4 col-xs-6" v-if="analyticsStore.data.articlesCount">
       <q-card
         class="bg-secondary cursor-pointer"
         dark
@@ -80,8 +79,11 @@
           <div class="text-h2 flex">
             <q-icon name="mdi-translate" class="q-mr-sm" />
             {{
-              analyticsStore.data.languageCollectionsCount /
-                analyticsStore.data.articlesCount || 0
+              Math.round(
+                (analyticsStore.data.languageCollectionsCount /
+                  analyticsStore.data.articlesCount) *
+                  100
+              ) / 100 || 0
             }}
           </div>
         </q-card-section>

@@ -365,7 +365,7 @@ export default {
         if (article.status === "review") {
           const reviewVersionRef = doc(
             db,
-            "articles",
+            "draftArticles",
             this.liveDraftArticle.id,
             "versions",
             article.id
@@ -375,7 +375,7 @@ export default {
       });
 
       // 2. Reverts the live edit to the last published version.
-      const liveArticleRef = doc(db, "articles", this.liveDraftArticle.id);
+      const liveArticleRef = doc(db, "draftArticles", this.liveDraftArticle.id);
       batch.update(liveArticleRef, {
         ...lastPublishedArticle,
         requestedPublication: false,

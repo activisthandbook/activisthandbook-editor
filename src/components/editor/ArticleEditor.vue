@@ -19,22 +19,12 @@
     :languageCollectionID="editorStore.article.languageCollectionID"
   />
 
-  <q-input
-    dense
-    v-model="editorStore.article.path"
-    color="secondary"
-    placeholder="my-path"
-    @update:model-value="save()"
-  >
-    <template v-slot:prepend>
-      <q-icon name="mdi-link" />
-      <span class="text-caption text-grey-9 text-bold q-ml-sm">
-        activisthandbook.org/<span v-if="editorStore.article.lang"
-          >{{ editorStore.article.lang.code }}/</span
-        >
-      </span>
-    </template>
-  </q-input>
+  <PathInput
+    :path="editorStore.article.path"
+    :lang="editorStore.article.lang"
+    :currentID="editorStore.article.id"
+    @validUpdate="(newPath) => savePath(newPath)"
+  />
 
   <ArticleMenu />
 
@@ -250,6 +240,7 @@
 
 <script>
 import ArticleMenu from "src/components/editor/ArticleMenu.vue";
+import PathInput from "src/components/editor/PathInput.vue";
 import LanguageSelector from "components/LanguageSelector.vue";
 
 import { mapStores } from "pinia";
@@ -321,6 +312,7 @@ const SingleParagraphDocument = Document.extend({
 export default {
   components: {
     EditorContent,
+    PathInput,
     ArticleMenu,
     LanguageSelector,
   },
@@ -508,6 +500,11 @@ export default {
     },
     save() {
       this.editorStore.renderAndSave(this.firebaseStore.auth.currentUser.uid);
+    },
+    savePath(newPath) {
+      console.log(newPath);
+      this.editorStore.article.path = newPath;
+      this.save();
     },
   },
 

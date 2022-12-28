@@ -49,7 +49,7 @@ export default {
   methods: {
     async fetchArticles() {
       const q = query(
-        collection(db, "articles"),
+        collection(db, "draftArticles"),
         where("requestedPublication", "==", true),
         orderBy("requestedPublicationTimestamp", "asc"),
         limit(10)

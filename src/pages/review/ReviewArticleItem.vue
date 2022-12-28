@@ -311,7 +311,7 @@ export default {
       if (!this.isNewArticle) {
         // PUBLISHED BEFORE: This is not a new article. It has been published before, so we only want to show the versions back until the last published one on the website (so including that one)
         versionsQuery = query(
-          collection(db, "articles", this.liveDraftArticle.id, "versions"),
+          collection(db, "draftArticles", this.liveDraftArticle.id, "versions"),
           orderBy("metadata.createdTimestamp"),
           where(
             "status",
@@ -324,7 +324,7 @@ export default {
       } else {
         // NEW ARTICLE: Fetch all versions
         versionsQuery = query(
-          collection(db, "articles", this.liveDraftArticle.id, "versions"),
+          collection(db, "draftArticles", this.liveDraftArticle.id, "versions"),
           orderBy("metadata.createdTimestamp"),
           limit(10)
         );
@@ -374,78 +374,101 @@ export default {
       const acceptedVersion =
         this.articleVersions.data[this.articleVersionSelected];
 
-      // Get a new write batch
-      const batch = writeBatch(db);
-
-      // 1. Copy the currently selected version to the publishingQueue collection
-      const publishingQueueRef = doc(
-        db,
-        "publishingQueue",
-        this.liveDraftArticle.id
+      const pathValidation = await this.mixin_validatePath(
+        acceptedVersion.path,
+        acceptedVersion.lang.code,
+        acceptedVersion.articleID
       );
-      batch.set(publishingQueueRef, {
-        ...acceptedVersion,
-        id: acceptedVersion.articleID,
-        metadata: {
-          createdTimestamp: serverTimestamp(),
-          createdBy: this.firebaseStore.auth.currentUser.uid,
-        },
-      });
+      if (pathValidation.error) {
+        console.log("Path error!", pathValidation);
+        this.$q.dialog({
+          title: "Duplicate path!",
+          message:
+            "A page with this path already exists. Change the path before publishing.",
+          ok: {
+            color: "secondary",
+            flat: true,
+            noCaps: true,
+          },
+        });
+      } else {
+        // Get a new write batch
+        const batch = writeBatch(db);
 
-      // 2. Delete all review versions
-      this.articleVersions.data.forEach((article) => {
-        if (article.status === "review") {
-          const reviewVersionRef = doc(
-            db,
-            "articles",
-            this.liveDraftArticle.id,
-            "versions",
-            article.id
-          );
-          batch.delete(reviewVersionRef);
+        // 1. Copy the currently selected version to the publishingQueue collection
+        const publishingQueueRef = doc(
+          db,
+          "publishingQueue",
+          this.liveDraftArticle.id
+        );
+        batch.set(publishingQueueRef, {
+          ...acceptedVersion,
+          id: acceptedVersion.articleID,
+          metadata: {
+            createdTimestamp: serverTimestamp(),
+            createdBy: this.firebaseStore.auth.currentUser.uid,
+          },
+        });
+
+        // 2. Delete all review versions
+        this.articleVersions.data.forEach((article) => {
+          if (article.status === "review") {
+            const reviewVersionRef = doc(
+              db,
+              "draftArticles",
+              this.liveDraftArticle.id,
+              "versions",
+              article.id
+            );
+            batch.delete(reviewVersionRef);
+          }
+        });
+
+        // 3. Set requestedReview to false for the live edit version
+        const liveArticleRef = doc(
+          db,
+          "draftArticles",
+          this.liveDraftArticle.id
+        );
+        batch.update(liveArticleRef, {
+          requestedPublication: false,
+          // publishedFullPath: this.fullPath(acceptedVersion),
+          lastPublishedServerTimestamp: serverTimestamp(),
+          "metadata.updatedTimestamp": serverTimestamp(),
+          "metadata.updatedBy": this.firebaseStore.auth.currentUser.uid,
+        });
+
+        // 4. Create a new version with the status "published"
+        const versionID = this.mixin_randomID();
+        const versionRef = doc(
+          db,
+          "draftArticles",
+          this.liveDraftArticle.id,
+          "versions",
+          versionID
+        );
+        batch.set(versionRef, {
+          ...acceptedVersion,
+          id: versionID,
+          publishedFullPath: this.fullPath(acceptedVersion),
+          status: "published",
+          metadata: {
+            createdTimestamp: serverTimestamp(),
+            createdBy: this.firebaseStore.auth.currentUser.uid,
+          },
+        });
+
+        // Commit the batch
+        await batch.commit();
+        // }
+
+        if (acceptedVersion.deleteArticle) {
+          await this.deleteArticle();
         }
-      });
 
-      // 3. Set requestedReview to false for the live edit version
-      const liveArticleRef = doc(db, "articles", this.liveDraftArticle.id);
-      batch.update(liveArticleRef, {
-        requestedPublication: false,
-        // publishedFullPath: this.fullPath(acceptedVersion),
-        lastPublishedServerTimestamp: serverTimestamp(),
-        "metadata.updatedTimestamp": serverTimestamp(),
-        "metadata.updatedBy": this.firebaseStore.auth.currentUser.uid,
-      });
-
-      // 4. Create a new version with the status "published"
-      const versionID = this.mixin_randomID();
-      const versionRef = doc(
-        db,
-        "articles",
-        this.liveDraftArticle.id,
-        "versions",
-        versionID
-      );
-      batch.set(versionRef, {
-        ...acceptedVersion,
-        id: versionID,
-        publishedFullPath: this.fullPath(acceptedVersion),
-        status: "published",
-        metadata: {
-          createdTimestamp: serverTimestamp(),
-          createdBy: this.firebaseStore.auth.currentUser.uid,
-        },
-      });
-
-      // Commit the batch
-      await batch.commit();
-      // }
-
-      if (acceptedVersion.deleteArticle) {
-        await this.deleteArticle();
+        // update analytics locally (it will be updated on server automatically with a counter, but this way we prevent a delay)
+        this.analyticsStore.data.articlesInQueueCount++;
       }
-
-      // update analytics locally (it will be updated on server automatically with a counter, but this way we prevent a delay)
-      this.analyticsStore.data.articlesInQueueCount++;
     },
     revertToLastPublished: async function () {
       // Get a new write batch
@@ -458,7 +481,7 @@ export default {
         if (article.status === "review") {
           const reviewVersionRef = doc(
             db,
-            "articles",
+            "draftArticles",
             this.liveDraftArticle.id,
             "versions",
             article.id
@@ -468,7 +491,7 @@ export default {
       });
 
       // 2. Reverts the live edit to the last published version.
-      const liveArticleRef = doc(db, "articles", this.liveDraftArticle.id);
+      const liveArticleRef = doc(db, "draftArticles", this.liveDraftArticle.id);
       batch.update(liveArticleRef, {
         ...lastPublishedArticle,
         id: lastPublishedArticle.articleID,
@@ -527,7 +550,11 @@ export default {
           });
 
           // Delete live draft article. Versions are automatically deleted
-          const liveArticleRef = doc(db, "articles", this.liveDraftArticle.id);
+          const liveArticleRef = doc(
+            db,
+            "draftArticles",
+            this.liveDraftArticle.id
+          );
           transaction.delete(liveArticleRef);
         });
 
