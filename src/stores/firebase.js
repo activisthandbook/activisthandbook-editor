@@ -80,11 +80,6 @@ export const useFirebaseStore = defineStore("firebase", {
       */
       this.functions = getFunctions(firebaseApp, "europe-west1");
 
-      /* 🔥 INITIALISE STORAGE
-      Docs: https://firebase.google.com/docs/web/setup
-      */
-      this.firestore = getStorage(firebaseApp);
-
       /* 📈 INITIALISE GOOGLE ANALYTICS
       Docs: https://firebase.google.com/docs/analytics
       */
