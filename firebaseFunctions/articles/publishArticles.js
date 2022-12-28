@@ -248,7 +248,7 @@ async function updatePublishedArticles(articles) {
   // 🔁 LOOP THROUGH ALL ARTICLES
   for (const article of articles) {
     // References for docs we want to edit later
-    const draftArticleRef = db.collection("articles").doc(article.id);
+    const draftArticleRef = db.collection("draftArticles").doc(article.id);
     const publishedArticleRef = db
       .collection("publishedArticles")
       .doc(article.id);

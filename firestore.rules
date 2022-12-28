@@ -3,6 +3,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
     match /{document=**} {
 
+      // HELPER FUNCTIONS
     	function signedIn() {
         return request.auth.uid != null &&
           request.auth.token.email_verified == true
@@ -21,6 +22,7 @@ service cloud.firestore {
       }
 
 
+      // APP
       match /app/{settingID} {
         allow read, write: if hasRole(getRoles(), "moderator");
       }
@@ -30,6 +32,7 @@ service cloud.firestore {
         allow update: if hasRole(getRoles(), "moderator");
       }
 
+      // USER PROFILES
       match /userProfiles/{userID} {
         allow read: if signedIn();
         allow write: if
@@ -38,14 +41,9 @@ service cloud.firestore {
           request.auth.uid == userID &&
           // Users cannot set their roles
           (doesNotContainFields(['roles']) || request.resource.data.roles == resource.data.roles);
-        // allow update:
-        //   if signedIn() &&
-        //   // User can only edit their own document
-        //   request.auth.uid == userID &&
-        //   // Users cannot edit their roles
-        //   request.resource.data.roles == resource.data.roles;
       }
 
+      // MENU
       match /menu/draft {
         allow read, write: if signedIn();
 
@@ -59,11 +57,13 @@ service cloud.firestore {
         allow read, write: if hasRole(getRoles(), "moderator");
       }
 
+      // IMAGES
       match /images/{imageID} {
         allow read: if signedIn()
       }
 
-    	match /articles/{articleID} {
+      // ARTICLES
+    	match /draftArticles/{articleID} {
         allow read:
           if signedIn();
         allow create:
@@ -81,47 +81,19 @@ service cloud.firestore {
         }
       }
 
+      match /publishedArticles/{collectionID} {
+        allow read: if signedIn();
+      }
+
       match /languageCollections/{collectionID} {
-        allow read, write: if signedIn();
+        allow read, create, update: if signedIn();
+        allow delete: if hasRole(getRoles(), "moderator")
       }
 
       match /publishingQueue/{articleID} {
         allow write, read: if hasRole(getRoles(), "moderator");
       }
 
-      match /articleSync/{articleSyncID} {
-        allow read, write: if signedIn();
-      }
-
-      match /results/{resultID} {
-        allow get: if signedIn();
-      }
-
-      match /customers/{uid} {
-        allow read: if request.auth.uid == uid;
-
-        match /checkout_sessions/{id} {
-          allow read, write: if request.auth.uid == uid;
-        }
-        match /subscriptions/{id} {
-          allow read: if request.auth.uid == uid;
-        }
-        match /payments/{id} {
-          allow read: if request.auth.uid == uid;
-        }
-      }
-
-      match /products/{id} {
-        allow read: if signedIn();
-
-        match /prices/{id} {
-          allow read: if signedIn();
-        }
-
-        match /tax_rates/{id} {
-          allow read: if signedIn();
-        }
-      }
     }
   }
 }

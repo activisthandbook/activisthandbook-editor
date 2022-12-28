@@ -259,7 +259,7 @@
               no-caps
               color="secondary"
               icon="mdi-shield-check"
-              :to="{ name: 'Review', params: { homeTab: 'articles' } }"
+              :to="{ name: 'Review', params: { reviewTab: 'articles' } }"
               outline
             />
             <q-btn
@@ -424,7 +424,7 @@ export default {
       const versionID = this.mixin_randomID();
       const versionRef = doc(
         db,
-        "articles",
+        "draftArticles",
         this.$route.params.articleID,
         "versions",
         versionID
@@ -446,7 +446,7 @@ export default {
 
       // 2. Update live draft
       batch.set(
-        doc(db, "articles", this.$route.params.articleID),
+        doc(db, "draftArticles", this.$route.params.articleID),
         {
           requestedPublication: true,
           requestedPublicationTimestamp: time,
@@ -467,7 +467,7 @@ export default {
     },
     deleteAndPublish() {
       setDoc(
-        doc(db, "articles", this.$route.params.articleID),
+        doc(db, "draftArticles", this.$route.params.articleID),
         {
           deleteArticle: true,
         },
@@ -481,7 +481,7 @@ export default {
     },
     restoreAndPublish() {
       setDoc(
-        doc(db, "articles", this.$route.params.articleID),
+        doc(db, "draftArticles", this.$route.params.articleID),
         {
           deleteArticle: false,
         },

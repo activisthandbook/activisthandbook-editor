@@ -82,7 +82,7 @@ export default {
 
       const batch = writeBatch(db);
 
-      batch.set(doc(db, "articles", newArticleID), {
+      batch.set(doc(db, "draftArticles", newArticleID), {
         langCode: this.lang.code,
         title: this.title,
         languageCollectionID: newLanguageCollectionID,

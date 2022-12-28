@@ -58,7 +58,7 @@ export default {
     fetchUnpublishedArticles() {
       this.unpublishedArticles.unsubscribe = onSnapshot(
         query(
-          collection(db, "articles"),
+          collection(db, "draftArticles"),
           where("lastPublishedServerTimestamp", "==", null),
           limit(5)
         ),

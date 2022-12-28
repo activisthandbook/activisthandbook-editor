@@ -91,7 +91,7 @@ export const useEditorStore = defineStore("editor", {
         this.article.id = articleID;
         LoadingBar.start();
 
-        await getDoc(doc(db, "articles", articleID))
+        await getDoc(doc(db, "draftArticles", articleID))
           .then(async (snapshot) => {
             if (snapshot.exists()) {
               // Find language info from local store, using the language code that is saved with the article
@@ -101,7 +101,7 @@ export const useEditorStore = defineStore("editor", {
 
               this.article = { ...this.article, ...snapshot.data(), lang };
 
-              document.title = `Edit | ${this.article.title}`;
+              document.title = `Edit | ${this.article.title || "No title"}`;
 
               // Load the language collection data
               const languageCollectionID = snapshot.data().languageCollectionID;
@@ -221,7 +221,7 @@ export const useEditorStore = defineStore("editor", {
     }, 5000),
     async save(userID) {
       await setDoc(
-        doc(db, "articles", this.article.id),
+        doc(db, "draftArticles", this.article.id),
         {
           ...this.article,
           metadata: {

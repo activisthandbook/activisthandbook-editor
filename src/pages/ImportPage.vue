@@ -379,7 +379,7 @@ export default {
       const batchArticles = writeBatch(db);
 
       this.renderedPages.data.forEach((article) => {
-        const articleRef = doc(db, "articles", article.id);
+        const articleRef = doc(db, "draftArticles", article.id);
         batchArticles.set(articleRef, article);
       });
 

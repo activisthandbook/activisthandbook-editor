@@ -2,6 +2,15 @@ import { boot } from "quasar/wrappers";
 import { Notify } from "quasar";
 import { openURL } from "quasar";
 
+import {
+  query,
+  collection,
+  getDocs,
+  where,
+  limit,
+  getFirestore,
+} from "firebase/firestore";
+
 import dayjs from "dayjs";
 import calendar from "dayjs/plugin/calendar";
 import updateLocale from "dayjs/plugin/updateLocale";
@@ -62,6 +71,61 @@ export default boot(({ app }) => {
         // setVerticalScrollPosition("vertical", offset, duration);
 
         // console.log(offset, verticalScrollPosition);
+      },
+      async mixin_validatePath(path, langCode, currentID) {
+        const validPathRegex = /^[A-Za-z0-9]+(-[A-Za-z0-9]+)*$/;
+
+        // Empty path
+        if (!path) {
+          return { error: "Add a path.", duplicates: null };
+        }
+
+        // Invalid path
+        else if (!validPathRegex.test(path)) {
+          return {
+            error:
+              "Only use lowercase letters, numbers and dashes (-) in between.",
+            duplicates: null,
+          };
+        }
+
+        // If the path is not edited, do not do anything
+        else {
+          const db = getFirestore();
+          const draftArticles = await getDocs(
+            query(
+              collection(db, "draftArticles"),
+              where("path", "==", path),
+              where("lang.code", "==", langCode),
+              where("id", "!=", currentID),
+              limit(1)
+            )
+          );
+          const publishedArticles = await getDocs(
+            query(
+              collection(db, "publishedArticles"),
+              where("path", "==", path),
+              where("lang.code", "==", langCode),
+              where("id", "!=", currentID),
+              limit(1)
+            )
+          );
+
+          if (draftArticles.empty && publishedArticles.empty) {
+            // Valid, no document exists yet with this path
+            return { error: null, duplicates: null };
+          } else {
+            // Invalid
+            const duplicates = [];
+            draftArticles.forEach((doc) => {
+              duplicates.push(doc.data());
+            });
+            publishedArticles.forEach((doc) => {
+              duplicates.push(doc.data());
+            });
+            return { error: "Path already exists.", duplicates: duplicates };
+          }
+        }
       },
     },
   });
