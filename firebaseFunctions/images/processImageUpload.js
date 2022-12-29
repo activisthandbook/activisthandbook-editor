@@ -10,7 +10,17 @@ exports.processImageUpload = functions
   // Not working (eg. getting branch error)? Make sure to check that the API token is still valid:
   // https://developers.cloudflare.com/images/cloudflare-images/api-request/
   // https://firebase.google.com/docs/functions/config-env
+  .runWith({
+    enforceAppCheck: true, // Requests without valid App Check tokens will be rejected.
+  })
   .https.onCall(async (imageData, context) => {
+    if (context.app == undefined) {
+      throw new functions.https.HttpsError(
+        "failed-precondition",
+        "The function must be called from an App Check verified app."
+      );
+    }
+
     if (!context.auth.token.email_verified) {
       // Throwing an HttpsError so that the client gets the error details.
       throw new functions.https.HttpsError(

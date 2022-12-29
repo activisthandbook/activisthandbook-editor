@@ -10,8 +10,16 @@ exports.getImageUploadURL = functions
   // https://firebase.google.com/docs/functions/config-env
   .runWith({
     secrets: ["CLOUDFLARE_IMAGES_ACCOUNT_ID", "CLOUDFLARE_IMAGES_API_TOKEN"],
+    enforceAppCheck: true, // Requests without valid App Check tokens will be rejected.
   })
   .https.onCall(async (data, context) => {
+    if (context.app == undefined) {
+      throw new functions.https.HttpsError(
+        "failed-precondition",
+        "The function must be called from an App Check verified app."
+      );
+    }
+
     if (!context.auth.token.email_verified) {
       // Throwing an HttpsError so that the client gets the error details.
       throw new functions.https.HttpsError(
