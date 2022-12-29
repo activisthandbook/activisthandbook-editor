@@ -93,10 +93,21 @@ exports.publishArticles = functions
   // STEP 1: Generate new token (https://github.com/settings/tokens)
   // STEP 2: Save the token (https://firebase.google.com/docs/functions/config-env):
   //  firebase functions:secrets:set GITHUB_API
-  .runWith({ secrets: ["GITHUB_API"] })
+  .runWith({
+    secrets: ["GITHUB_API"],
+    enforceAppCheck: true, // Requests without valid App Check tokens will be rejected.
+  })
   .https.onCall(async (data, context) => {
-    // Reset variables
-    languageCollections = {};
+    // APP CHECK
+    // context.app will be undefined if the request doesn't include an
+    // App Check token. (If the request includes an invalid App Check
+    // token, the request will be rejected with HTTP error 401.)
+    if (context.app == undefined) {
+      throw new functions.https.HttpsError(
+        "failed-precondition",
+        "The function must be called from an App Check verified app."
+      );
+    }
 
     // Checking that the user is authenticated.
     if (!context.auth.token.email_verified) {
@@ -106,6 +117,9 @@ exports.publishArticles = functions
         "The function must be called while authenticated with a verified email."
       );
     } else {
+      // Reset variables
+      languageCollections = {};
+
       const userProfileRef = db
         .collection("userProfiles")
         .doc(context.auth.token.uid);
