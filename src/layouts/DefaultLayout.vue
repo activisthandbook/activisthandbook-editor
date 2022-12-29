@@ -4,11 +4,14 @@
       firebaseStore.auth.currentUser &&
       !usersStore.profile.dataLoaded[firebaseStore.auth.currentUser.uid]
     "
-    class="fixed-center text-center text-caption text-grey"
+    class="fixed-full text-center text-caption text-grey bg-accent"
   >
-    <q-spinner color="grey" size="3em" />
-    <div class="q-mt-md">Loading...</div>
+    <div class="fixed-center">
+      <q-spinner color="grey" size="3em" />
+      <div class="q-mt-md">Loading...</div>
+    </div>
   </div>
+
   <div v-else>
     <router-view />
   </div>

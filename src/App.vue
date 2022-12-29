@@ -1,13 +1,16 @@
 <template>
   <div
     v-if="!firebaseStore.userLoaded || firebaseStore.userVerificationLoading"
-    class="fixed-center text-center text-caption text-grey"
+    class="fixed-full text-center text-caption text-grey bg-accent"
   >
-    <q-spinner color="grey" size="3em" />
-    <div class="q-mt-md">Getting ready...</div>
+    <div class="fixed-center">
+      <q-spinner color="grey" size="3em" />
+      <div class="q-mt-md">Getting ready...</div>
+    </div>
   </div>
   <router-view v-else-if="firebaseStore.userAuthenticated" />
   <LoginPage v-else />
+  <AnalyticsComponent />
 </template>
 
 <script>
@@ -20,12 +23,13 @@ import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 // import { mapStores } from "pinia";
 
 import LoginPage from "src/pages/LoginPage.vue";
+import AnalyticsComponent from "src/components/AnalyticsComponent.vue";
 
 const provider = new GoogleAuthProvider();
 
 export default defineComponent({
   name: "App",
-  components: { LoginPage },
+  components: { LoginPage, AnalyticsComponent },
   setup() {
     const firebaseStore = useFirebaseStore();
     // call the action as a method of the store

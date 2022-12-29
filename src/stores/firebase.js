@@ -2,7 +2,7 @@ import { defineStore } from "pinia";
 
 import { boot } from "quasar/wrappers";
 import { initializeApp } from "firebase/app";
-import { getAnalytics, logEvent, setUserId } from "firebase/analytics";
+// import { getAnalytics, logEvent, setUserId } from "firebase/analytics";
 import {
   getAuth,
   signInAnonymously,
@@ -64,12 +64,12 @@ export const useFirebaseStore = defineStore("firebase", {
       /* 🔥 INITIALISE FIREBASE
       Docs: https://firebase.google.com/docs/web/setup
       */
-      let firebaseApp = null;
+      this.firebaseApp = null;
       if (process.env.DEV) {
         console.log(`DEV SERVER`);
-        firebaseApp = initializeApp(firebaseConfigDev);
+        this.firebaseApp = initializeApp(firebaseConfigDev);
       } else {
-        firebaseApp = initializeApp(firebaseConfigProduction);
+        this.firebaseApp = initializeApp(firebaseConfigProduction);
       }
 
       // 🔥 INITIALISE REALTIME DATABASE
@@ -78,12 +78,12 @@ export const useFirebaseStore = defineStore("firebase", {
       /* 🔥 INITIALISE FUNCTIONS
       Docs: https://firebase.google.com/docs/web/setup
       */
-      this.functions = getFunctions(firebaseApp, "europe-west1");
+      this.functions = getFunctions(this.firebaseApp, "europe-west1");
 
       /* 📈 INITIALISE GOOGLE ANALYTICS
       Docs: https://firebase.google.com/docs/analytics
       */
-      // store.commit("firebase/addAnalytics", getAnalytics(firebaseApp));
+      // this.analytics = getAnalytics(firebaseApp);
 
       this.auth = getAuth();
 
@@ -130,7 +130,7 @@ export const useFirebaseStore = defineStore("firebase", {
 
       /* 🤖 PERFORNANCE MONITORING
        */
-      getPerformance(firebaseApp);
+      getPerformance(this.firebaseApp);
     },
     async signOut() {
       this.userLoaded = false;
