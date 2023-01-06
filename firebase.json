@@ -14,5 +14,11 @@
   "firestore": {
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
+  },
+  "extensions": {
+    "firestore-counter": "firebase/firestore-counter@0.2.5",
+    "algolia-search-users": "algolia/firestore-algolia-search@0.5.14",
+    "article-search-algolia": "algolia/firestore-algolia-search@0.5.14",
+    "firestore-algolia-search": "algolia/firestore-algolia-search@0.5.14"
   }
 }

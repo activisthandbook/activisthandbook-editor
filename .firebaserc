@@ -1,5 +1,16 @@
 {
   "projects": {
     "default": "rebeltools-write"
+  },
+  "targets": {},
+  "etags": {
+    "rebeltools-write": {
+      "extensionInstances": {
+        "firestore-counter": "475671eb009a73b11c6975ee7378052aacab55646a1a8909f5bdfa61176e5909",
+        "algolia-search-users": "a3bc7aebb2c9b8c7c52c98fddedc760f2f339cbd982c093e175ab7244b8cdd7c",
+        "article-search-algolia": "bc3240c64488f0d9693cfc0d45237d6026da21bf8d3bcff259a01a6c2e70041f",
+        "firestore-algolia-search": "55f78e0618bb997efbd446a56c9ba36e1b1f8b34c8c012339b59fabe82e0ab96"
+      }
+    }
   }
 }
