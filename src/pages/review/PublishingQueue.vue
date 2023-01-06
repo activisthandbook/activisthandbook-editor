@@ -68,33 +68,8 @@ export default {
           this.$q.loading.hide();
           // this.$q.notify("Articles published");
           // this.publishedSuccesfullyDialog = true;
+          this.analyticsStore.data.articlesInQueueCount = 0;
           this.$emit("published");
-
-          this.showRenderingTime = true;
-          const renderingTime = 62 * 1000;
-
-          setTimeout(() => {
-            this.showRenderingTime = false;
-            this.$q.notify({
-              icon: "mdi-check",
-              message: "Website published",
-              color: "black",
-              textColor: "accent",
-              timeout: 7000,
-              actions: [
-                {
-                  label: "View",
-                  color: "accent",
-                  noCaps: true,
-                  handler: () => {
-                    window
-                      .open("https://activisthandbook.org", "_blank")
-                      .focus();
-                  },
-                },
-              ],
-            });
-          }, renderingTime);
         })
         .catch((error) => {
           // this.publishingLoading = false;

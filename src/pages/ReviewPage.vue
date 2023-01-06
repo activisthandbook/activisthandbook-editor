@@ -29,7 +29,7 @@
                 (analyticsStore.data.articlesInQueueCount ||
                   analyticsStore.data.menuInPublishingQueue)
               "
-              @published="publishedSuccesfullyDialog = true"
+              @published="published()"
             />
             <q-tabs class="bg-grey-3 rounded-borders" align="justify">
               <q-route-tab
@@ -169,6 +169,34 @@ export default {
       publishedSuccesfullyDialog: false,
       showRenderingTime: false,
     };
+  },
+  methods: {
+    published() {
+      this.publishedSuccesfullyDialog = true;
+      this.showRenderingTime = true;
+      const renderingTime = 62 * 1000;
+
+      setTimeout(() => {
+        this.showRenderingTime = false;
+        this.$q.notify({
+          icon: "mdi-check",
+          message: "Website published",
+          color: "black",
+          textColor: "accent",
+          timeout: 7000,
+          actions: [
+            {
+              label: "View",
+              color: "accent",
+              noCaps: true,
+              handler: () => {
+                window.open("https://activisthandbook.org", "_blank").focus();
+              },
+            },
+          ],
+        });
+      }, renderingTime);
+    },
   },
   // created() {
   //   // watch the params of the route to fetch the data again
