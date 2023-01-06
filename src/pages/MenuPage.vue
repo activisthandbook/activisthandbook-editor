@@ -143,6 +143,7 @@ const db = getFirestore();
 
 import { mapStores } from "pinia";
 import { useLanguagesStore } from "stores/languages";
+import { useFirebaseStore } from "stores/firebase";
 
 import NavigationMenuItem from "components/NavigationMenuItem.vue";
 import AppSwitcher from "components/AppSwitcher.vue";
@@ -193,7 +194,7 @@ export default {
   computed: {
     // note we are not passing an array, just one store after the other
     // each store will be accessible as its id + 'Store'
-    ...mapStores(useLanguagesStore),
+    ...mapStores(useLanguagesStore, useFirebaseStore),
   },
   watch: {
     lang: {
@@ -407,9 +408,12 @@ export default {
         {
           sidebar: this.sidebar_menuItems,
           nav: this.nav_menuItems,
-          lastUpdatedServerTimestamp: serverTimestamp(),
           id: versionID,
           status: "review",
+          metadata: {
+            createdBy: this.firebaseStore.auth.currentUser.uid,
+            createdTimestamp: serverTimestamp(),
+          },
         },
         {
           merge: true,

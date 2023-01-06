@@ -1,4 +1,5 @@
 <template>
+  <q-layout></q-layout>
   <q-dialog v-model="open" persistent>
     <q-card class="bg-accent full-width" style="max-width: 350px">
       <q-card-section>
@@ -90,8 +91,8 @@ export default {
         publishedFullPath: null,
         id: newArticleID,
         metadata: {
-          updatedTimestamp: null,
-          updatedBy: null,
+          updatedTimestamp: serverTimestamp(),
+          updatedBy: this.firebaseStore.auth.currentUser.uid,
           createdTimestamp: serverTimestamp(),
           createdBy: this.firebaseStore.auth.currentUser.uid,
         },
@@ -104,9 +105,10 @@ export default {
             langCode: this.lang.code,
           },
         ],
+        publishedArticles: null,
         metadata: {
-          updatedTimestamp: null,
-          updatedBy: null,
+          updatedTimestamp: serverTimestamp(),
+          updatedBy: this.firebaseStore.auth.currentUser.uid,
           createdTimestamp: serverTimestamp(),
           createdBy: this.firebaseStore.auth.currentUser.uid,
         },
@@ -125,13 +127,20 @@ export default {
         { merge: true }
       );
 
-      await batch.commit();
-
-      this.loading = false;
-      this.$router.push({
-        name: "Edit",
-        params: { articleID: newArticleID },
-      });
+      await batch
+        .commit()
+        .then(() => {
+          this.loading = false;
+          this.$router.push({
+            name: "Edit",
+            params: { articleID: newArticleID },
+          });
+        })
+        .catch((error) => {
+          this.loading = false;
+          this.$q.notify("Creating article failed");
+          console.log(error);
+        });
     },
     goBack() {
       window.history.go(-1);

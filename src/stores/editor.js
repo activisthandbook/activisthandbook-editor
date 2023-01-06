@@ -246,6 +246,10 @@ export const useEditorStore = defineStore("editor", {
           doc(db, "userProfiles", userID),
           {
             recentlyEditedArticles: arrayRemove(this.article.id),
+            metadata: {
+              updatedTimestamp: serverTimestamp(),
+              updatedBy: userID,
+            },
           },
           { merge: true }
         ).catch((error) => {

@@ -450,20 +450,30 @@ export default {
         {
           requestedPublication: true,
           requestedPublicationTimestamp: time,
+          metadata: {
+            updatedTimestamp: serverTimestamp(),
+            updatedBy: this.firebaseStore.auth.currentUser.uid,
+          },
         },
         {
           merge: true,
         }
       );
 
-      await batch.commit().then(async () => {
-        this.editorStore.article.requestedPublication = true;
-        this.editorStore.article.requestedPublicationTimestamp = time;
+      await batch
+        .commit()
+        .then(async () => {
+          this.editorStore.article.requestedPublication = true;
+          this.editorStore.article.requestedPublicationTimestamp = time;
 
-        if (!this.editorStore.article.deleteArticle) {
-          this.publishedSuccesfullyDialog = true;
-        }
-      });
+          if (!this.editorStore.article.deleteArticle) {
+            this.publishedSuccesfullyDialog = true;
+          }
+        })
+        .catch((error) => {
+          this.$q.notify("Publishing failed");
+          console.error(error);
+        });
     },
     deleteAndPublish() {
       setDoc(
