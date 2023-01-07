@@ -1,4 +1,5 @@
 <template>
+  <q-layout></q-layout>
   <q-dialog v-model="open" persistent>
     <q-card class="bg-accent full-width" style="max-width: 320px">
       <q-card-section>
