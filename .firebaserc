@@ -7,9 +7,9 @@
     "rebeltools-write": {
       "extensionInstances": {
         "firestore-counter": "475671eb009a73b11c6975ee7378052aacab55646a1a8909f5bdfa61176e5909",
-        "algolia-search-users": "a3bc7aebb2c9b8c7c52c98fddedc760f2f339cbd982c093e175ab7244b8cdd7c",
-        "article-search-algolia": "bc3240c64488f0d9693cfc0d45237d6026da21bf8d3bcff259a01a6c2e70041f",
-        "firestore-algolia-search": "55f78e0618bb997efbd446a56c9ba36e1b1f8b34c8c012339b59fabe82e0ab96"
+        "search-articles": "20a463d60327ee78ef657c959b559322dc94b01d12afcc713a2249da019b90e4",
+        "search-images": "e0894c7c900708b0a7aeb66181d9f4c9f4a45c92a983ad93dacdad3e786e86fd",
+        "search-users": "6b08a8a10c77de6fdcfc6f3fff1c7be8b4541a0c5b5cb20a12b12af78c106174"
       }
     }
   }

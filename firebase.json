@@ -17,8 +17,8 @@
   },
   "extensions": {
     "firestore-counter": "firebase/firestore-counter@0.2.5",
-    "algolia-search-users": "algolia/firestore-algolia-search@0.5.14",
-    "article-search-algolia": "algolia/firestore-algolia-search@0.5.14",
-    "firestore-algolia-search": "algolia/firestore-algolia-search@0.5.14"
+    "search-users": "algolia/firestore-algolia-search@0.5.14",
+    "search-articles": "algolia/firestore-algolia-search@0.5.14",
+    "search-images": "algolia/firestore-algolia-search@0.5.14"
   }
 }
