@@ -33,7 +33,6 @@ service cloud.firestore {
           request.resource.data.metadata.updatedTimestamp == request.time
       }
 
-
       // APP
       match /app/moderator {
         allow read, create, update: if hasRole(getRoles(), "moderator");
@@ -86,13 +85,13 @@ service cloud.firestore {
         allow read: if signedIn()
       }
 
+
       // ARTICLES
     	match /draftArticles/{articleID} {
         allow read:
           if signedIn();
         allow create:
           if signedIn() &&
-          request.resource.data.publishedFullPath == null &&
           validMetadataCreated() &&
           validMetadataUpdated();
         allow update:
@@ -116,11 +115,17 @@ service cloud.firestore {
         allow read: if signedIn();
         allow create: if
           signedIn() &&
+          // CONTENT VALIDATION
+          // draftArticles
+          request.resource.data.draftArticles.size() == 1 &&
+          // publishedArticles
           request.resource.data.publishedArticles == null &&
+          // metadata
           validMetadataCreated() &&
           validMetadataUpdated();
         allow update: if
           signedIn() &&
+          // publishedArticles
           request.resource.data.publishedArticles == resource.data.publishedArticles &&
           validMetadataUpdated();
         allow delete: if hasRole(getRoles(), "moderator")
