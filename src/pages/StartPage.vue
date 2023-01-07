@@ -215,7 +215,10 @@ export default {
           .firstName
       ) {
         this.loading = true;
-        await this.usersStore.saveUser(this.firebaseStore.auth.currentUser.uid);
+        await this.usersStore.saveUser(
+          this.firebaseStore.auth.currentUser.uid,
+          firebaseStore.auth.currentUser.uid
+        );
         this.loading = false;
         this.$q.notify({
           message: "Created public profile",

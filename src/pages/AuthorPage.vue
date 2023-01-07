@@ -46,6 +46,30 @@
                 />
               </div>
             </q-card-section>
+
+            <q-card-section
+              v-if="
+                usersStore.profile.data[
+                  firebaseStore.auth.currentUser.uid
+                ].roles?.includes('admin')
+              "
+            >
+              <q-select
+                filled
+                v-model="usersStore.profile.data[$route.params.authorID].roles"
+                multiple
+                :options="['admin', 'moderator']"
+                label="Roles"
+                style="width: 250px"
+                @blur="
+                  usersStore.saveUser(
+                    $route.params.authorID,
+                    firebaseStore.auth.currentUser.uid
+                  )
+                "
+              />
+            </q-card-section>
+
             <q-list padding>
               <q-item>
                 <q-item-section avatar>

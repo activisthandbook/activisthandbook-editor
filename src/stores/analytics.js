@@ -22,6 +22,7 @@ export const useAnalyticsStore = defineStore("analytics", {
         },
         (error) => {
           this.error = error;
+          console.log(error);
         }
       );
     },

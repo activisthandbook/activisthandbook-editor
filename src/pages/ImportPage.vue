@@ -285,7 +285,7 @@ export default {
         if (renderedPageCollectionIndex >= 0) {
           renderedPage.languageCollectionID =
             languageCollections[renderedPageCollectionIndex].id;
-          languageCollections[renderedPageCollectionIndex].articles.push({
+          languageCollections[renderedPageCollectionIndex].articles_draft.push({
             articleID: renderedPage.id,
             langCode: renderedPage.langCode,
           });

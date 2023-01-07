@@ -6,15 +6,15 @@
           <strong v-if="analyticsStore.data.menuInPublishingQueue">Menu</strong>
           <span
             v-if="
-              analyticsStore.data.articlesInQueueCount &&
+              analyticsStore.data.articles_inQueue_count &&
               analyticsStore.data.menuInPublishingQueue
             "
           >
             and
           </span>
-          <strong v-if="analyticsStore.data.articlesInQueueCount">
+          <strong v-if="analyticsStore.data.articles_inQueue_count">
             <strong>
-              {{ analyticsStore.data.articlesInQueueCount }}
+              {{ analyticsStore.data.articles_inQueue_count }}
             </strong>
             <span v-if="analyticsStore.data.articlesInQueueCount > 1">
               articles</span
@@ -31,7 +31,7 @@
           :class="{
             'draw-attention':
               analyticsStore.dataLoaded &&
-              analyticsStore.data.articlesInQueueCount > 0,
+              analyticsStore.data.articles_inQueue_count > 0,
           }"
           @click="publishArticles()"
           icon="mdi-check-all"
@@ -68,7 +68,7 @@ export default {
           this.$q.loading.hide();
           // this.$q.notify("Articles published");
           // this.publishedSuccesfullyDialog = true;
-          this.analyticsStore.data.articlesInQueueCount = 0;
+          this.analyticsStore.data.articles_inQueue_count = 0;
           this.$emit("published");
         })
         .catch((error) => {

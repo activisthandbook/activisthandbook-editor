@@ -12,7 +12,7 @@
       v-if="articles_published.data[0]"
       :articles="articles_published.data"
     />
-    <q-card-section v-else> No newly published articles found. </q-card-section>
+    <q-card-section v-else> No published articles found. </q-card-section>
   </q-card>
 </template>
 <script>
@@ -37,7 +37,7 @@ export default {
   components: { ArticleList },
   data: function () {
     return {
-      publishedArticles: {
+      articles_published: {
         data: null,
         dataLoaded: false,
         error: null,
@@ -52,11 +52,11 @@ export default {
     this.fetchPublishedArticles();
   },
   unmounted() {
-    this.publishedArticles.unsubscribe();
+    this.articles_published.unsubscribe();
   },
   methods: {
     fetchPublishedArticles() {
-      this.publishedArticles.unsubscribe = onSnapshot(
+      this.articles_published.unsubscribe = onSnapshot(
         query(
           collection(db, "articles_draft"),
           orderBy("lastPublishedServerTimestamp", "desc"),
@@ -68,11 +68,11 @@ export default {
           snapshot.forEach((doc) => {
             articles.push(doc.data());
           });
-          this.publishedArticles.data = articles;
-          this.publishedArticles.dataLoaded = true;
+          this.articles_published.data = articles;
+          this.articles_published.dataLoaded = true;
         },
         (error) => {
-          this.publishedArticles.error = error;
+          this.articles_published.error = error;
         }
       );
     },

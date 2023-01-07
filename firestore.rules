@@ -10,7 +10,7 @@ service cloud.firestore {
       }
 
       function getRoles() {
-          return get(/databases/$(database)/documents/userProfiles/$(request.auth.uid)).data.roles;
+          return get(/databases/$(database)/documents/users_profile/$(request.auth.uid)).data.roles;
         }
 
       function hasRole(userRoles, role) {
@@ -44,7 +44,7 @@ service cloud.firestore {
       }
 
       // USER PROFILES
-      match /userProfiles/{userID} {
+      match /users_profile/{userID} {
         allow read: if signedIn();
         allow create: if
           signedIn() &&
@@ -57,10 +57,14 @@ service cloud.firestore {
         allow update: if
           signedIn() &&
           validMetadataUpdated() &&
-          // User can only edit their own document
+          // User can only edit their own document, except if they are admin
           request.auth.uid == userID &&
-          // Users cannot set their roles
+          // User cannot set their own roles, except if they are admin
           (doesNotContainFields(['roles']) || request.resource.data.roles == resource.data.roles);
+
+        allow write: if
+          validMetadataUpdated() &&
+          hasRole(getRoles(), "admin");
       }
 
       // MENU

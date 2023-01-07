@@ -87,43 +87,50 @@ export default boot(({ app }) => {
               "Only use lowercase letters, numbers and dashes (-) in between.",
             duplicates: null,
           };
-        }
-
-        // If the path is not edited, do not do anything
-        else {
+        } else {
           const db = getFirestore();
-          const draftArticles = await getDocs(
-            query(
-              collection(db, "articles_draft"),
-              where("path", "==", path),
-              where("lang.code", "==", langCode),
-              where("id", "!=", currentID),
-              limit(1)
-            )
-          );
-          const publishedArticles = await getDocs(
-            query(
-              collection(db, "articles_published"),
-              where("path", "==", path),
-              where("lang.code", "==", langCode),
-              where("id", "!=", currentID),
-              limit(1)
-            )
-          );
 
-          if (draftArticles.empty && publishedArticles.empty) {
-            // Valid, no document exists yet with this path
-            return { error: null, duplicates: null };
-          } else {
-            // Invalid
-            const duplicates = [];
-            draftArticles.forEach((doc) => {
-              duplicates.push(doc.data());
-            });
-            publishedArticles.forEach((doc) => {
-              duplicates.push(doc.data());
-            });
-            return { error: "Path already exists.", duplicates: duplicates };
+          try {
+            const draftArticles = await getDocs(
+              query(
+                collection(db, "articles_draft"),
+                where("path", "==", path),
+                where("lang.code", "==", langCode),
+                where("id", "!=", currentID),
+                limit(1)
+              )
+            );
+            const publishedArticles = await getDocs(
+              query(
+                collection(db, "articles_published"),
+                where("path", "==", path),
+                where("lang.code", "==", langCode),
+                where("id", "!=", currentID),
+                limit(1)
+              )
+            );
+
+            if (draftArticles.empty && publishedArticles.empty) {
+              // Valid, no document exists yet with this path
+              return { error: null, duplicates: null };
+            } else {
+              // Invalid
+              const duplicates = [];
+              draftArticles.forEach((doc) => {
+                duplicates.push(doc.data());
+              });
+              publishedArticles.forEach((doc) => {
+                duplicates.push(doc.data());
+              });
+              return { error: "Path already exists.", duplicates: duplicates };
+            }
+          } catch (error) {
+            this.$q.notify("Validating path failed");
+            console.error(error);
+            return {
+              error: "Something went wrong.",
+              duplicates: null,
+            };
           }
         }
       },

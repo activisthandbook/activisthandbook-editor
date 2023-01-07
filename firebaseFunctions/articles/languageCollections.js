@@ -4,9 +4,9 @@ const db = admin.firestore();
 
 // Create a counter
 const Counter = require("./../distributedCounter");
-const languageCollectionsCount = new Counter(
+const languageCollections_count = new Counter(
   db.collection("app").doc("analytics"),
-  "languageCollectionsCount"
+  "languageCollections_count"
 );
 
 exports.onCreate = functions
@@ -14,7 +14,7 @@ exports.onCreate = functions
   .firestore.document("languageCollections/{languageCollectionID}")
   .onCreate((change, context) => {
     // Trigger the counter
-    languageCollectionsCount.incrementBy(1);
+    languageCollections_count.incrementBy(1);
   });
 
 exports.onDelete = functions
@@ -22,5 +22,5 @@ exports.onDelete = functions
   .firestore.document("languageCollections/{languageCollectionID}")
   .onDelete((change, context) => {
     // Trigger the counter
-    languageCollectionsCount.incrementBy(-1);
+    languageCollections_count.incrementBy(-1);
   });

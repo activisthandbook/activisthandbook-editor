@@ -84,12 +84,12 @@ export const useUsersStore = defineStore("users", {
       delete this.profile.error[userID];
       delete this.profile.unsubscribe[userID];
     },
-    async saveUser(userID) {
+    async saveUser(userID, currentUserID) {
       let data = {
         ...this.profile.data[userID],
         metadata: {
           updatedTimestamp: serverTimestamp(),
-          updatedBy: userID,
+          updatedBy: currentUserID,
         },
       };
       if (!this.profile.data[userID].metadata?.createdTimestamp) {

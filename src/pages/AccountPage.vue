@@ -33,7 +33,10 @@
                       .firstName
                   "
                   @blur="
-                    usersStore.saveUser(firebaseStore.auth.currentUser.uid)
+                    usersStore.saveUser(
+                      firebaseStore.auth.currentUser.uid,
+                      firebaseStore.auth.currentUser.uid
+                    )
                   "
                 />
                 <q-input
@@ -46,7 +49,10 @@
                       .lastName
                   "
                   @blur="
-                    usersStore.saveUser(firebaseStore.auth.currentUser.uid)
+                    usersStore.saveUser(
+                      firebaseStore.auth.currentUser.uid,
+                      firebaseStore.auth.currentUser.uid
+                    )
                   "
                 />
                 <q-btn

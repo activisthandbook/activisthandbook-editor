@@ -109,17 +109,20 @@ export const useEditorStore = defineStore("editor", {
                 doc(db, "languageCollections", languageCollectionID)
               ).then(async (snapshot) => {
                 if (snapshot.exists()) {
-                  const languageCollection = snapshot.data().articles;
+                  const languageCollection = snapshot.data().articles_draft;
                   this.local.languageCollection = [];
-                  languageCollection.forEach((article) => {
-                    const languageDetails = languagesStore.languages.find(
-                      (x) => x.code === article.langCode
-                    );
-                    this.local.languageCollection.push({
-                      ...article,
-                      ...languageDetails,
+
+                  if (languageCollection) {
+                    languageCollection.forEach((article) => {
+                      const languageDetails = languagesStore.languages.find(
+                        (x) => x.code === article.langCode
+                      );
+                      this.local.languageCollection.push({
+                        ...article,
+                        ...languageDetails,
+                      });
                     });
-                  });
+                  }
                 } else {
                   Notify.create("Language collection not found.");
                 }

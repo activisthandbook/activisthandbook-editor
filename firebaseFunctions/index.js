@@ -22,6 +22,7 @@ exports.publishArticles = publishArticles.publishArticles;
 exports.articles_draft = require("./articles/articles_draft");
 exports.articles_inQueue = require("./articles/articles_inQueue");
 exports.articles_published = require("./articles/articles_published");
+exports.languageCollections = require("./articles/languageCollections");
 
 // IMAGES
 exports.getImageUploadURL = getImageUploadURL.getImageUploadURL;

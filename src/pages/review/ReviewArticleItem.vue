@@ -477,7 +477,7 @@ export default {
         }
 
         // update analytics locally (it will be updated on server automatically with a counter, but this way we prevent a delay)
-        this.analyticsStore.data.articlesInQueueCount++;
+        this.analyticsStore.data.articles_inQueue_count++;
       }
     },
     revertToLastPublished: async function () {
@@ -573,7 +573,7 @@ export default {
         });
 
         // update analytics locally (it will be updated on server automatically with a counter, but this way we prevent a delay)
-        this.analyticsStore.data.articlesInQueueCount++;
+        this.analyticsStore.data.articles_inQueue_count++;
       } catch (e) {
         console.log("Transaction failed: ", e);
       }

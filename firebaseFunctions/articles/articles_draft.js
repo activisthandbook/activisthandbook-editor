@@ -7,20 +7,20 @@ const db = admin.firestore();
 const Counter = require("./../distributedCounter");
 const articlesCount = new Counter(
   db.collection("app").doc("analytics"),
-  "articles_drafts_count"
+  "articles_draft_count"
 );
 
-exports.articles_draft_onCreate = functions
+exports.onCreate = functions
   .region("europe-west1")
-  .firestore.document("draftArticles/{articleID}")
+  .firestore.document("articles_draft/{articleID}")
   .onCreate(async (snap, context) => {
     // Trigger the counter
     articlesCount.incrementBy(1);
   });
 
-exports.articles_draft_onDelete = functions
+exports.onDelete = functions
   .region("europe-west1")
-  .firestore.document("draftArticles/{articleID}")
+  .firestore.document("articles_draft/{articleID}")
   .onDelete(async (snap, context) => {
     // Trigger the counter
     articlesCount.incrementBy(-1);
@@ -30,7 +30,7 @@ exports.articles_draft_onDelete = functions
     // Run a recursive delete on the given document or collection path.
     // The 'token' must be set in the functions config, and can be generated
     // at the command line by running 'firebase login:ci'.
-    await firebase_tools.firestore.delete(`draftArticles/${articleID}`, {
+    await firebase_tools.firestore.delete(`articles_draft/${articleID}`, {
       project: process.env.GCLOUD_PROJECT,
       recursive: true,
       force: true,

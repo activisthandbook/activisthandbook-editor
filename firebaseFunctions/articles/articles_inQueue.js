@@ -9,7 +9,7 @@ const articles_inQueue_count = new Counter(
   "articles_inQueue_count"
 );
 
-exports.articles_inQueue_onCreate = functions
+exports.onCreate = functions
   .region("europe-west1")
   .firestore.document("articles_inQueue/{articleID}")
   .onCreate((change, context) => {
@@ -17,7 +17,7 @@ exports.articles_inQueue_onCreate = functions
     articles_inQueue_count.incrementBy(1);
   });
 
-exports.article_inQueue_onDelete = functions
+exports.onDelete = functions
   .region("europe-west1")
   .firestore.document("articles_inQueue/{articleID}")
   .onDelete((change, context) => {

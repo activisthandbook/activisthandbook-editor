@@ -88,7 +88,7 @@ export default {
     )
       .then((snapshot) => {
         if (snapshot.exists()) {
-          this.languageCollection = snapshot.data().articles;
+          this.languageCollection = snapshot.data().articles_draft;
         } else {
           this.$q.notify("Language collection not found.");
           this.$router.push({ name: "404" });

@@ -32,7 +32,7 @@ export default {
   },
   data() {
     return {
-      articles: {
+      articles_draft: {
         data: null,
         dataLoaded: false,
         error: null,
@@ -44,7 +44,7 @@ export default {
     this.fetchArticles();
   },
   unmounted() {
-    this.articles.unsubscribe();
+    this.articles_draft.unsubscribe();
   },
   methods: {
     async fetchArticles() {
@@ -54,7 +54,7 @@ export default {
         orderBy("requestedPublicationTimestamp", "asc"),
         limit(10)
       );
-      this.articles.unsubscribe = onSnapshot(q, async (querySnapshot) => {
+      this.articles_draft.unsubscribe = onSnapshot(q, async (querySnapshot) => {
         const articles = [];
         querySnapshot.forEach((doc) => {
           articles.push({
@@ -62,8 +62,8 @@ export default {
             id: doc.id,
           });
         });
-        this.articles.data = articles;
-        this.articles.dataLoaded = true;
+        this.articles_draft.data = articles;
+        this.articles_draft.dataLoaded = true;
       });
     },
   },

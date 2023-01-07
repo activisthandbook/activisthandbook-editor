@@ -30,7 +30,11 @@ export default {
   },
   async created() {
     await this.analyticsStore.fetchAnalytics();
-    await this.usersStore.fetchUser(this.firebaseStore.auth.currentUser.uid);
+    try {
+      await this.usersStore.fetchUser(this.firebaseStore.auth.currentUser.uid);
+    } catch (error) {
+      console.log("test");
+    }
   },
   unmounted() {
     this.usersStore.unsubscribeUser(this.firebaseStore.auth.currentUser.uid);

@@ -26,7 +26,7 @@
               v-if="
                 !this.showRenderingTime &&
                 analyticsStore.dataLoaded &&
-                (analyticsStore.data.articlesInQueueCount ||
+                (analyticsStore.data.articles_inQueue_count ||
                   analyticsStore.data.menuInPublishingQueue)
               "
               @published="published()"

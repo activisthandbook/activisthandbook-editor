@@ -402,8 +402,9 @@ async function updatePublishedArticles(articles) {
       (!languageCollections[article.languageCollectionID].publishedArticles ||
         !languageCollections[article.languageCollectionID].publishedArticles
           .length) &&
-      (!languageCollections[article.languageCollectionID].articles ||
-        !languageCollections[article.languageCollectionID].articles.length)
+      (!languageCollections[article.languageCollectionID].articles_draft ||
+        !languageCollections[article.languageCollectionID].articles_draft
+          .length)
     ) {
       // If both publishedArticles and articles are empty, delete language collection
       batch.delete(languageCollectionRef);

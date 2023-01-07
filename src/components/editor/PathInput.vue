@@ -52,6 +52,7 @@ export default {
   },
   methods: {
     async handleBlur() {
+      // Only do something if path is changed
       if (this.localPath !== this.path) {
         this.validation = await this.mixin_validatePath(
           this.localPath,

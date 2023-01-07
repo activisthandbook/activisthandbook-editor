@@ -99,7 +99,7 @@ export default {
       });
 
       batch.set(doc(db, "languageCollections", newLanguageCollectionID), {
-        articles: [
+        draftArticles: [
           {
             articleID: newArticleID,
             langCode: this.lang.code,

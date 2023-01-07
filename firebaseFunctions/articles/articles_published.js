@@ -9,7 +9,7 @@ const articles_published_count = new Counter(
   "articles_published_count"
 );
 
-exports.articles_published_onCreate = functions
+exports.onCreate = functions
   .region("europe-west1")
   .firestore.document("articles_published/{articleID}")
   .onCreate((change, context) => {
@@ -17,7 +17,7 @@ exports.articles_published_onCreate = functions
     articles_published_count.incrementBy(1);
   });
 
-exports.articles_published_onDelete = functions
+exports.onDelete = functions
   .region("europe-west1")
   .firestore.document("articles_published/{articleID}")
   .onDelete((change, context) => {
