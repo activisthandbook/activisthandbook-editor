@@ -94,7 +94,7 @@ export default boot(({ app }) => {
           const db = getFirestore();
           const draftArticles = await getDocs(
             query(
-              collection(db, "draftArticles"),
+              collection(db, "articles_draft"),
               where("path", "==", path),
               where("lang.code", "==", langCode),
               where("id", "!=", currentID),
@@ -103,7 +103,7 @@ export default boot(({ app }) => {
           );
           const publishedArticles = await getDocs(
             query(
-              collection(db, "publishedArticles"),
+              collection(db, "articles_published"),
               where("path", "==", path),
               where("lang.code", "==", langCode),
               where("id", "!=", currentID),

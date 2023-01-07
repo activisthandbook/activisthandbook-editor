@@ -336,7 +336,7 @@ export default {
       const batch = writeBatch(db);
 
       // 1. Copy the currently selected version to the publishingQueue collection
-      const publishingQueueRef = doc(db, "menu", "publishingQueue");
+      const publishingQueueRef = doc(db, "menu", "inQueue");
       batch.set(publishingQueueRef, {
         ...acceptedVersion,
         metadata: {
@@ -420,7 +420,7 @@ export default {
         if (article.status === "review") {
           const reviewVersionRef = doc(
             db,
-            "draftArticles",
+            "articles_draft",
             this.liveDraftArticle.id,
             "versions",
             article.id
@@ -430,7 +430,11 @@ export default {
       });
 
       // 2. Reverts the live edit to the last published version.
-      const liveArticleRef = doc(db, "draftArticles", this.liveDraftArticle.id);
+      const liveArticleRef = doc(
+        db,
+        "articles_draft",
+        this.liveDraftArticle.id
+      );
       batch.update(liveArticleRef, {
         ...lastPublishedArticle,
         requestedPublication: false,

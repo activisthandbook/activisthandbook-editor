@@ -58,7 +58,7 @@ export default {
     fetchImportedArticles() {
       this.importedArticles.unsubscribe = onSnapshot(
         query(
-          collection(db, "draftArticles"),
+          collection(db, "articles_draft"),
           where("imported", "==", true),
           limit(5)
         ),

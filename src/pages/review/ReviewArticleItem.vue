@@ -311,7 +311,12 @@ export default {
       if (!this.isNewArticle) {
         // PUBLISHED BEFORE: This is not a new article. It has been published before, so we only want to show the versions back until the last published one on the website (so including that one)
         versionsQuery = query(
-          collection(db, "draftArticles", this.liveDraftArticle.id, "versions"),
+          collection(
+            db,
+            "articles_draft",
+            this.liveDraftArticle.id,
+            "versions"
+          ),
           orderBy("metadata.createdTimestamp"),
           where(
             "status",
@@ -324,7 +329,12 @@ export default {
       } else {
         // NEW ARTICLE: Fetch all versions
         versionsQuery = query(
-          collection(db, "draftArticles", this.liveDraftArticle.id, "versions"),
+          collection(
+            db,
+            "articles_draft",
+            this.liveDraftArticle.id,
+            "versions"
+          ),
           orderBy("metadata.createdTimestamp"),
           limit(10)
         );
@@ -398,7 +408,7 @@ export default {
         // 1. Copy the currently selected version to the publishingQueue collection
         const publishingQueueRef = doc(
           db,
-          "publishingQueue",
+          "articles_inQueue",
           this.liveDraftArticle.id
         );
         batch.set(publishingQueueRef, {
@@ -415,7 +425,7 @@ export default {
           if (article.status === "review") {
             const reviewVersionRef = doc(
               db,
-              "draftArticles",
+              "articles_draft",
               this.liveDraftArticle.id,
               "versions",
               article.id
@@ -427,7 +437,7 @@ export default {
         // 3. Set requestedReview to false for the live edit version
         const liveArticleRef = doc(
           db,
-          "draftArticles",
+          "articles_draft",
           this.liveDraftArticle.id
         );
         batch.update(liveArticleRef, {
@@ -442,7 +452,7 @@ export default {
         const versionID = this.mixin_randomID();
         const versionRef = doc(
           db,
-          "draftArticles",
+          "articles_draft",
           this.liveDraftArticle.id,
           "versions",
           versionID
@@ -481,7 +491,7 @@ export default {
         if (article.status === "review") {
           const reviewVersionRef = doc(
             db,
-            "draftArticles",
+            "articles_draft",
             this.liveDraftArticle.id,
             "versions",
             article.id
@@ -491,7 +501,11 @@ export default {
       });
 
       // 2. Reverts the live edit to the last published version.
-      const liveArticleRef = doc(db, "draftArticles", this.liveDraftArticle.id);
+      const liveArticleRef = doc(
+        db,
+        "articles_draft",
+        this.liveDraftArticle.id
+      );
       batch.update(liveArticleRef, {
         ...lastPublishedArticle,
         id: lastPublishedArticle.articleID,
@@ -527,7 +541,7 @@ export default {
           // Copy the currently selected version to the publishingQueue collection
           const publishingQueueRef = doc(
             db,
-            "publishingQueue",
+            "articles_inQueue",
             this.liveDraftArticle.id
           );
           transaction.set(publishingQueueRef, {
@@ -552,7 +566,7 @@ export default {
           // Delete live draft article. Versions are automatically deleted
           const liveArticleRef = doc(
             db,
-            "draftArticles",
+            "articles_draft",
             this.liveDraftArticle.id
           );
           transaction.delete(liveArticleRef);

@@ -106,7 +106,7 @@ export default {
 
       const batch = writeBatch(db);
 
-      batch.set(doc(db, "draftArticles", newArticleID), {
+      batch.set(doc(db, "articles_draft", newArticleID), {
         langCode: this.lang.code,
         languageCollectionID: this.$route.params.languageCollectionID,
         publishedFullPath: null,

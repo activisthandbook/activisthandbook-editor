@@ -1,5 +1,5 @@
 <template>
-  <q-card class="bg-accent q-py-sm" v-if="publishedArticles.dataLoaded">
+  <q-card class="bg-accent q-py-sm" v-if="articles_published.dataLoaded">
     <q-list>
       <q-item class="q-py-md bg-grey-1 q-mb-sm">
         <q-item-section avatar>
@@ -9,8 +9,8 @@
       </q-item>
     </q-list>
     <ArticleList
-      v-if="publishedArticles.data[0]"
-      :articles="publishedArticles.data"
+      v-if="articles_published.data[0]"
+      :articles="articles_published.data"
     />
     <q-card-section v-else> No newly published articles found. </q-card-section>
   </q-card>
@@ -58,7 +58,7 @@ export default {
     fetchPublishedArticles() {
       this.publishedArticles.unsubscribe = onSnapshot(
         query(
-          collection(db, "draftArticles"),
+          collection(db, "articles_draft"),
           orderBy("lastPublishedServerTimestamp", "desc"),
           where("lastPublishedServerTimestamp", "!=", null),
           limit(5)

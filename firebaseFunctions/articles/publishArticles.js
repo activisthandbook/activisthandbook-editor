@@ -184,7 +184,7 @@ exports.publishArticles = functions
 // STEP 1 _________________________________
 
 async function fetchPublishingQueue() {
-  const publishingQueueRef = db.collection("publishingQueue");
+  const publishingQueueRef = db.collection("articles_inQueue");
   const snapshot = await publishingQueueRef.get();
   if (snapshot.empty) {
     // console.log('No matching documents.');
@@ -229,7 +229,7 @@ async function fetchLanguageCollection(languageCollectionID) {
 }
 
 async function fetchPublishingQueueMenu() {
-  const publishingQueueRef = db.collection("menu").doc("publishingQueue");
+  const publishingQueueRef = db.collection("menu").doc("articles_inQueue");
   const docSnapshot = await publishingQueueRef.get();
   if (docSnapshot.empty) {
     // console.log('No matching documents.');
@@ -262,9 +262,9 @@ async function updatePublishedArticles(articles) {
   // 🔁 LOOP THROUGH ALL ARTICLES
   for (const article of articles) {
     // References for docs we want to edit later
-    const draftArticleRef = db.collection("draftArticles").doc(article.id);
+    const draftArticleRef = db.collection("articles_draft").doc(article.id);
     const publishedArticleRef = db
-      .collection("publishedArticles")
+      .collection("articles_published")
       .doc(article.id);
     const languageCollectionRef = db
       .collection("languageCollections")
@@ -713,13 +713,13 @@ async function clearPublishingQueue(articles, menu) {
 
   if (articles) {
     for (const article of articles) {
-      const articleRef = db.collection("publishingQueue").doc(article.id);
+      const articleRef = db.collection("articles_inQueue").doc(article.id);
       batch.delete(articleRef);
     }
   }
 
   if (menu) {
-    const menuPublishingQueueRef = db.collection("menu").doc("publishingQueue");
+    const menuPublishingQueueRef = db.collection("menu").doc("inQueue");
 
     batch.delete(menuPublishingQueueRef);
     const moderatorRef = db.collection("app").doc("analytics");

@@ -4,23 +4,23 @@ const db = admin.firestore();
 
 // Create a counter
 const Counter = require("./../distributedCounter");
-const articlesPublishedCount = new Counter(
+const articles_inQueue_count = new Counter(
   db.collection("app").doc("analytics"),
-  "articlesPublishedCount"
+  "articles_inQueue_count"
 );
 
-exports.onCreate = functions
+exports.articles_inQueue_onCreate = functions
   .region("europe-west1")
-  .firestore.document("articlesPublished/{articleID}")
+  .firestore.document("articles_inQueue/{articleID}")
   .onCreate((change, context) => {
     // Trigger the counter
-    articlesPublishedCount.incrementBy(1);
+    articles_inQueue_count.incrementBy(1);
   });
 
-exports.onDelete = functions
+exports.article_inQueue_onDelete = functions
   .region("europe-west1")
-  .firestore.document("articlesPublished/{articleID}")
+  .firestore.document("articles_inQueue/{articleID}")
   .onDelete((change, context) => {
     // Trigger the counter
-    articlesPublishedCount.incrementBy(-1);
+    articles_inQueue_count.incrementBy(-1);
   });

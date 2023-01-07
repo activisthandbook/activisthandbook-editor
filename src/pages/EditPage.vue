@@ -424,7 +424,7 @@ export default {
       const versionID = this.mixin_randomID();
       const versionRef = doc(
         db,
-        "draftArticles",
+        "articles_draft",
         this.$route.params.articleID,
         "versions",
         versionID
@@ -446,7 +446,7 @@ export default {
 
       // 2. Update live draft
       batch.set(
-        doc(db, "draftArticles", this.$route.params.articleID),
+        doc(db, "articles_draft", this.$route.params.articleID),
         {
           requestedPublication: true,
           requestedPublicationTimestamp: time,
@@ -477,7 +477,7 @@ export default {
     },
     deleteAndPublish() {
       setDoc(
-        doc(db, "draftArticles", this.$route.params.articleID),
+        doc(db, "articles_draft", this.$route.params.articleID),
         {
           deleteArticle: true,
         },
@@ -491,7 +491,7 @@ export default {
     },
     restoreAndPublish() {
       setDoc(
-        doc(db, "draftArticles", this.$route.params.articleID),
+        doc(db, "articles_draft", this.$route.params.articleID),
         {
           deleteArticle: false,
         },
