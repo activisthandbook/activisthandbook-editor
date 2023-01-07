@@ -87,7 +87,7 @@ service cloud.firestore {
 
 
       // ARTICLES
-    	match /draftArticles/{articleID} {
+    	match /articles_draft/{articleID} {
         allow read:
           if signedIn();
         allow create:
@@ -107,7 +107,11 @@ service cloud.firestore {
         }
       }
 
-      match /publishedArticles/{collectionID} {
+      match /articles_inQueue/{articleID} {
+        allow read, create, update: if hasRole(getRoles(), "moderator");
+      }
+
+      match /articles_published/{collectionID} {
         allow read: if signedIn();
       }
 
@@ -129,10 +133,6 @@ service cloud.firestore {
           request.resource.data.publishedArticles == resource.data.publishedArticles &&
           validMetadataUpdated();
         allow delete: if hasRole(getRoles(), "moderator")
-      }
-
-      match /publishingQueue/{articleID} {
-        allow read, create, update: if hasRole(getRoles(), "moderator");
       }
 
     }

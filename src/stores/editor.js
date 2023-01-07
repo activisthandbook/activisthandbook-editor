@@ -243,7 +243,7 @@ export const useEditorStore = defineStore("editor", {
       if (!this.recentArticles.includes(this.article.id)) {
         this.recentArticles.push(this.article.id);
         await setDoc(
-          doc(db, "userProfiles", userID),
+          doc(db, "users_profile", userID),
           {
             recentlyEditedArticles: arrayRemove(this.article.id),
             metadata: {
@@ -257,7 +257,7 @@ export const useEditorStore = defineStore("editor", {
           console.error(error);
         });
         await setDoc(
-          doc(db, "userProfiles", userID),
+          doc(db, "users_profile", userID),
           {
             recentlyEditedArticles: arrayUnion(this.article.id),
             editCount: increment(1),

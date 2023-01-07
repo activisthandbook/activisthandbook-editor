@@ -37,7 +37,7 @@ export const useUsersStore = defineStore("users", {
         return new Promise(async (resolve, reject) => {
           this.profile.loadStarted[userID] = true;
 
-          const userRef = doc(db, "userProfiles", userID);
+          const userRef = doc(db, "users_profile", userID);
 
           this.profile.unsubscribe[userID] = await onSnapshot(
             userRef,
@@ -97,7 +97,7 @@ export const useUsersStore = defineStore("users", {
         data.metadata.createdTimestamp = serverTimestamp();
         data.metadata.createdBy = userID;
       }
-      await setDoc(doc(db, "userProfiles", userID), data, {
+      await setDoc(doc(db, "users_profile", userID), data, {
         merge: true,
       }).catch((error) => {
         Notify.create("Saving user failed");
@@ -154,7 +154,7 @@ export const useUsersStore = defineStore("users", {
         //   );
 
         //   await setDoc(
-        //     doc(db, "userProfiles", userID),
+        //     doc(db, "users_profile", userID),
         //     {
         //       recentlyEditedArticles:
         //         this.profile.data[userID].recentlyEditedArticles,

@@ -121,7 +121,7 @@ exports.publishArticles = functions
       languageCollections = {};
 
       const userProfileRef = db
-        .collection("userProfiles")
+        .collection("users_profile")
         .doc(context.auth.token.uid);
       const userDoc = await userProfileRef.get();
 

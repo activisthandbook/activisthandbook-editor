@@ -115,7 +115,7 @@ export default {
       });
 
       batch.set(
-        doc(db, "userProfiles", this.firebaseStore.auth.currentUser.uid),
+        doc(db, "users_profile", this.firebaseStore.auth.currentUser.uid),
         {
           recentlyEditedArticles: arrayUnion(newArticleID),
 

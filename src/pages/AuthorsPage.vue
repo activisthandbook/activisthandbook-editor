@@ -120,7 +120,7 @@ export default {
       return new Promise(async (resolve, reject) => {
         this.topAuthors.unsubscribe = onSnapshot(
           query(
-            collection(db, "userProfiles"),
+            collection(db, "users_profile"),
             orderBy("editCount", "desc"),
             limit(5)
           ),
@@ -144,7 +144,7 @@ export default {
       return new Promise(async (resolve, reject) => {
         this.newAuthors.unsubscribe = onSnapshot(
           query(
-            collection(db, "userProfiles"),
+            collection(db, "users_profile"),
             orderBy("metadata.createdTimestamp", "desc"),
             limit(5)
           ),
