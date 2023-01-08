@@ -99,13 +99,13 @@ export default {
       });
 
       batch.set(doc(db, "languageCollections", newLanguageCollectionID), {
-        draftArticles: [
+        articles_draft: [
           {
             articleID: newArticleID,
             langCode: this.lang.code,
           },
         ],
-        publishedArticles: null,
+        articles_published: null,
         metadata: {
           updatedTimestamp: serverTimestamp(),
           updatedBy: this.firebaseStore.auth.currentUser.uid,

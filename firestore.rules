@@ -71,7 +71,14 @@ service cloud.firestore {
       match /menu/draft {
         allow read, create, update: if signedIn();
 
-        match /versions/{versionID} {
+        match /versions_draft/{versionID} {
+          allow read: if signedIn();
+          allow create: if
+            signedIn() &&
+            validMetadataCreated();
+          allow delete: if hasRole(getRoles(), "moderator");
+        }
+        match /versions_published/{versionID} {
           allow read: if signedIn();
           allow create: if
             signedIn() &&
@@ -105,7 +112,11 @@ service cloud.firestore {
         allow delete:
           if hasRole(getRoles(), "moderator");
 
-        match /versions/{versionID} {
+        match /versions_draft/{versionID} {
+        	allow read, create: if signedIn();
+          allow write, delete: if hasRole(getRoles(), "moderator");
+        }
+        match /versions_published/{versionID} {
         	allow read, create: if signedIn();
           allow write, delete: if hasRole(getRoles(), "moderator");
         }
@@ -125,16 +136,16 @@ service cloud.firestore {
           signedIn() &&
           // CONTENT VALIDATION
           // draftArticles
-          request.resource.data.draftArticles.size() == 1 &&
-          // publishedArticles
-          request.resource.data.publishedArticles == null &&
+          request.resource.data.articles_draft.size() == 1 &&
+          // articles_published
+          request.resource.data.articles_published == null &&
           // metadata
           validMetadataCreated() &&
           validMetadataUpdated();
         allow update: if
           signedIn() &&
-          // publishedArticles
-          request.resource.data.publishedArticles == resource.data.publishedArticles &&
+          // articles_published
+          request.resource.data.articles_published == resource.data.articles_published &&
           validMetadataUpdated();
         allow delete: if hasRole(getRoles(), "moderator")
       }

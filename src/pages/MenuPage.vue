@@ -401,7 +401,7 @@ export default {
 
       // 1. Create new version
       const versionID = this.mixin_randomID();
-      const versionRef = doc(db, "menu", "draft", "versions", versionID);
+      const versionRef = doc(db, "menu", "draft", "versions_draft", versionID);
 
       batch.set(
         versionRef,

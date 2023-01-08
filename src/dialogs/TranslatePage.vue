@@ -111,8 +111,8 @@ export default {
         languageCollectionID: this.$route.params.languageCollectionID,
         publishedFullPath: null,
         metadata: {
-          updatedTimestamp: null,
-          updatedBy: null,
+          updatedTimestamp: serverTimestamp(),
+          updatedBy: this.firebaseStore.auth.currentUser.uid,
           createdTimestamp: serverTimestamp(),
           createdBy: this.firebaseStore.auth.currentUser.uid,
         },
@@ -121,7 +121,7 @@ export default {
       batch.update(
         doc(db, "languageCollections", this.$route.params.languageCollectionID),
         {
-          articles: arrayUnion({
+          articles_draft: arrayUnion({
             articleID: newArticleID,
             langCode: this.lang.code,
           }),

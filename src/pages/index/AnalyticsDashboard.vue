@@ -89,8 +89,8 @@
             <q-icon name="mdi-translate" class="q-mr-sm" />
             {{
               Math.round(
-                (analyticsStore.data.languageCollections_count /
-                  analyticsStore.data.articles_draft_count) *
+                (analyticsStore.data.articles_draft_count /
+                  analyticsStore.data.languageCollections_count) *
                   100
               ) / 100 || 0
             }}
@@ -109,7 +109,7 @@
           <div class="text-caption">Authors</div>
           <div class="text-h2 flex">
             <q-icon name="mdi-account-group" class="q-mr-sm" />
-            {{ analyticsStore.data.authorsCount || 0 }}
+            {{ analyticsStore.data.users_profile_count || 0 }}
           </div>
         </q-card-section>
       </q-card>

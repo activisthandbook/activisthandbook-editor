@@ -27,3 +27,6 @@ exports.languageCollections = require("./articles/languageCollections");
 // IMAGES
 exports.getImageUploadURL = getImageUploadURL.getImageUploadURL;
 exports.processImageUpload = processImageUpload.processImageUpload;
+
+// USERS
+exports.users_profile = require("./users/users_profile");

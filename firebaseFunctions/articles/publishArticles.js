@@ -272,11 +272,11 @@ async function updatePublishedArticles(articles) {
 
     let publishedArticlesIndex = null;
 
-    if (languageCollections[article.languageCollectionID].publishedArticles) {
-      // Find the index of the current article language in the publishedArticles of this article's languageCollection
+    if (languageCollections[article.languageCollectionID].articles_published) {
+      // Find the index of the current article language in the articles_published of this article's languageCollection
       publishedArticlesIndex = languageCollections[
         article.languageCollectionID
-      ].publishedArticles.findIndex((x) => x.articleID === article.id);
+      ].articles_published.findIndex((x) => x.articleID === article.id);
 
       log("⚪️ publishedArticlesIndex", publishedArticlesIndex);
     }
@@ -288,31 +288,33 @@ async function updatePublishedArticles(articles) {
       log("⚪️ delete article", article);
       batch.delete(publishedArticleRef);
 
-      // Fallback 'if' statement: publishedArticles should always be defined for articles that you are trying to delete
-      if (languageCollections[article.languageCollectionID].publishedArticles) {
-        // Remove article from publishedArticles array
+      // Fallback 'if' statement: articles_published should always be defined for articles that you are trying to delete
+      if (
+        languageCollections[article.languageCollectionID].articles_published
+      ) {
+        // Remove article from articles_published array
         languageCollections[
           article.languageCollectionID
-        ].publishedArticles.splice(publishedArticlesIndex, 1);
+        ].articles_published.splice(publishedArticlesIndex, 1);
 
         log(
-          "⚪️ publishedArticles",
-          languageCollections[article.languageCollectionID].publishedArticles
+          "⚪️ articles_published",
+          languageCollections[article.languageCollectionID].articles_published
         );
       }
     } // 🗑 END DELETE ARTICLE
 
     // 📝 EDIT ARTICLE
     // Actions:
-    // 1. Update publishedArticles collection
+    // 1. Update articles_published collection
     // 2. Build fullPublishedPath from languageCode and path
     // 3. Get details on this language based on the languageCode
-    // 4. Define object to add or update in the languageCollection 'publishedArticles' array.
+    // 4. Define object to add or update in the languageCollection 'articles_published' array.
     // 5. Check if this languageCollection already contains any published articles & find index
-    // 6. Create, add to or update publishedArticles array
+    // 6. Create, add to or update articles_published array
     else if (!article.deleteArticle) {
       log("⚪️ edit article", article);
-      // 1. Update publishedArticles collection
+      // 1. Update articles_published collection
       batch.set(publishedArticleRef, article);
 
       // 2. Build full link from languageCode and path
@@ -331,7 +333,7 @@ async function updatePublishedArticles(articles) {
       );
       log("⚪️ languageDetails", languageDetails);
 
-      // 4. Define object to add or update in the languageCollection 'publishedArticles' array.
+      // 4. Define object to add or update in the languageCollection 'articles_published' array.
       const languageToAdd = {
         articleID: article.id,
         langCode: article.langCode,
@@ -340,18 +342,18 @@ async function updatePublishedArticles(articles) {
       };
       log("⚪️ languageToAdd", languageToAdd);
 
-      // 6. Create, add to or update publishedArticles array
+      // 6. Create, add to or update articles_published array
 
       // A. No published languages yet -> create array
       if (
-        !languageCollections[article.languageCollectionID].publishedArticles
+        !languageCollections[article.languageCollectionID].articles_published
       ) {
-        languageCollections[article.languageCollectionID].publishedArticles = [
+        languageCollections[article.languageCollectionID].articles_published = [
           languageToAdd,
         ];
         log(
-          "⚪️ No published languages yet -> create publishedArticles array",
-          languageCollections[article.languageCollectionID].publishedArticles
+          "⚪️ No published languages yet -> create articles_published array",
+          languageCollections[article.languageCollectionID].articles_published
         );
       }
 
@@ -359,11 +361,11 @@ async function updatePublishedArticles(articles) {
       else if (publishedArticlesIndex === -1) {
         languageCollections[
           article.languageCollectionID
-        ].publishedArticles.push(languageToAdd);
+        ].articles_published.push(languageToAdd);
 
         log(
           "⚪️ Article not included in language collection yet -> add to array",
-          languageCollections[article.languageCollectionID].publishedArticles
+          languageCollections[article.languageCollectionID].articles_published
         );
       }
 
@@ -372,47 +374,47 @@ async function updatePublishedArticles(articles) {
         // Remove current instance
         languageCollections[
           article.languageCollectionID
-        ].publishedArticles.splice(publishedArticlesIndex, 1);
+        ].articles_published.splice(publishedArticlesIndex, 1);
 
         // Add updated instance
         languageCollections[
           article.languageCollectionID
-        ].publishedArticles.push(languageToAdd);
+        ].articles_published.push(languageToAdd);
 
         log(
           "⚪️Article has been published before -> update array",
-          languageCollections[article.languageCollectionID].publishedArticles
+          languageCollections[article.languageCollectionID].articles_published
         );
       }
     } // 📝 END EDIT ARTICLE
 
     // 🔤 SORT LANGUAGE COLLECTION ALPHABETICALLY
-    languageCollections[article.languageCollectionID].publishedArticles =
+    languageCollections[article.languageCollectionID].articles_published =
       _.sortBy(
-        languageCollections[article.languageCollectionID].publishedArticles,
+        languageCollections[article.languageCollectionID].articles_published,
         ["localName"]
       );
 
     log(
-      "⚪️sort publishedArticles",
-      languageCollections[article.languageCollectionID].publishedArticles
+      "⚪️sort articles_published",
+      languageCollections[article.languageCollectionID].articles_published
     );
 
     if (
-      (!languageCollections[article.languageCollectionID].publishedArticles ||
-        !languageCollections[article.languageCollectionID].publishedArticles
+      (!languageCollections[article.languageCollectionID].articles_published ||
+        !languageCollections[article.languageCollectionID].articles_published
           .length) &&
       (!languageCollections[article.languageCollectionID].articles_draft ||
         !languageCollections[article.languageCollectionID].articles_draft
           .length)
     ) {
-      // If both publishedArticles and articles are empty, delete language collection
+      // If both articles_published and articles are empty, delete language collection
       batch.delete(languageCollectionRef);
     } else {
       // 🔥 UPDATE LANGUAGE COLLECTION IN FIRESTORE
       batch.update(languageCollectionRef, {
-        publishedArticles:
-          languageCollections[article.languageCollectionID].publishedArticles,
+        articles_published:
+          languageCollections[article.languageCollectionID].articles_published,
         lastPublishedServerTimestamp: FieldValue.serverTimestamp(),
       });
     }
@@ -463,11 +465,11 @@ async function syncWithGithub(token, articles, menu) {
         "articles/public/languageCollections/" + languageCollectionID + ".json";
 
       if (
-        languageCollections[languageCollectionID].publishedArticles &&
-        languageCollections[languageCollectionID].publishedArticles.length
+        languageCollections[languageCollectionID].articles_published &&
+        languageCollections[languageCollectionID].articles_published.length
       ) {
         files[githubPath] = JSON.stringify(
-          languageCollections[languageCollectionID].publishedArticles
+          languageCollections[languageCollectionID].articles_published
         );
       } else if (
         languageCollections[languageCollectionID].lastPublishedServerTimestamp

@@ -51,7 +51,7 @@
       ]
     },
     {
-      "collectionGroup": "versions",
+      "collectionGroup": "versions_draft",
       "queryScope": "COLLECTION",
       "fields": [
         {

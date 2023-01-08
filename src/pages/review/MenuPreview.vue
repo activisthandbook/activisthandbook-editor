@@ -231,15 +231,13 @@ export default {
       let versionsQuery = null;
       if (this.liveDraftMenu.lastPublishedServerTimestamp) {
         versionsQuery = query(
-          collection(db, "menu", "draft", "versions"),
-          where("status", "==", "review"),
+          collection(db, "menu", "draft", "versions_draft"),
           orderBy("lastUpdatedServerTimestamp"),
           limit(10)
         );
       } else {
         versionsQuery = query(
-          collection(db, "menu", "draft", "versions"),
-          where("status", "==", "review"),
+          collection(db, "menu", "draft", "versions_draft"),
           orderBy("lastUpdatedServerTimestamp"),
           limit(10)
         );
@@ -311,7 +309,7 @@ export default {
             db,
             "menu",
             "draft",
-            "versions",
+            "versions_draft",
             version.id
           );
           batch.delete(reviewVersionRef);
@@ -329,10 +327,15 @@ export default {
 
       // 4. Create a new version with the status "published"
       const versionID = this.mixin_randomID();
-      const versionRef = doc(db, "menu", "draft", "versions", versionID);
+      const versionRef = doc(
+        db,
+        "menu",
+        "draft",
+        "versions_published",
+        versionID
+      );
       batch.set(versionRef, {
         ...acceptedVersion,
-        status: "published",
         metadata: {
           createdTimestamp: serverTimestamp(),
           createdBy: this.firebaseStore.auth.currentUser.uid,
@@ -362,16 +365,14 @@ export default {
 
       // 1. Deletes all review versions (not the previous published ones)
       this.articleVersions.data.forEach((article) => {
-        if (article.status === "review") {
-          const reviewVersionRef = doc(
-            db,
-            "articles_draft",
-            this.liveDraftArticle.id,
-            "versions",
-            article.id
-          );
-          batch.delete(reviewVersionRef);
-        }
+        const reviewVersionRef = doc(
+          db,
+          "articles_draft",
+          this.liveDraftArticle.id,
+          "versions_draft",
+          article.id
+        );
+        batch.delete(reviewVersionRef);
       });
 
       // 2. Reverts the live edit to the last published version.

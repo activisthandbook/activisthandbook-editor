@@ -91,7 +91,7 @@ export default boot(({ app }) => {
           const db = getFirestore();
 
           try {
-            const draftArticles = await getDocs(
+            const articles_draft = await getDocs(
               query(
                 collection(db, "articles_draft"),
                 where("path", "==", path),
@@ -100,7 +100,7 @@ export default boot(({ app }) => {
                 limit(1)
               )
             );
-            const publishedArticles = await getDocs(
+            const articles_published = await getDocs(
               query(
                 collection(db, "articles_published"),
                 where("path", "==", path),
@@ -110,16 +110,16 @@ export default boot(({ app }) => {
               )
             );
 
-            if (draftArticles.empty && publishedArticles.empty) {
+            if (articles_draft.empty && articles_published.empty) {
               // Valid, no document exists yet with this path
               return { error: null, duplicates: null };
             } else {
               // Invalid
               const duplicates = [];
-              draftArticles.forEach((doc) => {
+              articles_draft.forEach((doc) => {
                 duplicates.push(doc.data());
               });
-              publishedArticles.forEach((doc) => {
+              articles_published.forEach((doc) => {
                 duplicates.push(doc.data());
               });
               return { error: "Path already exists.", duplicates: duplicates };

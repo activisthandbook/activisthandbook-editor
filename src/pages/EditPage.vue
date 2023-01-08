@@ -426,7 +426,7 @@ export default {
         db,
         "articles_draft",
         this.$route.params.articleID,
-        "versions",
+        "versions_draft",
         versionID
       );
 
