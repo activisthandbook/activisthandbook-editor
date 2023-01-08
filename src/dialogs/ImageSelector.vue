@@ -53,6 +53,7 @@
               icon="mdi-upload"
               @click="$refs.fileInput.click()"
               :disable="!imageUploadURL"
+              :loading="!imageUploadURL"
             />
           </q-toolbar>
         </q-header>
@@ -309,12 +310,10 @@
                       <li>
                         <strong
                           >This image is publicly shared on Activist Handbook,
-                          attributing you as author ({{
-                            firebaseStore.auth.currentUser.displayName
-                          }}).</strong
+                          attributing you as author ({{ fullName }}).</strong
                         >
-                        That means that everyone can see the image and your
-                        name.
+                        That means that everyone can see the image, your name
+                        and a link to your profile.
                       </li>
                       <li>
                         <strong
@@ -432,10 +431,9 @@
           <q-page padding class="q-gutter-y-sm">
             <q-img
               :src="previewImageURL"
+              :srcset="previewImageSRCset"
               :ratio="16 / 9"
               class="q-my-md rounded-borders"
-              no-spinner
-              no-transition
             />
             <q-input
               label="Title"
@@ -461,7 +459,7 @@
               disable
             />
 
-            <div v-if="image.data.labels" class="q-mt-sm">
+            <div v-if="image.data.tags" class="q-mt-sm">
               <!-- <q-input
                 v-model="newTag"
                 label="New tag..."
@@ -486,9 +484,9 @@
               </q-input> -->
 
               <q-select
-                label="Search tags"
+                label="Tags"
                 outlined
-                v-model="image.data.labels"
+                v-model="image.data.tags"
                 use-input
                 use-chips
                 multiple
@@ -525,6 +523,7 @@
 import axios from "axios";
 import { mapStores } from "pinia";
 import { useFirebaseStore } from "src/stores/firebase";
+import { useUsersStore } from "src/stores/users";
 import { useEditorStore } from "src/stores/editor";
 const db = getFirestore();
 
@@ -562,7 +561,6 @@ function imageDefault() {
         licence: null,
         ai: null,
       },
-      labels: null,
     },
     title: null,
   };
@@ -618,7 +616,7 @@ export default {
   },
 
   computed: {
-    ...mapStores(useFirebaseStore, useEditorStore),
+    ...mapStores(useFirebaseStore, useEditorStore, useUsersStore),
     images: function () {
       if (this.searchResults) return this.searchResults;
       else return this.galleryImages.data;
@@ -637,7 +635,27 @@ export default {
     previewImageURL: function () {
       // If we still have the image locally, we load that one to save bandwith
       if (this.image.localURL) return this.image.localURL;
-      else return `${this.imageHost}${this.image.data.id}/articleLarge`;
+      else return `${this.imageHost}${this.image.data.id}/1018x573`;
+    },
+    previewImageSRCset: function () {
+      // If we still have the image locally, we load that one to save bandwith
+      if (this.image.localURL) return this.image.localURL;
+      else
+        return `${this.imageHost}${this.image.data.id}/588x331 1x, ${this.imageHost}${this.image.data.id}/1018x573 2x`;
+    },
+    fullName: function () {
+      let name =
+        this.usersStore.profile.data[this.firebaseStore.auth.currentUser.uid]
+          .firstName;
+
+      if (
+        this.usersStore.profile.data[this.firebaseStore.auth.currentUser.uid]
+          .lastName
+      )
+        name +=
+          this.usersStore.profile.data[this.firebaseStore.auth.currentUser.uid]
+            .lastName;
+      return name;
     },
   },
   async mounted() {
@@ -659,7 +677,7 @@ export default {
       this.galleryImages.unsubscribe = onSnapshot(
         query(
           collection(db, "images"),
-          orderBy("createdServerTimestamp", "desc"),
+          orderBy("metadata.createdTimestamp", "desc"),
           limit(12)
         ),
         (snapshot) => {
@@ -695,8 +713,7 @@ export default {
     async processImageUpload() {
       // If these are not set, the current user is the author.
       if (!this.image.data.author.name) {
-        this.image.data.author.name =
-          this.firebaseStore.auth.currentUser.displayName;
+        this.image.data.author.name = this.fullName;
       }
       if (!this.image.data.author.source) {
         // TO-DO: Add author profiles!
@@ -709,9 +726,11 @@ export default {
       );
       await processImageUpload({ ...this.image.data })
         .then((result) => {
+          console.log(result);
           // Check if we're still viewing the same image
-          if (this.image.data.id === result.data.id)
+          if (this.image.data.id === result.data.id) {
             this.image.data = result.data;
+          }
         })
         .catch((error) => {
           this.image.error = error;

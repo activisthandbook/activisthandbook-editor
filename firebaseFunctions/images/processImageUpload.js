@@ -2,8 +2,10 @@ const functions = require("firebase-functions");
 const vision = require("@google-cloud/vision");
 
 const admin = require("firebase-admin");
-const { getFirestore } = require("firebase-admin/firestore");
+const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 const db = getFirestore();
+
+const debugging = true;
 
 exports.processImageUpload = functions
   .region("europe-west1")
@@ -33,9 +35,14 @@ exports.processImageUpload = functions
       const newData = {
         ...imageData,
         tags: labels,
-        createdServerTimestamp: admin.database.ServerValue.TIMESTAMP,
+        metadata: {
+          createdBy: context.auth.token.uid,
+          createdTimestamp: FieldValue.serverTimestamp(),
+          updatedBy: context.auth.token.uid,
+          updatedTimestamp: FieldValue.serverTimestamp(),
+        },
       };
-
+      log("image doc", newData);
       const res = await db.collection("images").doc(imageData.id).set(newData);
 
       return newData;
@@ -49,16 +56,28 @@ async function detectImageLabels(imageData) {
   // Details for Cloudflare Images delivery URL
   const imageDomain = "https://imagedelivery.net";
   const accountHash = "0REzXdw3XtT87nmcqY33OQ";
-  const variantName = "public";
+  const variantName = "840x472"; // https://cloud.google.com/vision/docs/supported-files#image_sizing
 
   // Performs label detection on the gcs file
   const [result] = await client.labelDetection(
     `${imageDomain}/${accountHash}/${imageData.id}/${variantName}`
   );
 
+  log("labelDetection", result);
+
   let labels = [];
 
   result.labelAnnotations.forEach((label) => labels.push(label.description));
 
   return labels;
+}
+
+function log(message, attachment) {
+  if (debugging) {
+    if (attachment) {
+      functions.logger.log(message, attachment);
+    } else {
+      functions.logger.log(message);
+    }
+  }
 }
