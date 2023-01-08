@@ -513,6 +513,18 @@
             <div v-if="image.data.author.licence">
               Licence: {{ image.data.author.licence }}
             </div>
+
+            <q-btn
+              label="Report image"
+              icon="mdi-alert"
+              class="q-mt-md"
+              :href="
+                'mailto:contact@activisthandbook.org?subject=⚠️+Report+image:+' +
+                image.data.id +
+                '&body=I+would+like+to+report+an+image+on+Activist+Handbook.%0D%0A%0D%0AReason%3A'
+              "
+              target="_blank"
+            />
           </q-page>
         </q-page-container>
       </div>

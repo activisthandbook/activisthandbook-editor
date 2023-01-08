@@ -197,6 +197,19 @@
         </div>
       </div>
     </q-card-section>
+    <q-card-section>
+      <q-btn
+        label="Report article"
+        icon="mdi-alert"
+        outline
+        :href="
+          'mailto:contact@activisthandbook.org?subject=⚠️+Report+article%3A+' +
+          editorStore.article.id +
+          '&body=I+would+like+to+report+an+article+on+Activist+Handbook.%0D%0A%0D%0AReason%3A'
+        "
+        target="_blank"
+      />
+    </q-card-section>
   </q-card>
 
   <q-page-sticky
