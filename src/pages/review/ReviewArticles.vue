@@ -1,12 +1,12 @@
 <template>
-  <div v-if="articles.dataLoaded" class="q-gutter-y-md q-my-md">
-    <q-card v-if="!articles.data[0]" class="bg-accent">
+  <div v-if="articles_draft.dataLoaded" class="q-gutter-y-md q-my-md">
+    <q-card v-if="!articles_draft.data[0]" class="bg-accent">
       <q-card-section>No new edits.</q-card-section>
     </q-card>
     <ReviewArticleItem
-      v-for="article in articles.data"
-      :liveDraftArticle="article"
-      :key="article.id"
+      v-for="article_draft in articles_draft.data"
+      :liveDraftArticle="article_draft"
+      :key="article_draft.id"
     />
   </div>
 </template>
