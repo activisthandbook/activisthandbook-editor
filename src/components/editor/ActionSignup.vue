@@ -1,17 +1,17 @@
 <template>
   <!-- SYNC WITH WEBSITE: Has content -->
-  <node-view-wrapper class="action-volunteer">
+  <node-view-wrapper class="action-signup">
     <span
       class="label"
       contenteditable="false"
       draggable="true"
       data-drag-handle
     >
-      Recruit volunteers
+      Signup form
     </span>
     <node-view-content class="content" />
 
-    <div class="volunteer-preview" contenteditable="false">
+    <div class="signup-preview" contenteditable="false">
       <div class="input-label"></div>
       <div class="input"></div>
       <div class="input-label"></div>
@@ -22,11 +22,50 @@
       <div class="privacy"></div>
       <div class="button"></div>
     </div>
+    <q-card contenteditable="false" class="text-black bg-accent q-mt-lg">
+      <q-card-section>
+        <div class="q-gutter-y-sm">
+          <div class="text-bold">Form settings</div>
+          <q-input
+            label="Button label"
+            outlined
+            color="secondary"
+            v-model="buttonlabel"
+            @update:model-value="update()"
+          />
+          <q-select
+            placeholder="Add tag..."
+            v-model="tags"
+            use-input
+            use-chips
+            outlined
+            multiple
+            hide-dropdown-icon
+            input-debounce="0"
+            new-value-mode="add-unique"
+            color="secondary"
+            @update:model-value="update()"
+          >
+            <template #prepend>
+              <q-icon name="mdi-tag" />
+            </template>
+          </q-select>
+          <q-input
+            label="After signup, redirect to..."
+            placeholder="/path/to/page"
+            outlined
+            color="secondary"
+            v-model="redirect"
+            @update:model-value="update()"
+          />
+        </div>
+      </q-card-section>
+    </q-card>
   </node-view-wrapper>
 </template>
 
 <style lang="scss">
-.action-volunteer {
+.action-signup {
   background: $secondary;
   color: $accent;
   border: 3px solid #0d0d0d;
@@ -35,7 +74,7 @@
   position: relative;
   padding: calc(14px + 0.5vw) calc(8px + 2vw) calc(14px + 2vw) calc(8px + 2vw);
 
-  .volunteer-preview {
+  .signup-preview {
     .input-label,
     .privacy {
       background: rgba($accent, 0.5);
@@ -94,6 +133,22 @@ export default {
   components: {
     NodeViewWrapper,
     NodeViewContent,
+  },
+  data() {
+    return {
+      tags: this.node.attrs.tags,
+      redirect: this.node.attrs.redirect,
+      buttonlabel: this.node.attrs.buttonlabel,
+    };
+  },
+  methods: {
+    update() {
+      this.updateAttributes({
+        tags: this.tags,
+        redirect: this.redirect,
+        buttonlabel: this.buttonlabel,
+      });
+    },
   },
 };
 </script>

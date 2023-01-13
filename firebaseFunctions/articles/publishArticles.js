@@ -28,7 +28,7 @@ const elementsToKeep = [
   "action-custom",
   "action-donate",
   "action-smart-small",
-  "action-volunteer",
+  "action-signup",
   "action-button",
 ];
 function isOneOfElements(node, array) {
@@ -74,7 +74,7 @@ turndownService.keep(elementsToKeep);
 //     "action-custom",
 //     "action-donate",
 //     "action-smart-small",
-//     "action-volunteer",
+//     "action-signup",
 //     "action-button",
 //   ],
 // });
@@ -642,7 +642,7 @@ function generateFileContent(article) {
   //   "action-custom",
   //   "action-donate",
   //   "action-smart-small",
-  //   "action-volunteer",
+  //   "action-signup",
   //   "action-button",
   // ]);
 
@@ -653,7 +653,7 @@ function generateFileContent(article) {
       // "client-only",
       "dynamic-image",
       "action-donate",
-      "action-volunteer",
+      "action-signup",
       "action-custom",
       "action-smart-small",
       "action-button",
@@ -663,6 +663,7 @@ function generateFileContent(article) {
       iframe: ["src", "allowfullscreen", "start", "width", "height"],
       div: ["data-youtube-video"],
       "dynamic-image": ["alt", "imageid", "title"],
+      "action-signup": ["tags", "redirect", "buttonlabel"],
       "action-custom": ["buttonlink", "buttonlabel"],
       "action-button": ["buttonlink", "buttonanchor", "buttonlabel"],
     },

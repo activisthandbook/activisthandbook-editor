@@ -151,7 +151,7 @@ export const useEditorStore = defineStore("editor", {
                     // "client-only",
                     "dynamic-image",
                     "action-donate",
-                    "action-volunteer",
+                    "action-signup",
                     "action-custom",
                     "action-smart-small",
                     "action-button",
@@ -167,7 +167,12 @@ export const useEditorStore = defineStore("editor", {
                     ],
                     div: ["data-youtube-video"],
                     "dynamic-image": ["alt", "imageid", "title"],
-                    "action-custom": ["buttonlink", "buttonlabel"],
+                    "action-signup": ["tags", "redirect"],
+                    "action-custom": [
+                      "buttonlink",
+                      "buttonlabel",
+                      "buttonlabel",
+                    ],
                     "action-button": [
                       "buttonlink",
                       "buttonanchor",

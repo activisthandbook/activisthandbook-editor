@@ -1,10 +1,10 @@
 import { mergeAttributes, Node } from "@tiptap/core";
 import { VueNodeViewRenderer } from "@tiptap/vue-3";
 
-import ActionVolunteerComponent from "./ActionVolunteer.vue";
+import ActionSignupComponent from "./ActionSignup.vue";
 
 export default Node.create({
-  name: "actionVolunteer",
+  name: "actionSignup",
 
   group: "block",
 
@@ -15,7 +15,7 @@ export default Node.create({
   parseHTML() {
     return [
       {
-        tag: "action-volunteer",
+        tag: "action-signup",
       },
     ];
   },
@@ -23,20 +23,37 @@ export default Node.create({
   renderHTML({ HTMLAttributes }) {
     return [
       // "client-only",
-      // ["action-volunteer", mergeAttributes(HTMLAttributes), 0],
-      "action-volunteer",
+      // ["action-signup", mergeAttributes(HTMLAttributes), 0],
+      "action-signup",
       mergeAttributes(HTMLAttributes),
       0,
     ];
   },
 
   addNodeView() {
-    return VueNodeViewRenderer(ActionVolunteerComponent);
+    return VueNodeViewRenderer(ActionSignupComponent);
+  },
+
+  addAttributes() {
+    return {
+      tags: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("tags")?.split(","),
+      },
+      redirect: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("redirect"),
+      },
+      buttonlabel: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("buttonlabel"),
+      },
+    };
   },
 
   addCommands() {
     return {
-      setActionVolunteer:
+      setActionSignup:
         ({ ...attrs }) =>
         ({ chain }) => {
           return chain()

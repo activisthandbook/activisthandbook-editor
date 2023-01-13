@@ -292,7 +292,7 @@ import TableRow from "@tiptap/extension-table-row";
 
 import DynamicImage from "./DynamicImage";
 import ActionDonate from "./ActionDonate";
-import ActionVolunteer from "./ActionVolunteer";
+import ActionSignup from "./ActionSignup";
 import ActionCustom from "./ActionCustom";
 import ActionSmart from "./ActionSmart";
 import ActionButton from "./ActionButton";
@@ -468,7 +468,7 @@ export default {
           CustomHeading,
           DynamicImage,
           ActionDonate,
-          ActionVolunteer,
+          ActionSignup,
           ActionCustom,
           ActionSmart,
           ActionButton,

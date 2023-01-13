@@ -87,10 +87,10 @@ export default {
           action: "donate",
         },
         {
-          label: "Become volunteer",
+          label: "Sign up",
           icon: "mdi-heart",
-          explanation: "Ask for time",
-          action: "volunteer",
+          explanation: "Ask for contact details",
+          action: "signup",
         },
         {
           label: "Custom action",
@@ -121,11 +121,11 @@ export default {
             .setActionDonate({})
             .run();
           break;
-        case "volunteer":
+        case "signup":
           this.editorStore.tiptap.content
             .chain()
             .focus()
-            .setActionVolunteer({})
+            .setActionSignup({})
             .run();
           break;
         case "custom":
