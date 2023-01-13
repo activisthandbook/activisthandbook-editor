@@ -2,7 +2,9 @@
   <q-card
     class="bg-accent q-py-sm"
     v-if="
-      usersStore.recentArticles.dataLoaded[firebaseStore.auth.currentUser.uid]
+      usersStore.recentArticles.dataLoaded[
+        firebaseStore.auth.currentUser.uid
+      ] && usersStore.recentArticles.data[firebaseStore.auth.currentUser.uid]
     "
   >
     <q-list>

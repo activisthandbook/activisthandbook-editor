@@ -279,7 +279,7 @@ export default {
     next() {
       if (this.$route.query.next) {
         this.$router.push(this.$route.query.next);
-      } else this.$router.push({ name: "Home" });
+      } else this.$router.push({ name: "Home", params: { homeTab: "me" } });
     },
   },
 };
