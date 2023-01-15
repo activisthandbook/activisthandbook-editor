@@ -20,5 +20,20 @@
     "search-users": "algolia/firestore-algolia-search@0.5.14",
     "search-articles": "algolia/firestore-algolia-search@0.5.14",
     "search-images": "algolia/firestore-algolia-search@0.5.14"
+  },
+  "emulators": {
+    "auth": {
+      "port": 9099
+    },
+    "functions": {
+      "port": 5001
+    },
+    "firestore": {
+      "port": 8080
+    },
+    "ui": {
+      "enabled": true
+    },
+    "singleProjectMode": true
   }
 }

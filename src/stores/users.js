@@ -7,8 +7,10 @@ import {
   getDoc,
   setDoc,
   serverTimestamp,
+  connectFirestoreEmulator,
 } from "firebase/firestore";
 const db = getFirestore();
+connectFirestoreEmulator(db, 'localhost', 8080);
 
 import { Notify } from "quasar";
 

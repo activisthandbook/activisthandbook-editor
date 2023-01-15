@@ -19,8 +19,10 @@ import {
   arrayRemove,
   arrayUnion,
   increment,
+  connectFirestoreEmulator,
 } from "firebase/firestore";
 const db = getFirestore();
+connectFirestoreEmulator(db, 'localhost', 8080);
 
 export const useEditorStore = defineStore("editor", {
   state: () => ({

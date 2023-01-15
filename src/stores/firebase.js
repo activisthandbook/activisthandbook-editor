@@ -10,11 +10,11 @@ import {
   onAuthStateChanged,
   sendSignInLinkToEmail,
   isSignInWithEmailLink,
+  connectAuthEmulator,
   signInWithEmailLink,
 } from "firebase/auth";
 // import { getFirestore, enableIndexedDbPersistence } from "firebase/firestore";
 import { getFunctions } from "firebase/functions";
-import { getStorage } from "firebase/storage";
 import { getDatabase } from "firebase/database";
 
 import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
@@ -87,6 +87,13 @@ export const useFirebaseStore = defineStore("firebase", {
       // this.analytics = getAnalytics(firebaseApp);
 
       this.auth = getAuth();
+      if (location.hostname === "localhost") {
+        console.log("localhost detected vlad!");
+        connectAuthEmulator(this.auth, "http://localhost:9099");
+
+        // db.useEmulator("localhost", 8080);
+      }
+    
 
       onAuthStateChanged(this.auth, (user) => {
         this.userLoaded = true;

@@ -37,6 +37,7 @@ npm run format
 ### Build the app for production
 
 ```bash
+firebase login
 quasar build
 ```
 
