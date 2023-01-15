@@ -4,16 +4,16 @@ import { boot } from "quasar/wrappers";
 import { initializeApp } from "firebase/app";
 // import { getAnalytics, logEvent, setUserId } from "firebase/analytics";
 import {
-  getAuth,
+  initializeAuth,
+  connectAuthEmulator,
   signInAnonymously,
   signOut,
   onAuthStateChanged,
   sendSignInLinkToEmail,
   isSignInWithEmailLink,
-  connectAuthEmulator,
   signInWithEmailLink,
 } from "firebase/auth";
-// import { getFirestore, enableIndexedDbPersistence } from "firebase/firestore";
+import { initializeFirestore, connectFirestoreEmulator } from "firebase/firestore";
 import { getFunctions } from "firebase/functions";
 import { getDatabase } from "firebase/database";
 
@@ -69,8 +69,16 @@ export const useFirebaseStore = defineStore("firebase", {
       if (process.env.DEV) {
         console.log(`DEV SERVER`);
         this.firebaseApp = initializeApp(firebaseConfigDev);
+
+        this.firestore = initializeFirestore(this.firebaseApp,{});
+        connectFirestoreEmulator(this.firestore, 'localhost', 8080);
+
+        this.auth = initializeAuth(this.firebaseApp,{});
+        connectAuthEmulator(this.auth, "http://localhost:9099");
       } else {
         this.firebaseApp = initializeApp(firebaseConfigProduction);
+        this.firestore = initializeFirestore(this.firebaseApp,{});
+        this.auth = initializeAuth(this.firebaseApp,{});
       }
 
       // 🔥 INITIALISE REALTIME DATABASE
@@ -86,14 +94,6 @@ export const useFirebaseStore = defineStore("firebase", {
       */
       // this.analytics = getAnalytics(firebaseApp);
 
-      this.auth = getAuth();
-      if (location.hostname === "localhost") {
-        console.log("localhost detected vlad!");
-        connectAuthEmulator(this.auth, "http://localhost:9099");
-
-        // db.useEmulator("localhost", 8080);
-      }
-    
 
       onAuthStateChanged(this.auth, (user) => {
         this.userLoaded = true;

@@ -1,8 +1,7 @@
 import { defineStore } from "pinia";
 
-import { getFirestore, doc, onSnapshot, connectFirestoreEmulator } from "firebase/firestore";
+import { getFirestore, doc, onSnapshot } from "firebase/firestore";
 const db = getFirestore();
-connectFirestoreEmulator(db, 'localhost', 8080);
 
 export const useAnalyticsStore = defineStore("analytics", {
   state: () => ({

@@ -15,7 +15,9 @@ npm install
 ### Start the app in development mode (hot-code reloading, error reporting, etc.)
 
 ```bash
+# Required for firebase-admin SDK connection
 export FIRESTORE_EMULATOR_HOST="localhost:8080"
+# Required if you are running pubsub emulator package, eg. some firebase functions use it
 export JAVA_HOME="/usr/lib/jvm/java-17-openjdk-amd64/"
 quasar dev
 ```
@@ -39,6 +41,7 @@ npm run format
 ### Build the app for production
 
 ```bash
+# Don't forget to login at least once
 firebase login
 quasar build
 ```
