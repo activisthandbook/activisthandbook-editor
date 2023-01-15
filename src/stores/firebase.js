@@ -14,7 +14,7 @@ import {
   signInWithEmailLink,
 } from "firebase/auth";
 import { initializeFirestore, connectFirestoreEmulator } from "firebase/firestore";
-import { getFunctions } from "firebase/functions";
+import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
 import { getDatabase } from "firebase/database";
 
 import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
@@ -69,25 +69,22 @@ export const useFirebaseStore = defineStore("firebase", {
       if (process.env.DEV) {
         console.log(`DEV SERVER`);
         this.firebaseApp = initializeApp(firebaseConfigDev);
-
-        this.firestore = initializeFirestore(this.firebaseApp,{});
-        connectFirestoreEmulator(this.firestore, 'localhost', 8080);
-
-        this.auth = initializeAuth(this.firebaseApp,{});
-        connectAuthEmulator(this.auth, "http://localhost:9099");
       } else {
         this.firebaseApp = initializeApp(firebaseConfigProduction);
-        this.firestore = initializeFirestore(this.firebaseApp,{});
-        this.auth = initializeAuth(this.firebaseApp,{});
+      }
+
+      this.firestore = initializeFirestore(this.firebaseApp,{});
+      this.auth = initializeAuth(this.firebaseApp,{});
+      this.functions = getFunctions(this.firebaseApp, "europe-west1");
+
+      if (process.env.DEV) {
+        connectFirestoreEmulator(this.firestore, 'localhost', 8080);
+        connectAuthEmulator(this.auth, "http://localhost:9099");
+        connectFunctionsEmulator(this.functions, "localhost", 5001)
       }
 
       // 🔥 INITIALISE REALTIME DATABASE
       // this.database = getDatabase(firebaseApp);
-
-      /* 🔥 INITIALISE FUNCTIONS
-      Docs: https://firebase.google.com/docs/web/setup
-      */
-      this.functions = getFunctions(this.firebaseApp, "europe-west1");
 
       /* 📈 INITIALISE GOOGLE ANALYTICS
       Docs: https://firebase.google.com/docs/analytics
