@@ -15,6 +15,8 @@ npm install
 ### Start the app in development mode (hot-code reloading, error reporting, etc.)
 
 ```bash
+export FIRESTORE_EMULATOR_HOST="localhost:8080"
+export JAVA_HOME="/usr/lib/jvm/java-17-openjdk-amd64/"
 quasar dev
 ```
 
