@@ -6,8 +6,8 @@ const db = admin.firestore();
 // Whenever there is a change, we check what the change was, and adjust the counter
 const Counter = require("./../distributedCounter");
 const articlesNeedReview = new Counter(
-    db.collection("articles_draft/{articleID}"),
-    "versions_published"
+    db.collection("app/analytics"),
+    "articles_need_review_count"
   );
 
 exports.onCreate = functions
