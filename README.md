@@ -4,6 +4,17 @@ Visual editor for Activist Handbook
 
 ![Database visualised](assets/database-visualised.jpg)
 
+## Deploy using Cloudflare pages
+
+### Build & deployment settings
+Production branch: main
+Preview branches: dev
+Build command: quasar build
+Build output directory: dist/spa
+
+### Environment variables
+NODE_VERSION: 14
+
 ## Install the dependencies
 
 ```bash
