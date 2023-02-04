@@ -28,8 +28,8 @@
     <div class="text-bold">Preparation</div>
     <ul>
       <li>
-        Change the file src/stores/firebase.js: temporarily set the
-        firebaseConfigDevelopment to the value firebaseConfigProduction
+        Change the file src/stores/firebase.js: temporarily set 'importing' to
+        true.
       </li>
       <li>Temporarily allow localhost in app-check and authentication.</li>
       <li>Give yourself admin rights.</li>
@@ -117,6 +117,15 @@
       >
       and set the counters.
     </div>
+
+    <div class="text-bold">7) Finishing</div>
+    <ul>
+      <li>Remove localhost from app check and authentication.</li>
+      <li>
+        Change the file src/stores/firebase.js: temporarily set 'importing' to
+        false.
+      </li>
+    </ul>
   </div>
 </template>
 <script>
@@ -324,177 +333,184 @@ export default {
       }
 
       await this.pages.data.forEach((page) => {
-        const id = this.mixin_randomID();
-        let renderedPage = {
-          title: sanitizeHtml(page.title),
-          description: sanitizeHtml(page.description),
-          path: sanitizePath(page.path),
-          publishedFullPath: generateFullPath(page),
-          lastPublishedServerTimestamp: parseDate(page.updatedAt),
-          id: id,
-          articleID: id,
-          langCode: sanitizeHtml(page.locale),
-          content: "",
-          tags: [],
-          imported: true,
-          importInfo: {},
-          metadata: {
-            updatedTimestamp: parseDate(page.updatedAt),
-            updatedBy: this.firebaseStore.auth.currentUser.uid,
-            createdTimestamp: parseDate(page.createdAt),
-            createdBy: this.firebaseStore.auth.currentUser.uid,
-          },
-        };
-
-        // 1. Use content if contentType is html (because it does not contain TOC links)
-        // Content can be markdown
-        // Render is always html
-        if (page.contentType === "html") {
-          renderedPage.content = page.content;
+        if (page.path === "index" && page.locale === "en") {
+          console.log("index page skipped");
         } else {
-          // For example, the original is markdown, so then we use the html render
-          renderedPage.content = page.render;
-        }
+          const id = this.mixin_randomID();
+          let renderedPage = {
+            title: sanitizeHtml(page.title),
+            description: sanitizeHtml(page.description),
+            path: sanitizePath(page.path),
+            publishedFullPath: generateFullPath(page),
+            lastPublishedServerTimestamp: parseDate(page.updatedAt),
+            id: id,
+            articleID: id,
+            langCode: sanitizeHtml(page.locale),
+            content: "",
+            tags: [],
+            imported: true,
+            importInfo: {},
+            metadata: {
+              updatedTimestamp: parseDate(page.updatedAt),
+              updatedBy: this.firebaseStore.auth.currentUser.uid,
+              createdTimestamp: parseDate(page.createdAt),
+              createdBy: this.firebaseStore.auth.currentUser.uid,
+            },
+          };
 
-        // 2. Set import metadata
-        if (renderedPage.content.includes("<img")) {
-          renderedPage.importInfo.includesImages = true;
-        }
-        if (renderedPage.content.includes("<iframe")) {
-          renderedPage.importInfo.includesIframe = true;
-        }
-
-        // 3. Clean markdown render artifacts (we remove TOC anchor text "¶", not the empty links that remain, those are removed later)
-        if (page.contentType === "markdown") {
-          renderedPage.content = renderedPage.content.replaceAll("¶", "");
-        }
-
-        // 4. See if a language collection already exists for this path. If yes, add it to that collection. If not, create one.
-        const renderedPageID = this.mixin_randomID();
-        const renderedPageCollectionIndex = languageCollections.findIndex(
-          (languageCollection) => languageCollection.path === renderedPage.path
-        );
-        if (renderedPageCollectionIndex >= 0) {
-          renderedPage.languageCollectionID =
-            languageCollections[renderedPageCollectionIndex].id;
-          languageCollections[renderedPageCollectionIndex].articles_draft.push({
-            articleID: renderedPage.id,
-            langCode: renderedPage.langCode,
-          });
-        } else {
-          const languageCollectionID = this.mixin_randomID();
-          renderedPage.languageCollectionID = languageCollectionID;
-          languageCollections.push({
-            id: languageCollectionID,
-            path: renderedPage.path,
-            articles_draft: [
-              {
-                articleID: renderedPage.id,
-                langCode: renderedPage.langCode,
-              },
-            ],
-          });
-        }
-
-        // 5. Replace "<div>\n</div>", then all "\n", then all "\" with nothing ""
-        renderedPage.content = renderedPage.content
-          .replaceAll("<div>\n</div>", "")
-          .replaceAll("\n", "")
-          .replaceAll("\\", "")
-          .replaceAll("&nbsp;", " ");
-
-        // 6. Replace <figure with <div to prevent tiptap bug "Cannot read properties of null (reading 'firstChild')" (It usually is wrapped around a table, and replacing it fixes it.)
-        renderedPage.content = renderedPage.content
-          .replaceAll("<figure", "<div")
-          .replaceAll("</figure", "</div");
-
-        // 7. Change headings
-        // Replace "<h3" with "<h4". Then replace "<h2" with "<h3". Finally replace "<h1" with "<h2". We leave <h5 and <h6 untouched, because that makes it easier for editors to recognise them & fix it manually (they will be highlighted in the editor).
-        renderedPage.content = renderedPage.content
-          .replaceAll("<h3", "<h4")
-          .replaceAll("</h3", "</h4")
-          .replaceAll("<h2", "<h3")
-          .replaceAll("</h2", "</h3")
-          .replaceAll("<h1", "<h2")
-          .replaceAll("</h1", "</h2");
-
-        // 8. Fix links
-        // - In Vitepress, the default language does not use a language prefix)
-        // - We want relative paths
-        renderedPage.content = renderedPage.content
-          .replaceAll('"https://activisthandbook.org/', '"/')
-          .replaceAll('"https://www.activisthandbook.org/', '"/')
-          .replaceAll('"/en/', '"/');
-
-        var doc = document.createElement("div");
-        doc.innerHTML = renderedPage.content;
-        const links = doc.getElementsByTagName("a");
-
-        for (var i = 0; i < links.length; i++) {
-          const url = links[i].getAttribute("href");
-
-          const urlArray = url.split("/");
-          if (url.endsWith("/home") && !url.startsWith("http")) {
-            const langCode = urlArray[1];
-
-            renderedPage.content = renderedPage.content.replaceAll(
-              `href=\"${url}\"`,
-              `href=\"/${langCode}/\"`
-            );
+          // 1. Use content if contentType is html (because it does not contain TOC links)
+          // Content can be markdown
+          // Render is always html
+          if (page.contentType === "html") {
+            renderedPage.content = page.content;
+          } else {
+            // For example, the original is markdown, so then we use the html render
+            renderedPage.content = page.render;
           }
 
-          if (
-            !url.startsWith("http") &&
-            !url.startsWith("/") &&
-            !url.startsWith("mailto")
-          ) {
-            renderedPage.content = renderedPage.content.replaceAll(
-              `href=\"${url}\"`,
-              `href=\"/${renderedPage.path}/${url}\"`
-            );
-            // console.log("changed links:", renderedPage.content);
+          // 2. Set import metadata
+          if (renderedPage.content.includes("<img")) {
+            renderedPage.importInfo.includesImages = true;
           }
+          if (renderedPage.content.includes("<iframe")) {
+            renderedPage.importInfo.includesIframe = true;
+          }
+
+          // 3. Clean markdown render artifacts (we remove TOC anchor text "¶", not the empty links that remain, those are removed later)
+          if (page.contentType === "markdown") {
+            renderedPage.content = renderedPage.content.replaceAll("¶", "");
+          }
+
+          // 4. See if a language collection already exists for this path. If yes, add it to that collection. If not, create one.
+          const renderedPageID = this.mixin_randomID();
+          const renderedPageCollectionIndex = languageCollections.findIndex(
+            (languageCollection) =>
+              languageCollection.path === renderedPage.path
+          );
+          if (renderedPageCollectionIndex >= 0) {
+            renderedPage.languageCollectionID =
+              languageCollections[renderedPageCollectionIndex].id;
+            languageCollections[
+              renderedPageCollectionIndex
+            ].articles_draft.push({
+              articleID: renderedPage.id,
+              langCode: renderedPage.langCode,
+            });
+          } else {
+            const languageCollectionID = this.mixin_randomID();
+            renderedPage.languageCollectionID = languageCollectionID;
+            languageCollections.push({
+              id: languageCollectionID,
+              path: renderedPage.path,
+              articles_draft: [
+                {
+                  articleID: renderedPage.id,
+                  langCode: renderedPage.langCode,
+                },
+              ],
+            });
+          }
+
+          // 5. Replace "<div>\n</div>", then all "\n", then all "\" with nothing ""
+          renderedPage.content = renderedPage.content
+            .replaceAll("<div>\n</div>", "")
+            .replaceAll("\n", "")
+            .replaceAll("\\", "")
+            .replaceAll("&nbsp;", " ");
+
+          // 6. Replace <figure with <div to prevent tiptap bug "Cannot read properties of null (reading 'firstChild')" (It usually is wrapped around a table, and replacing it fixes it.)
+          renderedPage.content = renderedPage.content
+            .replaceAll("<figure", "<div")
+            .replaceAll("</figure", "</div");
+
+          // 7. Change headings
+          // Replace "<h3" with "<h4". Then replace "<h2" with "<h3". Finally replace "<h1" with "<h2". We leave <h5 and <h6 untouched, because that makes it easier for editors to recognise them & fix it manually (they will be highlighted in the editor).
+          renderedPage.content = renderedPage.content
+            .replaceAll("<h3", "<h4")
+            .replaceAll("</h3", "</h4")
+            .replaceAll("<h2", "<h3")
+            .replaceAll("</h2", "</h3")
+            .replaceAll("<h1", "<h2")
+            .replaceAll("</h1", "</h2");
+
+          // 8. Fix links
+          // - In Vitepress, the default language does not use a language prefix)
+          // - We want relative paths
+          renderedPage.content = renderedPage.content
+            .replaceAll('"https://activisthandbook.org/', '"/')
+            .replaceAll('"https://www.activisthandbook.org/', '"/')
+            .replaceAll('"/en/', '"/');
+
+          var doc = document.createElement("div");
+          doc.innerHTML = renderedPage.content;
+          const links = doc.getElementsByTagName("a");
+
+          for (var i = 0; i < links.length; i++) {
+            const url = links[i].getAttribute("href");
+
+            const urlArray = url.split("/");
+            if (url.endsWith("/home") && !url.startsWith("http")) {
+              const langCode = urlArray[1];
+
+              renderedPage.content = renderedPage.content.replaceAll(
+                `href=\"${url}\"`,
+                `href=\"/${langCode}/\"`
+              );
+            }
+
+            if (
+              !url.startsWith("http") &&
+              !url.startsWith("/") &&
+              !url.startsWith("mailto")
+            ) {
+              renderedPage.content = renderedPage.content.replaceAll(
+                `href=\"${url}\"`,
+                `href=\"/${renderedPage.path}/${url}\"`
+              );
+              // console.log("changed links:", renderedPage.content);
+            }
+          }
+
+          doc.remove();
+
+          // 9. Add tags
+          page.tags.forEach((tag) => {
+            renderedPage.tags.push(sanitizeHtml(tag.title));
+          });
+
+          // 10. Sanitize content
+          renderedPage.content = sanitizeHtml(renderedPage.content, {
+            allowedTags: sanitizeHtml.defaults.allowedTags.concat([
+              "iframe",
+              "img",
+              "figure",
+              "figcaption",
+            ]),
+            allowedAttributes: {
+              ...sanitizeHtml.defaults.allowedAttributes,
+              iframe: ["src", "allowfullscreen", "start", "width", "height"],
+              div: ["data-youtube-video"],
+              img: ["src", "alt", "imageid", "imagesource", "imagecaption"],
+            },
+
+            allowedIframeHostnames: ["www.youtube-nocookie.com"],
+
+            // 11. Remove empty <a></a> tags
+            exclusiveFilter: function (frame) {
+              return frame.tag === "a" && !frame.text.trim();
+            },
+          });
+
+          // 12. Replace  &amp; with &
+          renderedPage.content = renderedPage.content.replaceAll("&amp;", "&");
+          renderedPage.title = renderedPage.title.replaceAll("&amp;", "&");
+          renderedPage.description = renderedPage.description.replaceAll(
+            "&amp;",
+            "&"
+          );
+
+          renderedPages.push(renderedPage);
         }
-
-        doc.remove();
-
-        // 9. Add tags
-        page.tags.forEach((tag) => {
-          renderedPage.tags.push(sanitizeHtml(tag.title));
-        });
-
-        // 10. Sanitize content
-        renderedPage.content = sanitizeHtml(renderedPage.content, {
-          allowedTags: sanitizeHtml.defaults.allowedTags.concat([
-            "iframe",
-            "img",
-            "figure",
-            "figcaption",
-          ]),
-          allowedAttributes: {
-            ...sanitizeHtml.defaults.allowedAttributes,
-            iframe: ["src", "allowfullscreen", "start", "width", "height"],
-            div: ["data-youtube-video"],
-            img: ["src", "alt", "imageid", "imagesource", "imagecaption"],
-          },
-
-          allowedIframeHostnames: ["www.youtube-nocookie.com"],
-
-          // 11. Remove empty <a></a> tags
-          exclusiveFilter: function (frame) {
-            return frame.tag === "a" && !frame.text.trim();
-          },
-        });
-
-        // 12. Replace  &amp; with &
-        renderedPage.content = renderedPage.content.replaceAll("&amp;", "&");
-        renderedPage.title = renderedPage.title.replaceAll("&amp;", "&");
-        renderedPage.description = renderedPage.description.replaceAll(
-          "&amp;",
-          "&"
-        );
-
-        renderedPages.push(renderedPage);
       });
 
       this.renderedPages.data = renderedPages;
