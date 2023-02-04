@@ -21,6 +21,7 @@
       <li>Images and videos need to be added manually.</li>
       <li>Does not check for duplicate paths with existing articles.</li>
       <li>Cannot deal with '&lt;' in text.</li>
+      <li>Counters only correct when there were no articles before.</li>
     </ul>
     <div class="text-bold">Fetch limit</div>
     <q-slider v-model="settings.fetchLimit" :min="1" :max="1000" label-always />
@@ -31,6 +32,7 @@
         firebaseConfigDevelopment to the value firebaseConfigProduction
       </li>
       <li>Temporarily allow localhost in app-check and authentication.</li>
+      <li>Give yourself admin rights.</li>
     </ul>
     <div class="text-bold">1) Add GraphQL API key</div>
     <form>
@@ -132,6 +134,7 @@ import {
   collection,
   limit,
   setDoc,
+  Timestamp,
 } from "firebase/firestore";
 import { mapStores } from "pinia";
 import { useFirebaseStore } from "src/stores/firebase";
@@ -194,7 +197,6 @@ export default {
   watch: {
     "pages.data"() {
       this.pages.length = this.pages.data.length;
-      console.log("test");
     },
   },
   methods: {
@@ -239,7 +241,6 @@ export default {
 
       let pages = [];
       const callback = () => {
-        console.log("callback");
         this.pages.data = pages;
         this.pages.dataLoaded = true;
         this.pages.loading = false;
@@ -318,6 +319,10 @@ export default {
         return fullPath;
       }
 
+      function parseDate(date) {
+        return Timestamp.fromMillis(Date.parse(date));
+      }
+
       await this.pages.data.forEach((page) => {
         const id = this.mixin_randomID();
         let renderedPage = {
@@ -325,7 +330,7 @@ export default {
           description: sanitizeHtml(page.description),
           path: sanitizePath(page.path),
           publishedFullPath: generateFullPath(page),
-          lastPublishedServerTimestamp: serverTimestamp(),
+          lastPublishedServerTimestamp: parseDate(page.updatedAt),
           id: id,
           articleID: id,
           langCode: sanitizeHtml(page.locale),
@@ -334,9 +339,9 @@ export default {
           imported: true,
           importInfo: {},
           metadata: {
-            updatedTimestamp: serverTimestamp(),
+            updatedTimestamp: parseDate(page.updatedAt),
             updatedBy: this.firebaseStore.auth.currentUser.uid,
-            createdTimestamp: serverTimestamp(),
+            createdTimestamp: parseDate(page.createdAt),
             createdBy: this.firebaseStore.auth.currentUser.uid,
           },
         };
@@ -430,7 +435,6 @@ export default {
 
           const urlArray = url.split("/");
           if (url.endsWith("/home") && !url.startsWith("http")) {
-            console.log(urlArray);
             const langCode = urlArray[1];
 
             renderedPage.content = renderedPage.content.replaceAll(
@@ -588,10 +592,7 @@ export default {
       // Articles
       this.databaseArticles.loading = true;
       const databaseArticles = await getDocs(
-        query(
-          collection(db, "articles_draft"),
-          where("lastPublishedServerTimestamp", "==", null)
-        )
+        query(collection(db, "articles_draft"))
       );
 
       let articles = [];
@@ -623,6 +624,7 @@ export default {
         doc(db, "app", "analytics"),
         {
           articles_draft_count: this.databaseArticles.length,
+          articles_published_count: this.databaseArticles.length,
           languageCollections_count: this.databaseLanguageCollections.length,
         },
         { merge: true }
