@@ -27,7 +27,7 @@
 export default {
   data: function () {
     return {
-      remainingSeconds: 62,
+      remainingSeconds: 70,
     };
   },
   created() {
