@@ -436,8 +436,10 @@ export default {
         articleID: this.editorStore.article.id,
         status: "review",
         metadata: {
-          createdTimestamp: serverTimestamp(),
-          createdBy: this.firebaseStore.auth.currentUser.uid,
+          createdTimestamp: this.editorStore.article.metadata.createdTimestamp,
+          createdBy: this.editorStore.article.metadata.createdBy,
+          updatedTimestamp: serverTimestamp(),
+          updatedBy: this.firebaseStore.auth.currentUser.uid,
         },
       };
       batch.set(versionRef, versionContent, {
