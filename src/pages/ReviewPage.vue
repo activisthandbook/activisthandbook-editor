@@ -167,7 +167,7 @@ export default {
     published() {
       this.publishedSuccesfullyDialog = true;
       this.showRenderingTime = true;
-      const renderingTime = 62 * 1000;
+      const renderingTime = 70 * 1000;
 
       setTimeout(() => {
         this.showRenderingTime = false;

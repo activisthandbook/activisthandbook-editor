@@ -73,7 +73,7 @@ export default boot(({ app }) => {
         // console.log(offset, verticalScrollPosition);
       },
       async mixin_validatePath(path, langCode, currentID) {
-        const validPathRegex = /^[A-Za-z0-9]+(-[A-Za-z0-9]+)*$/;
+        const validPathRegex = /^[A-Za-z0-9]+(-[A-Za-z0-9\/]+)*$/;
 
         // Empty path
         if (!path) {
@@ -88,10 +88,10 @@ export default boot(({ app }) => {
         }
 
         // Invalid path
-        else if (!validPathRegex.test(path)) {
+        else if (!validPathRegex.test(path) || path.endsWith("/")) {
           return {
             error:
-              "Only use lowercase letters, numbers and dashes (-) in between.",
+              "Only use lowercase letters, numbers and dashes (-) or slashes (/) in between.",
             duplicates: null,
           };
         } else {
