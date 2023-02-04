@@ -54,20 +54,13 @@
                 no-caps
                 :to="{ params: { reviewTab: 'menu' } }"
               >
-                <!-- <q-badge
-                  floating
-                  color="secondary"
-                  rounded
-                  v-if="menu.dataLoaded && menu.data.requestedPublication"
-                >
-                  1
-                </q-badge> -->
               </q-route-tab>
             </q-tabs>
 
             <div style="min-height: 256px">
               <ReviewArticles v-if="$route.params.reviewTab === 'articles'" />
-              <ReviewMenu v-if="$route.params.reviewTab === 'menu'" />
+              <!-- <ReviewMenu v-if="$route.params.reviewTab === 'menu'" /> -->
+              <div v-if="$route.params.reviewTab === 'menu'">Coming soon!</div>
             </div>
 
             <!-- <q-separator class="q-my-xl" />
@@ -146,7 +139,7 @@ import MissingPermissions from "src/components/MissingPermissions.vue";
 import RenderingTime from "src/pages/review/RenderingTime.vue";
 import PublishingQueue from "src/pages/review/PublishingQueue.vue";
 import ReviewArticles from "src/pages/review/ReviewArticles.vue";
-import ReviewMenu from "src/pages/review/ReviewMenu.vue";
+// import ReviewMenu from "src/pages/review/ReviewMenu.vue";
 
 export default {
   name: "ModerationPage",
@@ -158,7 +151,7 @@ export default {
     RenderingTime,
     PublishingQueue,
     ReviewArticles,
-    ReviewMenu,
+    // ReviewMenu,
   },
   computed: {
     ...mapStores(useFirebaseStore, useAnalyticsStore, useUsersStore),

@@ -9,9 +9,6 @@ const debugging = true;
 
 exports.processImageUpload = functions
   .region("europe-west1")
-  // Not working (eg. getting branch error)? Make sure to check that the API token is still valid:
-  // https://developers.cloudflare.com/images/cloudflare-images/api-request/
-  // https://firebase.google.com/docs/functions/config-env
   .runWith({
     enforceAppCheck: true, // Requests without valid App Check tokens will be rejected.
   })

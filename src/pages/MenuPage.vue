@@ -6,7 +6,7 @@
         <q-toolbar-title>Menu</q-toolbar-title>
         <!-- <q-space /> -->
 
-        <q-btn
+        <!-- <q-btn
           no-caps
           color="primary"
           icon="mdi-check"
@@ -15,7 +15,7 @@
           :disable="requestedPublicationTimestamp > lastUpdatedTimestampMillis"
         >
           <span class="q-ml-sm"> Publish </span>
-        </q-btn>
+        </q-btn> -->
       </q-toolbar>
     </q-header>
 
@@ -34,47 +34,6 @@
           </q-card>
 
           <div v-if="selectedLangCode" class="q-gutter-md">
-            <!-- <h1>Top navigation</h1>
-            <div>
-              <div
-                v-if="!nav_menuItems || !nav_menuItems[selectedLangCode]"
-                class="q-mb-md text-italic"
-              >
-                No navigation items have been added yet.
-              </div>
-              <div class="q-mb-sm" v-else>
-                <SlickList
-                  axis="y"
-                  :list="nav_menuItems[selectedLangCode]"
-                  useDragHandle
-                  lockAxis="y"
-                  helperClass="drag-item"
-                  @update:list="nav_updateParentOrder($event)"
-                >
-                  <SlickItem
-                    v-for="(menuItem, index) in nav_menuItems[selectedLangCode]"
-                    :key="menuItem.id"
-                    :index="index"
-                  >
-                    <NavigationMenuItem
-                      :menu="menuItem"
-                      :group="nav_accordionGroupID"
-                      @update="nav_update($event, index)"
-                      @delete="nav_deleteItem(index)"
-                      :touched="touched"
-                    />
-                  </SlickItem>
-                </SlickList>
-              </div>
-              <q-btn
-                label="Add item"
-                no-caps
-                color="secondary"
-                icon="mdi-plus"
-                @click="nav_addItem()"
-              />
-            </div> -->
-
             <h1 class="q-mt-lg">Sidebar</h1>
 
             <div>
@@ -144,6 +103,7 @@ const db = getFirestore();
 import { mapStores } from "pinia";
 import { useLanguagesStore } from "stores/languages";
 import { useFirebaseStore } from "stores/firebase";
+import { useUsersStore } from "stores/users";
 
 import NavigationMenuItem from "components/NavigationMenuItem.vue";
 import AppSwitcher from "components/AppSwitcher.vue";
@@ -175,6 +135,7 @@ export default {
       // Data
       nav_menuItems: {},
       sidebar_menuItems: {},
+
       requestedPublication: null,
       requestedPublicationTimestamp: null,
       lastUpdatedTimestampMillis: null,
@@ -194,7 +155,7 @@ export default {
   computed: {
     // note we are not passing an array, just one store after the other
     // each store will be accessible as its id + 'Store'
-    ...mapStores(useLanguagesStore, useFirebaseStore),
+    ...mapStores(useLanguagesStore, useFirebaseStore, useUsersStore),
   },
   watch: {
     lang: {
@@ -409,10 +370,11 @@ export default {
           sidebar: this.sidebar_menuItems,
           nav: this.nav_menuItems,
           id: versionID,
-          status: "review",
           metadata: {
             createdBy: this.firebaseStore.auth.currentUser.uid,
             createdTimestamp: serverTimestamp(),
+            updatedBy: this.firebaseStore.auth.currentUser.uid,
+            updatedTimestamp: serverTimestamp(),
           },
         },
         {

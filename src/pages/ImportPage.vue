@@ -7,15 +7,23 @@
       the bottons below in order. Review the output to verify everything works
       as expected.
     </div>
+    <div>
+      Warning: Using this import tool can be expensive. The exact costs depends
+      on the number of articles being imported and those already in Firebase.
+    </div>
     <div>Limitations:</div>
     <ul>
-      <li>Import max 500 pages.</li>
+      <li>Import max 1000 pages.</li>
       <li>
         Only works with quasar dev server, not in production (to circumvent cors
         rules).
       </li>
       <li>Images and videos need to be added manually.</li>
+      <li>Does not check for duplicate paths with existing articles.</li>
+      <li>Cannot deal with '&lt;' in text.</li>
     </ul>
+    <div class="text-bold">Fetch limit</div>
+    <q-slider v-model="settings.fetchLimit" :min="1" :max="1000" label-always />
     <div class="text-bold">1) Add GraphQL API key</div>
     <form>
       <q-input
@@ -47,7 +55,7 @@
     />
     <div v-if="pages.dataLoaded">
       RESULT: {{ pages.length }} pages found
-      <div class="plain-text-result">{{ pages }}</div>
+      <!-- <div class="plain-text-result">{{ pages }}</div> -->
     </div>
 
     <div class="text-bold">4) Render articles</div>
@@ -80,6 +88,25 @@
     <div v-if="push.done">
       RESULT: Successfully pushed all articles and language collections
     </div>
+
+    <div class="text-bold">6) Set counters (do this after 5 min!)</div>
+    <q-btn
+      label="Set counters"
+      @click="setCounters()"
+      :loading="databaseArticles.loading || databaseLanguageCollections.loading"
+    />
+    <div
+      v-if="
+        databaseArticles.dataLoaded && databaseLanguageCollections.dataLoaded
+      "
+    >
+      RESULT: Successfully fetched
+      <strong>{{ databaseArticles.length }} articles</strong> &
+      <strong
+        >{{ databaseLanguageCollections.length }} languageCollections</strong
+      >
+      and set the counters.
+    </div>
   </div>
 </template>
 <script>
@@ -91,13 +118,24 @@ import {
   doc,
   serverTimestamp,
   writeBatch,
+  getDocs,
+  query,
+  where,
+  collection,
+  limit,
+  setDoc,
 } from "firebase/firestore";
+import { mapStores } from "pinia";
+import { useFirebaseStore } from "src/stores/firebase";
 const db = getFirestore();
 
 export default {
   data: function () {
     return {
       apiKey: null,
+      settings: {
+        fetchLimit: 10,
+      },
       pageIDs: {
         data: null,
         dataLoaded: false,
@@ -125,12 +163,25 @@ export default {
         loading: false,
         done: false,
       },
+      databaseArticles: {
+        data: null,
+        dataLoaded: false,
+        loading: false,
+        length: null,
+      },
+      databaseLanguageCollections: {
+        data: null,
+        dataLoaded: false,
+        loading: false,
+        length: null,
+      },
     };
   },
   computed: {
     pagesDataLength: function () {
       return this.pages.data.length;
     },
+    ...mapStores(useFirebaseStore),
   },
   watch: {
     "pages.data"() {
@@ -159,8 +210,12 @@ export default {
         },
       }).then(async (result) => {
         let pageIDs = [];
+        let i = 0;
         await result.data.data.pages.list.forEach(async (page) => {
-          pageIDs.push(page.id);
+          if (i < this.settings.fetchLimit) {
+            pageIDs.push(page.id);
+          }
+          i++;
         });
         this.pageIDs.data = pageIDs;
         // this.$nextTick(() => {
@@ -182,10 +237,9 @@ export default {
         this.pages.loading = false;
       };
 
+      let i = 0;
+
       await this.pageIDs.data.forEach(async (pageID) => {
-        // x += 1;
-        // if (x < 10) {
-        // const id = 289;
         await axios({
           url: "/graphql",
           method: "post",
@@ -228,7 +282,6 @@ export default {
           }
           // callback();
         });
-        // }
       });
     },
     async renderPages() {
@@ -238,20 +291,46 @@ export default {
       this.renderedPages.loading = true;
       this.renderedLanguageCollections.loading = true;
 
+      function sanitizePath(path) {
+        let sanitizedPath = sanitizeHtml(path.replace("'", ""));
+        if (sanitizedPath === "home") {
+          sanitizedPath = "index";
+        }
+        return sanitizedPath;
+      }
+
+      function generateFullPath(article) {
+        let fullPath = "";
+        let path = sanitizePath(article.path);
+        if (article.locale === "en") {
+          fullPath = path;
+        } else {
+          fullPath = article.locale + "/" + path;
+        }
+        return fullPath;
+      }
+
       await this.pages.data.forEach((page) => {
+        const id = this.mixin_randomID();
         let renderedPage = {
           title: sanitizeHtml(page.title),
           description: sanitizeHtml(page.description),
-          path: sanitizeHtml(page.path),
-          id: this.mixin_randomID(),
+          path: sanitizePath(page.path),
+          publishedFullPath: generateFullPath(page),
+          lastPublishedServerTimestamp: serverTimestamp(),
+          id: id,
+          articleID: id,
           langCode: sanitizeHtml(page.locale),
           content: "",
           tags: [],
           imported: true,
           importInfo: {},
-          lastUpdatedServerTimestamp: serverTimestamp(),
-          createdServerTimestamp: serverTimestamp(),
-          lastPublishedServerTimestamp: null,
+          metadata: {
+            updatedTimestamp: serverTimestamp(),
+            updatedBy: this.firebaseStore.auth.currentUser.uid,
+            createdTimestamp: serverTimestamp(),
+            createdBy: this.firebaseStore.auth.currentUser.uid,
+          },
         };
 
         // 1. Use content if contentType is html (because it does not contain TOC links)
@@ -295,7 +374,7 @@ export default {
           languageCollections.push({
             id: languageCollectionID,
             path: renderedPage.path,
-            articles: [
+            articles_draft: [
               {
                 articleID: renderedPage.id,
                 langCode: renderedPage.langCode,
@@ -334,6 +413,39 @@ export default {
           .replaceAll('"https://www.activisthandbook.org/', '"/')
           .replaceAll('"/en/', '"/');
 
+        var doc = document.createElement("div");
+        doc.innerHTML = renderedPage.content;
+        const links = doc.getElementsByTagName("a");
+
+        for (var i = 0; i < links.length; i++) {
+          const url = links[i].getAttribute("href");
+
+          const urlArray = url.split("/");
+          if (url.endsWith("/home") && !url.startsWith("http")) {
+            console.log(urlArray);
+            const langCode = urlArray[1];
+
+            renderedPage.content = renderedPage.content.replaceAll(
+              `href=\"${url}\"`,
+              `href=\"/${langCode}/\"`
+            );
+          }
+
+          if (
+            !url.startsWith("http") &&
+            !url.startsWith("/") &&
+            !url.startsWith("mailto")
+          ) {
+            renderedPage.content = renderedPage.content.replaceAll(
+              `href=\"${url}\"`,
+              `href=\"/${renderedPage.path}/${url}\"`
+            );
+            // console.log("changed links:", renderedPage.content);
+          }
+        }
+
+        doc.remove();
+
         // 9. Add tags
         page.tags.forEach((tag) => {
           renderedPage.tags.push(sanitizeHtml(tag.title));
@@ -356,11 +468,19 @@ export default {
 
           allowedIframeHostnames: ["www.youtube-nocookie.com"],
 
-          // Remove empty <a></a> tags
+          // 11. Remove empty <a></a> tags
           exclusiveFilter: function (frame) {
             return frame.tag === "a" && !frame.text.trim();
           },
         });
+
+        // 12. Replace  &amp; with &
+        renderedPage.content = renderedPage.content.replaceAll("&amp;", "&");
+        renderedPage.title = renderedPage.title.replaceAll("&amp;", "&");
+        renderedPage.description = renderedPage.description.replaceAll(
+          "&amp;",
+          "&"
+        );
 
         renderedPages.push(renderedPage);
       });
@@ -376,34 +496,129 @@ export default {
       this.push.loading = true;
       this.push.done = false;
       // ARTICLES
-      const batchArticles = writeBatch(db);
+      const batchArticles1 = writeBatch(db);
+      const batchArticles2 = writeBatch(db);
+      const batchArticlesVersion1 = writeBatch(db);
+      const batchArticlesVersion2 = writeBatch(db);
+      const batchArticlesQueue1 = writeBatch(db);
+      const batchArticlesQueue2 = writeBatch(db);
 
-      this.renderedPages.data.forEach((article) => {
+      let countPages = 0;
+
+      this.renderedPages.data.forEach(async (article) => {
         const articleRef = doc(db, "articles_draft", article.id);
-        batchArticles.set(articleRef, article);
+        const articleVersionRef = doc(
+          db,
+          "articles_draft",
+          article.id,
+          "versions_published",
+          article.id
+        );
+        const articleQueueRef = doc(db, "articles_inQueue", article.id);
+        if (countPages < 500) {
+          batchArticles1.set(articleRef, article);
+          batchArticlesVersion1.set(articleVersionRef, article);
+          batchArticlesQueue1.set(articleQueueRef, article);
+        } else {
+          batchArticles2.set(articleRef, article);
+          batchArticlesVersion2.set(articleVersionRef, article);
+          batchArticlesQueue2.set(articleQueueRef, article);
+        }
+        countPages++;
       });
 
-      await batchArticles.commit();
+      await batchArticles1.commit();
+      await batchArticles2.commit();
+      await batchArticlesVersion1.commit();
+      await batchArticlesVersion2.commit();
+      await batchArticlesQueue1.commit();
+      await batchArticlesQueue2.commit();
 
       // LANGUAGE COLLECTIONS
-      const batchLanguageCollections = writeBatch(db);
+      const batchLanguageCollections1 = writeBatch(db);
+      const batchLanguageCollections2 = writeBatch(db);
 
-      this.renderedLanguageCollections.data.forEach((languageCollection) => {
-        const languageCollectionRef = doc(
-          db,
-          "languageCollections",
-          languageCollection.id
-        );
+      let countLanguageCollections = 0;
 
-        batchLanguageCollections.set(languageCollectionRef, {
-          articles: languageCollection.articles,
-        });
-      });
+      this.renderedLanguageCollections.data.forEach(
+        async (languageCollection) => {
+          const languageCollectionRef = doc(
+            db,
+            "languageCollections",
+            languageCollection.id
+          );
 
-      await batchLanguageCollections.commit();
+          const data = {
+            articles_draft: languageCollection.articles_draft,
+            articles_published: null,
+            id: languageCollection.id,
+            metadata: {
+              updatedTimestamp: serverTimestamp(),
+              updatedBy: this.firebaseStore.auth.currentUser.uid,
+              createdTimestamp: serverTimestamp(),
+              createdBy: this.firebaseStore.auth.currentUser.uid,
+            },
+          };
+
+          if (countLanguageCollections < 1000) {
+            batchLanguageCollections1.set(languageCollectionRef, data);
+          } else {
+            batchLanguageCollections2.set(languageCollectionRef, data);
+          }
+
+          countLanguageCollections++;
+        }
+      );
+
+      await batchLanguageCollections1.commit();
+      await batchLanguageCollections2.commit();
 
       this.push.loading = false;
       this.push.done = true;
+    },
+    async setCounters() {
+      // Articles
+      this.databaseArticles.loading = true;
+      const databaseArticles = await getDocs(
+        query(
+          collection(db, "articles_draft"),
+          where("lastPublishedServerTimestamp", "==", null)
+        )
+      );
+
+      let articles = [];
+      databaseArticles.forEach(async (doc) => {
+        articles.push(doc.data());
+      });
+      this.databaseArticles.data = articles;
+      this.databaseArticles.length = articles.length;
+      this.databaseArticles.dataLoaded = true;
+      this.databaseArticles.loading = false;
+
+      // Language collections
+      this.databaseLanguageCollections.loading = true;
+      const databaseLanguageCollections = await getDocs(
+        query(collection(db, "languageCollections"))
+      );
+
+      let LanguageCollections = [];
+      databaseLanguageCollections.forEach(async (doc) => {
+        LanguageCollections.push(doc.data());
+      });
+      this.databaseLanguageCollections.data = LanguageCollections;
+      this.databaseLanguageCollections.length = LanguageCollections.length;
+      this.databaseLanguageCollections.dataLoaded = true;
+      this.databaseLanguageCollections.loading = false;
+
+      // Set analytics counts
+      await setDoc(
+        doc(db, "app", "analytics"),
+        {
+          articles_draft_count: this.databaseArticles.length,
+          languageCollections_count: this.databaseLanguageCollections.length,
+        },
+        { merge: true }
+      );
     },
   },
 };

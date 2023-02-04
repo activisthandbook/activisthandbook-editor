@@ -55,5 +55,8 @@ async function getImageUploadURL(accountID, apiToken) {
       functions.logger.log("cloudflare response data", response.data);
 
       return response.data;
+    })
+    .catch((error) => {
+      functions.logger.log("cloudflare error", error);
     });
 }

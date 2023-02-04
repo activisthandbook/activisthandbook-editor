@@ -11,6 +11,14 @@
         "search-images": "e0894c7c900708b0a7aeb66181d9f4c9f4a45c92a983ad93dacdad3e786e86fd",
         "search-users": "6b08a8a10c77de6fdcfc6f3fff1c7be8b4541a0c5b5cb20a12b12af78c106174"
       }
+    },
+    "activist-handbook": {
+      "extensionInstances": {
+        "firestore-counter": "0918ba98af340c58f892bb300e32ffb5173baeb92b5046ed1bb4b00b9a2fda7b",
+        "search-articles": "4c6404818a53ea448131fd54c79ea92b7e0624006f82fd779c65e308ada44ad3",
+        "search-images": "ae8125d7ed6a6ef79ed6629fef679c0ed0f0b3b2ba4846dd4a9bb355ab1e1c4e",
+        "search-users": "957a10e071caafbd2c1394a9c2c6dfeced754fb5c63e3af07dd1b25f2cb6a66f"
+      }
     }
   }
 }

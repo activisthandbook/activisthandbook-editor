@@ -1,4 +1,4 @@
-const debugging = true;
+const debugging = false;
 
 const functions = require("firebase-functions");
 
@@ -96,6 +96,8 @@ exports.publishArticles = functions
   .runWith({
     secrets: ["GITHUB_API"],
     enforceAppCheck: true, // Requests without valid App Check tokens will be rejected.
+    memory: "8GB",
+    timeoutSeconds: 540,
   })
   .https.onCall(async (data, context) => {
     // APP CHECK
@@ -229,7 +231,7 @@ async function fetchLanguageCollection(languageCollectionID) {
 }
 
 async function fetchPublishingQueueMenu() {
-  const publishingQueueRef = db.collection("menu").doc("articles_inQueue");
+  const publishingQueueRef = db.collection("menu").doc("inQueue");
   const docSnapshot = await publishingQueueRef.get();
   if (docSnapshot.empty) {
     // console.log('No matching documents.');
@@ -257,7 +259,11 @@ function generateGitHubPath(fullPath) {
 
 async function updatePublishedArticles(articles) {
   // Get a new write batch
-  const batch = db.batch();
+  const batch1 = db.batch();
+  const batch2 = db.batch();
+  const batch3 = db.batch();
+
+  let i = 0;
 
   // 🔁 LOOP THROUGH ALL ARTICLES
   for (const article of articles) {
@@ -286,7 +292,11 @@ async function updatePublishedArticles(articles) {
     // - remove from language collection
     if (article.deleteArticle && article.publishedFullPath) {
       log("⚪️ delete article", article);
-      batch.delete(publishedArticleRef);
+
+      if (i < 500) batch1.delete(publishedArticleRef);
+      else if (i < 1000) batch2.delete(publishedArticleRef);
+      else batch3.delete(publishedArticleRef);
+      i++;
 
       // Fallback 'if' statement: articles_published should always be defined for articles that you are trying to delete
       if (
@@ -315,7 +325,10 @@ async function updatePublishedArticles(articles) {
     else if (!article.deleteArticle) {
       log("⚪️ edit article", article);
       // 1. Update articles_published collection
-      batch.set(publishedArticleRef, article);
+      if (i < 500) batch1.set(publishedArticleRef, article);
+      else if (i < 1000) batch2.set(publishedArticleRef, article);
+      else batch3.set(publishedArticleRef, article);
+      i++;
 
       // 2. Build full link from languageCode and path
       const fullPublishedPath = generateFullPath(article);
@@ -323,9 +336,14 @@ async function updatePublishedArticles(articles) {
       log("⚪️ fullPublishedPath article", fullPublishedPath);
 
       // Update full published path in live draft
-      batch.update(draftArticleRef, {
+      const draftArticleData = {
         publishedFullPath: fullPublishedPath,
-      });
+      };
+
+      if (i < 500) batch1.update(draftArticleRef, draftArticleData);
+      else if (i < 1000) batch2.update(draftArticleRef, draftArticleData);
+      else batch3.update(draftArticleRef, draftArticleData);
+      i++;
 
       // 3. Get details on this language based on the languageCode
       const languageDetails = languages.find(
@@ -395,6 +413,12 @@ async function updatePublishedArticles(articles) {
         ["localName"]
       );
 
+    // ADD COUNT TO LANGUAGE COLLECTION
+    languageCollections[article.languageCollectionID].articles_published_count =
+      languageCollections[
+        article.languageCollectionID
+      ].articles_published.length;
+
     log(
       "⚪️sort articles_published",
       languageCollections[article.languageCollectionID].articles_published
@@ -409,19 +433,29 @@ async function updatePublishedArticles(articles) {
           .length)
     ) {
       // If both articles_published and articles are empty, delete language collection
-      batch.delete(languageCollectionRef);
+      if (i < 500) batch1.delete(languageCollectionRef);
+      else if (i < 1000) batch2.delete(languageCollectionRef);
+      else batch3.delete(languageCollectionRef);
+      i++;
     } else {
       // 🔥 UPDATE LANGUAGE COLLECTION IN FIRESTORE
-      batch.update(languageCollectionRef, {
+      const languageCollectionData = {
         articles_published:
           languageCollections[article.languageCollectionID].articles_published,
         lastPublishedServerTimestamp: FieldValue.serverTimestamp(),
-      });
+      };
+      if (i < 500) batch1.update(languageCollectionRef, languageCollectionData);
+      else if (i < 1000)
+        batch2.update(languageCollectionRef, languageCollectionData);
+      else batch3.update(languageCollectionRef, languageCollectionData);
+      i++;
     }
   } // 🔁 END LOOP
 
   // 🔥 COMMIT THE BATCH
-  await batch.commit();
+  await batch1.commit();
+  await batch2.commit();
+  await batch3.commit();
 }
 
 // STEP 3 _________________________________
@@ -531,6 +565,10 @@ function generateFileContent(article) {
           hasCorrectType = _.isString(value);
           sanitizedValue = sanitize(value);
           break;
+        case "escapedString":
+          hasCorrectType = _.isString(value);
+          sanitizedValue = ">" + newLine + "  " + sanitize(value);
+          break;
         case "array":
           hasCorrectType = _.isArray(value);
           sanitizedValue = sanitize(JSON.stringify(value));
@@ -593,16 +631,20 @@ function generateFileContent(article) {
   }
 
   // Build frontmatter arry
-  addToFrontmatter({ key: "title", type: "string", value: article.title });
+  addToFrontmatter({
+    key: "title",
+    type: "escapedString",
+    value: article.title,
+  });
   addToFrontmatter({
     key: "description",
-    type: "string",
+    type: "escapedString",
     value: article.description,
   });
 
   addToFrontmatter({
     key: "langCode",
-    type: "strubg",
+    type: "string",
     value: article.langCode,
   });
   addToFrontmatter({ key: "articleID", type: "string", value: article.id });
@@ -713,21 +755,27 @@ function generateFileContentMenu(menu) {
 
 async function clearPublishingQueue(articles, menu) {
   // Get a new write batch
-  const batch = db.batch();
+  const batch1 = db.batch();
+  const batch2 = db.batch();
+  const batch3 = db.batch();
 
   if (articles) {
+    let i = 0;
     for (const article of articles) {
       const articleRef = db.collection("articles_inQueue").doc(article.id);
-      batch.delete(articleRef);
+      if (i < 500) batch1.delete(articleRef);
+      else if (i < 1000) batch2.delete(articleRef);
+      else batch3.delete(articleRef);
+      i++;
     }
   }
 
   if (menu) {
     const menuPublishingQueueRef = db.collection("menu").doc("inQueue");
 
-    batch.delete(menuPublishingQueueRef);
+    batch1.delete(menuPublishingQueueRef);
     const moderatorRef = db.collection("app").doc("analytics");
-    batch.set(
+    batch1.set(
       moderatorRef,
       {
         menuInPublishingQueue: false,
@@ -737,7 +785,9 @@ async function clearPublishingQueue(articles, menu) {
   }
 
   // Commit the batch
-  await batch.commit();
+  await batch1.commit();
+  await batch2.commit();
+  await batch3.commit();
 }
 
 function log(message, attachment) {

@@ -81,13 +81,16 @@ service cloud.firestore {
         match /versions_published/{versionID} {
           allow read: if signedIn();
           allow create: if
-            signedIn() &&
-            validMetadataCreated();
+            validMetadataCreated() &&
+            hasRole(getRoles(), "moderator");
           allow delete: if hasRole(getRoles(), "moderator");
         }
       }
+      match /menu/published {
+        allow read, create, update: if signedIn();
+      }
 
-       match /menu/publishingQueue {
+       match /menu/inQueue {
         allow read, write: if hasRole(getRoles(), "moderator");
       }
 
@@ -135,8 +138,6 @@ service cloud.firestore {
         allow create: if
           signedIn() &&
           // CONTENT VALIDATION
-          // draftArticles
-          request.resource.data.articles_draft.size() == 1 &&
           // articles_published
           request.resource.data.articles_published == null &&
           // metadata
