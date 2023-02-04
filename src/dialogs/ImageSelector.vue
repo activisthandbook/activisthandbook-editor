@@ -856,7 +856,7 @@ export default {
       }
       // caption += sanitizeHtml(img.data.author.name);
 
-      let captionSecondPart = "";
+      let captionSecondPart = " ";
       if (img.data.author.ai) {
         captionSecondPart += ` | Generated using ${img.data.author.ai}`;
       }
