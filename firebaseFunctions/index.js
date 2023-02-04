@@ -15,13 +15,15 @@ const processImageUpload = require("./images/processImageUpload");
 
 // ARTICLES
 // Callable functions 🔗
-exports.generateArticle = generateArticle.generateArticle;
+// exports.generateArticle = generateArticle.generateArticle;
 exports.publishArticles = publishArticles.publishArticles;
 
 // Triggers 🔥
 exports.articles_draft = require("./articles/articles_draft");
 exports.articles_inQueue = require("./articles/articles_inQueue");
 exports.articles_published = require("./articles/articles_published");
+exports.articles_versionsDraft = require("./articles/articles_versionsDraft");
+exports.articles_versionsPublished = require("./articles/articles_versionsPublished");
 exports.languageCollections = require("./articles/languageCollections");
 
 // IMAGES

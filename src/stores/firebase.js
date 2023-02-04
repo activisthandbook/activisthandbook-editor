@@ -45,7 +45,7 @@ const firebaseConfigProduction = {
   storageBucket: "activist-handbook.appspot.com",
   messagingSenderId: "456967588569",
   appId: "1:456967588569:web:746a47d93f049f44400cc8",
-  measurementId: "G-3Q25NYL5G8"
+  measurementId: "G-3Q25NYL5G8",
 };
 
 export const useFirebaseStore = defineStore("firebase", {
@@ -118,13 +118,13 @@ export const useFirebaseStore = defineStore("firebase", {
       Pass your reCAPTCHA v3 site key (public key) to activate(). Make sure this key is the counterpart to the secret key you set in the Firebase console.
       Docs: https://firebase.google.com/docs/app-check
       */
-     let ReCaptchaKey = null
-     if (process.env.DEV) {
-      ReCaptchaKey = "6LfbkrcjAAAAADRXu0PSoqJuJPR5f0XmkU5PUSjW"
-    } else {
-      ReCaptchaKey = "6LeB30wkAAAAAP83FT4upicmMB6NMfyZFdrsoK65"
-    }
-    const appCheck = initializeAppCheck(this.firebaseApp, {
+      let ReCaptchaKey = null;
+      if (process.env.DEV) {
+        ReCaptchaKey = "6LfbkrcjAAAAADRXu0PSoqJuJPR5f0XmkU5PUSjW";
+      } else {
+        ReCaptchaKey = "6LeB30wkAAAAAP83FT4upicmMB6NMfyZFdrsoK65";
+      }
+      const appCheck = initializeAppCheck(this.firebaseApp, {
         provider: new ReCaptchaV3Provider(ReCaptchaKey),
         // Optional argument. If true, the SDK automatically refreshes App Check
         // tokens as needed.

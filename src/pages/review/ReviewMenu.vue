@@ -1,107 +1,118 @@
 <template>
-  <h2>Sidebar</h2>
-  <div>
-    <q-card flat class="bg-grey-3 q-mt-sm">
-      <q-card-section>
-        <div class="text-bold">Compare versions:</div>
-        <div
-          class="q-px-xs"
-          v-if="menuVersions.dataLoaded && menuVersions.data"
-        >
-          <q-slider
-            v-model="menuVersionSelected"
-            :min="0"
-            :max="menuVersions.data.length - 1"
-            :step="1"
-            markers
-            snap
-            label
-            :label-value="versionLabel"
-            label-always
-            color="grey-6"
-            thumb-color="secondary"
-            thumb-size="32px"
-            track-size="16px"
-          />
-        </div>
-        <div class="flex" style="margin-top: -12px">
-          <span>First edit</span>
-          <!-- <span v-else>On website now</span> -->
-          <q-space />
-          <span>Last edit</span>
-        </div>
-        <div class="row q-col-gutter-sm q-mt-sm">
-          <div class="col-12 col-sm-3">
-            <q-btn
-              label="Revert"
-              icon="mdi-close"
-              color="secondary"
-              outline
-              class="full-width"
-              no-caps
-              @click="revertToLastPublished()"
-            />
-          </div>
-
-          <div class="col-12 col-sm-3">
-            <q-btn
-              label="Edit"
-              icon="mdi-pencil"
-              color="secondary"
-              outline
-              class="full-width"
-              no-caps
-              :to="{
-                name: 'Menu',
-              }"
-            />
-          </div>
-
-          <div class="col-12 col-sm-6">
-            <q-btn
-              label="Accept this version"
-              icon="mdi-check"
-              color="secondary"
-              class="full-width"
-              no-caps
-              @click="acceptVersion()"
-            />
-          </div>
-        </div>
-      </q-card-section>
-    </q-card>
-
-    <div v-if="!menuVersions.dataLoaded">Loading...</div>
-
-    <div v-else-if="!menuVersions.data[0]">
-      <div class="q-my-md">No updates to menu.</div>
-      <q-btn label="Edit menu" :to="{ name: 'Menu' }" no-caps />
-    </div>
-
-    <div class="q-gutter-y-md q-my-md" v-else>
+  <div class="q-my-md q-gutter-y-md">
+    <h2>Top nav</h2>
+    <div>Coming soon</div>
+    <h2>Sidebar</h2>
+    <div>
       <q-card
-        v-for="(menuItem, index) in menuVersions.data[menuVersionSelected]
-          .sidebar"
-        :key="menuItem.id"
-        class="bg-accent"
+        flat
+        class="bg-grey-3 q-mt-sm"
+        v-if="liveDraftMenu.data?.requestedPublication"
       >
         <q-card-section>
-          <div class="text-h3 q-pb-sm text-uppercase">{{ index }}</div>
-          <q-tree :nodes="menuItem" children-key="items" node-key="id" dense>
-            <template v-slot:default-header="prop">
-              <div class="text-weight-bold text-secondary">
-                {{ prop.node.text }}
-              </div>
-            </template>
+          <div class="text-bold">Compare versions:</div>
+          <div
+            class="q-px-xs"
+            v-if="menuVersions.dataLoaded && menuVersions.data"
+          >
+            <q-slider
+              v-model="menuVersionSelected"
+              :min="0"
+              :max="menuVersions.data.length - 1"
+              :step="1"
+              markers
+              snap
+              label
+              :label-value="versionLabel"
+              label-always
+              color="grey-6"
+              thumb-color="secondary"
+              thumb-size="32px"
+              track-size="16px"
+            />
+          </div>
+          <div class="flex" style="margin-top: -12px">
+            <span>First edit</span>
+            <!-- <span v-else>On website now</span> -->
+            <q-space />
+            <span>Last edit</span>
+          </div>
+          <div class="row q-col-gutter-sm q-mt-sm">
+            <div class="col-12 col-sm-3">
+              <q-btn
+                label="Revert"
+                icon="mdi-close"
+                color="secondary"
+                outline
+                class="full-width"
+                no-caps
+                @click="revertToLastPublished()"
+              />
+            </div>
 
-            <template v-slot:default-body="prop">
-              <div class="text-caption">
-                {{ prop.node.link }}
-              </div>
-            </template>
-          </q-tree>
+            <div class="col-12 col-sm-3">
+              <q-btn
+                label="Edit"
+                icon="mdi-pencil"
+                color="secondary"
+                outline
+                class="full-width"
+                no-caps
+                :to="{
+                  name: 'Menu',
+                }"
+              />
+            </div>
+
+            <div class="col-12 col-sm-6">
+              <q-btn
+                label="Accept this version"
+                icon="mdi-check"
+                color="secondary"
+                class="full-width"
+                no-caps
+                @click="acceptVersion()"
+              />
+            </div>
+          </div>
         </q-card-section>
       </q-card>
+
+      <div v-if="!menuVersions.dataLoaded">Loading...</div>
+
+      <div v-else-if="!menuVersions.data[0]">
+        <div class="q-my-md">No updates to menu.</div>
+        <q-btn label="Edit menu" :to="{ name: 'Menu' }" no-caps />
+      </div>
+
+      <div
+        class="q-gutter-y-md q-my-md"
+        v-else-if="menuVersions.data[menuVersionSelected]"
+      >
+        <q-card
+          v-for="(menuItem, index) in menuVersions.data[menuVersionSelected]
+            .sidebar"
+          :key="menuItem.id"
+          class="bg-accent"
+        >
+          <q-card-section>
+            <div class="text-h3 q-pb-sm text-uppercase">{{ index }}</div>
+            <q-tree :nodes="menuItem" children-key="items" node-key="id" dense>
+              <template v-slot:default-header="prop">
+                <div class="text-weight-bold text-secondary">
+                  {{ prop.node.text }}
+                </div>
+              </template>
+
+              <template v-slot:default-body="prop">
+                <div class="text-caption">
+                  {{ prop.node.link }}
+                </div>
+              </template>
+            </q-tree>
+          </q-card-section>
+        </q-card>
+      </div>
     </div>
   </div>
 </template>
@@ -208,8 +219,8 @@ export default {
         this.menuVersions.data[this.menuVersionSelected]
       ) {
         const date = this.mixin_humanDate(
-          this.menuVersions.data[this.menuVersionSelected]
-            .lastUpdatedServerTimestamp
+          this.menuVersions.data[this.menuVersionSelected].metadata
+            .updatedTimestamp
         );
 
         // if (!this.isNewMenu && this.menuVersionSelected === 0) {
@@ -336,16 +347,27 @@ export default {
       });
 
       // 2. Delete all review versions
-      this.menuVersions.data.forEach((version) => {
+      // this.menuVersions.data.forEach(async (version) => {
+      //   const reviewVersionRef = doc(
+      //     db,
+      //     "menu",
+      //     "draft",
+      //     "versions_draft",
+      //     version.id
+      //   );
+      //   batch.delete(reviewVersionRef);
+      // });
+
+      for (let index = 0; index < this.menuVersions.data.length; index++) {
         const reviewVersionRef = doc(
           db,
           "menu",
           "draft",
           "versions_draft",
-          version.id
+          this.menuVersions.data[index].id
         );
         batch.delete(reviewVersionRef);
-      });
+      }
 
       // 3. Set requestedReview to false for the live edit version
       const liveArticleRef = doc(db, "menu", "draft");
@@ -358,10 +380,15 @@ export default {
 
       // 4. Create a new version with the status "published"
       const versionID = this.mixin_randomID();
-      const versionRef = doc(db, "menu", "draft", "versions_draft", versionID);
+      const versionRef = doc(
+        db,
+        "menu",
+        "draft",
+        "versions_published",
+        versionID
+      );
       batch.set(versionRef, {
         ...acceptedVersion,
-        status: "published",
         metadata: {
           createdTimestamp: serverTimestamp(),
           createdBy: this.firebaseStore.auth.currentUser.uid,
@@ -370,10 +397,9 @@ export default {
 
       const publishedRef = doc(db, "menu", "published");
       batch.set(
-        versionRef,
+        publishedRef,
         {
           ...acceptedVersion,
-          status: "published",
           metadata: {
             updatedTimestamp: serverTimestamp(),
             updateddBy: this.firebaseStore.auth.currentUser.uid,
@@ -392,10 +418,16 @@ export default {
       });
 
       // Commit the batch
-      await batch.commit();
-
-      // update analytics locally (it will be updated on server automatically with a counter, but this way we prevent a delay)
-      this.analyticsStore.data.menuInPublishingQueue = true;
+      await batch
+        .commit()
+        .then(() => {
+          // update analytics locally (it will be updated on server automatically with a counter, but this way we prevent a delay)
+          this.analyticsStore.data.menuInPublishingQueue = true;
+        })
+        .catch((error) => {
+          console.error(error);
+          this.$q.notify("Accepting version failed.");
+        });
     },
     revertToLastPublished: async function () {
       // Get a new write batch

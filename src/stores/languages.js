@@ -1150,6 +1150,12 @@ export const useLanguagesStore = defineStore("languages", {
         localName: "Português",
       },
       {
+        code: "pt-br",
+        EnglishName: "Portuguese (Brazilian)",
+        direction: "ltr",
+        localName: "Português (brasileiro)",
+      },
+      {
         code: "qu",
         EnglishName: "Quechua",
         direction: "ltr",

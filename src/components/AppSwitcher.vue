@@ -52,19 +52,6 @@
         />
 
         <q-btn
-          icon="mdi-folder-text"
-          padding="0"
-          no-caps
-          label="Menu"
-          style="width: 80px; height: 72px"
-          size="13px"
-          stack
-          color="primary"
-          :to="{ name: 'Menu' }"
-          flat
-        />
-
-        <q-btn
           icon="mdi-account-group"
           padding="0"
           no-caps
@@ -76,6 +63,20 @@
           :to="{ name: 'Authors' }"
           flat
         />
+
+        <q-btn
+          icon="mdi-folder-text"
+          padding="0"
+          no-caps
+          label="Menu"
+          style="width: 80px; height: 72px"
+          size="13px"
+          stack
+          color="grey"
+          :to="{ name: 'Menu' }"
+          flat
+        />
+
         <q-btn
           icon="mdi-translate"
           padding="0"
@@ -84,7 +85,7 @@
           style="width: 80px; height: 72px"
           size="13px"
           stack
-          color="primary"
+          color="grey"
           :to="{ name: 'Translate' }"
           flat
         />

@@ -42,7 +42,7 @@ const routes = [
       },
       {
         path: "menu",
-        component: () => import("pages/MenuPage.vue"),
+        component: () => import("pages/ComingSoon.vue"),
         name: "Menu",
         meta: {
           title: "Edit menu | Activist Handbook",
@@ -95,7 +95,7 @@ const routes = [
       },
       {
         path: "/translate",
-        component: () => import("pages/TranslatePage.vue"),
+        component: () => import("src/pages/ComingSoon.vue"),
         name: "Translate",
         meta: {
           title: "Translate | Activist Handbook",
