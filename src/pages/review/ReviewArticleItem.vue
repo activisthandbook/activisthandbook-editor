@@ -408,10 +408,6 @@ export default {
         batch.set(publishingQueueRef, {
           ...acceptedVersion,
           id: acceptedVersion.articleID,
-          metadata: {
-            createdTimestamp: serverTimestamp(),
-            createdBy: this.firebaseStore.auth.currentUser.uid,
-          },
         });
 
         // 2. Delete all review versions
@@ -439,8 +435,6 @@ export default {
           // publishedFullPath: this.fullPath(acceptedVersion),
           lastPublishedServerTimestamp: serverTimestamp(),
           versions_draft_count: 0,
-          "metadata.updatedTimestamp": serverTimestamp(),
-          "metadata.updatedBy": this.firebaseStore.auth.currentUser.uid,
         });
 
         // 4. Create a new version with the status "published"
@@ -456,10 +450,6 @@ export default {
           ...acceptedVersion,
           id: versionID,
           publishedFullPath: this.fullPath(acceptedVersion),
-          metadata: {
-            createdTimestamp: serverTimestamp(),
-            createdBy: this.firebaseStore.auth.currentUser.uid,
-          },
         });
 
         // Commit the batch
@@ -503,7 +493,6 @@ export default {
         id: lastPublishedArticle.articleID,
         requestedPublication: false,
         reverted: true,
-
         "metadata.updatedTimestamp": serverTimestamp(),
         "metadata.updatedBy": this.firebaseStore.auth.currentUser.uid,
       });
@@ -539,10 +528,6 @@ export default {
           transaction.set(publishingQueueRef, {
             ...acceptedVersion,
             id: acceptedVersion.articleID,
-            metadata: {
-              createdTimestamp: serverTimestamp(),
-              createdBy: this.firebaseStore.auth.currentUser.uid,
-            },
           });
 
           // Remove from language collection
@@ -551,8 +536,6 @@ export default {
               articleID: this.liveDraftArticle.id,
               langCode: this.liveDraftArticle.langCode,
             }),
-            "metadata.updatedTimestamp": serverTimestamp(),
-            "metadata.updatedBy": this.firebaseStore.auth.currentUser.uid,
           });
 
           // Delete live draft article. Versions are automatically deleted

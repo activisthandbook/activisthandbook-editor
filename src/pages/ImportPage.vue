@@ -43,7 +43,7 @@
         true.
       </li>
       <li>Temporarily allow localhost in app-check and authentication.</li>
-      <li>Give yourself admin rights.</li>
+      <li>Give yourself admin and moderator rights.</li>
     </ul>
     <div class="text-bold">1) Add GraphQL API key</div>
     <form>
