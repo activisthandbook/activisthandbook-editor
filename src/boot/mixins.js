@@ -80,6 +80,13 @@ export default boot(({ app }) => {
           return { error: "Add a path.", duplicates: null };
         }
 
+        if (path === "index") {
+          return {
+            error: "Editing the homepage is not yet possible.",
+            duplicates: null,
+          };
+        }
+
         // Invalid path
         else if (!validPathRegex.test(path)) {
           return {

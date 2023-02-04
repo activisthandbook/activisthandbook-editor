@@ -22,6 +22,17 @@
       <li>Does not check for duplicate paths with existing articles.</li>
       <li>Cannot deal with '&lt;' in text.</li>
       <li>Counters only correct when there were no articles before.</li>
+      <li>
+        When importing a large number of articles, the publish function will
+        appear to fail (deadline-exceeded). Often, however, it does still work,
+        it just does not send a correct response. Make sure to increase memory
+        and time limit, and check the logs to see if the function is still
+        running.
+      </li>
+      <li>
+        Does not import index page (to prevent it overwriting the custom
+        homepage made in Vitepress).
+      </li>
     </ul>
     <div class="text-bold">Fetch limit</div>
     <q-slider v-model="settings.fetchLimit" :min="1" :max="1000" label-always />
@@ -126,6 +137,9 @@
         false.
       </li>
     </ul>
+
+    <div class="text-bold">Tooling</div>
+    <q-btn label="Put all published in queue" @click="reRender()" />
   </div>
 </template>
 <script>
@@ -333,7 +347,7 @@ export default {
       }
 
       await this.pages.data.forEach((page) => {
-        if (page.path === "index" && page.locale === "en") {
+        if (page.path === "home" && page.locale === "en") {
           console.log("index page skipped");
         } else {
           const id = this.mixin_randomID();
@@ -645,6 +659,22 @@ export default {
         },
         { merge: true }
       );
+    },
+    async reRender() {
+      const databaseArticles = await getDocs(
+        query(collection(db, "articles_published"))
+      );
+
+      const batch = writeBatch(db);
+
+      databaseArticles.forEach(async (article) => {
+        const data = article.data();
+        const articleRef = doc(db, "articles_inQueue", data.id);
+        batch.set(articleRef, data);
+      });
+
+      await batch.commit();
+      console.log("success");
     },
   },
 };
