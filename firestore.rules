@@ -24,13 +24,13 @@ service cloud.firestore {
       function validMetadataCreated(){
         return
           request.resource.data.metadata.createdBy == request.auth.uid &&
-          request.resource.data.metadata.createdTimestamp == request.time
+          (request.resource.data.metadata.createdTimestamp == request.time || hasRole(getRoles(), "admin"))
       }
 
       function validMetadataUpdated(){
         return
           request.resource.data.metadata.updatedBy == request.auth.uid &&
-          request.resource.data.metadata.updatedTimestamp == request.time
+          (request.resource.data.metadata.updatedTimestamp == request.time || hasRole(getRoles(), "admin"))
       }
 
       // APP

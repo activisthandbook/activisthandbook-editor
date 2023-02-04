@@ -17,15 +17,3 @@ exports.onCreate = functions
     // Trigger the counter
     articles_versionsDraft_count.incrementBy(1);
   });
-
-exports.onDelete = functions
-  .region("europe-west1")
-  .firestore.document("articles_draft/{articleID}/versions_draft/{versionID}")
-  .onDelete((change, context) => {
-    const articles_versionsDraft_count = new Counter(
-      db.collection("articles_draft").doc(context.params.articleID),
-      "versions_draft_count"
-    );
-    // Trigger the counter
-    articles_versionsDraft_count.incrementBy(-1);
-  });

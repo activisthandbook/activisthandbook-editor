@@ -1,3 +1,5 @@
+const importing = true;
+
 import { defineStore } from "pinia";
 
 import { boot } from "quasar/wrappers";
@@ -64,7 +66,7 @@ export const useFirebaseStore = defineStore("firebase", {
       Docs: https://firebase.google.com/docs/web/setup
       */
       this.firebaseApp = null;
-      if (process.env.DEV) {
+      if (process.env.DEV && !importing) {
         console.log(`DEV SERVER`);
         this.firebaseApp = initializeApp(firebaseConfigDev);
       } else {
@@ -119,7 +121,7 @@ export const useFirebaseStore = defineStore("firebase", {
       Docs: https://firebase.google.com/docs/app-check
       */
       let ReCaptchaKey = null;
-      if (process.env.DEV) {
+      if (process.env.DEV && !importing) {
         ReCaptchaKey = "6LfbkrcjAAAAADRXu0PSoqJuJPR5f0XmkU5PUSjW";
       } else {
         ReCaptchaKey = "6LeB30wkAAAAAP83FT4upicmMB6NMfyZFdrsoK65";

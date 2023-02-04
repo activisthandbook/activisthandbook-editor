@@ -438,6 +438,7 @@ export default {
           requestedPublication: false,
           // publishedFullPath: this.fullPath(acceptedVersion),
           lastPublishedServerTimestamp: serverTimestamp(),
+          versions_draft_count: 0,
           "metadata.updatedTimestamp": serverTimestamp(),
           "metadata.updatedBy": this.firebaseStore.auth.currentUser.uid,
         });

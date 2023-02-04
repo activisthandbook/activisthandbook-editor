@@ -654,7 +654,12 @@ function generateFileContent(article) {
     value: article.languageCollectionID,
   });
   addToFrontmatter({
-    key: "lastUpdated",
+    key: "updatedTimestamp",
+    type: "timestamp",
+    value: article.metadata.updatedTimestamp,
+  });
+  addToFrontmatter({
+    key: "createdTimestamp",
     type: "timestamp",
     value: article.metadata.createdTimestamp,
   });
