@@ -24,6 +24,14 @@
     </ul>
     <div class="text-bold">Fetch limit</div>
     <q-slider v-model="settings.fetchLimit" :min="1" :max="1000" label-always />
+    <div class="text-bold">Preparation</div>
+    <ul>
+      <li>
+        Change the file src/stores/firebase.js: temporarily set the
+        firebaseConfigDevelopment to the value firebaseConfigProduction
+      </li>
+      <li>Temporarily allow localhost in app-check and authentication.</li>
+    </ul>
     <div class="text-bold">1) Add GraphQL API key</div>
     <form>
       <q-input

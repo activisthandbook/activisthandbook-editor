@@ -29,6 +29,7 @@ exports.languageCollections = require("./articles/languageCollections");
 // IMAGES
 exports.getImageUploadURL = getImageUploadURL.getImageUploadURL;
 exports.processImageUpload = processImageUpload.processImageUpload;
+exports.images = require("./images/images");
 
 // USERS
 exports.users_profile = require("./users/users_profile");
