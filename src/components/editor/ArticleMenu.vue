@@ -94,11 +94,11 @@
         padding="sm"
         flat
         icon="mdi-link"
-        @click="openLinkDialog($event)"
+        @click="editor.openLinkDialog($event)"
         :class="{ 'is-active': editor.tiptap.content.isActive('link') }"
         class="hide-at-less-than-tiny"
       >
-        <q-dialog v-model="linkDialog">
+        <q-dialog v-model="this.editor.ui.linkDialog.open">
           <q-card style="min-width: 350px" class="bg-accent">
             <q-card-section>
               <div class="text-bold">Add link</div>
@@ -107,29 +107,49 @@
             <q-card-section class="q-pt-none">
               <q-input
                 dense
-                v-model="currentLink"
+                v-model="editor.ui.linkDialog.currentLink"
                 autofocus
-                @keyup.enter="setLink(currentLink)"
+                @keyup.enter="setLink(editor.ui.linkDialog.currentLink)"
                 color="secondary"
+                placeholder="/path/to/page"
+              />
+              <q-btn
+                v-if="editor.ui.linkDialog.currentLink"
+                flat
+                label="Remove link"
+                icon="mdi-link-off"
+                v-close-popup
+                dense
+                color="secondary"
+                class="q-mt-md"
+                no-caps
+                @click="removeLink()"
               />
             </q-card-section>
 
             <q-card-actions align="right">
               <q-btn
-                v-if="currentLink"
                 flat
-                label="Remove"
+                label="Cancel"
                 v-close-popup
                 color="secondary"
                 no-caps
-                @click="removeLink()"
               />
               <q-btn
+                v-if="editor.ui.linkDialog.currentLink"
+                label="Update link"
+                no-caps
+                v-close-popup
+                color="secondary"
+                @click="setLink(editor.ui.linkDialog.currentLink)"
+              />
+              <q-btn
+                v-else
                 label="Add link"
                 no-caps
                 v-close-popup
                 color="secondary"
-                @click="setLink(currentLink)"
+                @click="setLink(editor.ui.linkDialog.currentLink)"
               />
             </q-card-actions>
           </q-card>
@@ -345,116 +365,148 @@
       </q-btn>
     </div>
   </q-card>
-  <div
-    v-if="
-      editor && editor.tiptap.content && editor.tiptap.content.isActive('table')
-    "
-    class="justify-center sticky table-menu"
-  >
-    <div class="flex justify-center q-gutter-sm">
-      <div class="bg-accent shadow-8 rounded-borders flex items-center q-pa-xs">
-        <span class="text-caption text-bold q-ml-sm text-black">Column</span>
-        <q-btn
-          unelevated
-          icon="mdi-table-column-plus-before"
-          flat
-          padding="sm"
-          @click="editor.tiptap.content.chain().focus().addColumnBefore().run()"
-          :disabled="!editor.tiptap.content.can().addColumnBefore()"
-        >
-          <q-tooltip
-            transition-show="none"
-            transition-hide="none"
-            class="bg-grey-9 text-white"
-            :offset="[0, 4]"
-            >Add column before</q-tooltip
-          >
-        </q-btn>
-        <q-btn
-          flat
-          padding="sm"
-          icon="mdi-close-box"
-          @click="editor.tiptap.content.chain().focus().deleteColumn().run()"
-          :disabled="!editor.tiptap.content.can().deleteColumn()"
-        >
-          <q-tooltip
-            transition-show="none"
-            transition-hide="none"
-            class="bg-grey-9 text-white"
-            :offset="[0, 4]"
-            >Remove column</q-tooltip
-          >
-        </q-btn>
-        <q-btn
-          flat
-          icon="mdi-table-column-plus-after"
-          padding="sm"
-          @click="editor.tiptap.content.chain().focus().addColumnAfter().run()"
-          :disabled="!editor.tiptap.content.can().addColumnAfter()"
-        >
-          <q-tooltip
-            transition-show="none"
-            transition-hide="none"
-            class="bg-grey-9 text-white"
-            :offset="[0, 4]"
-            >Add column after</q-tooltip
-          >
-        </q-btn>
-      </div>
 
-      <div class="bg-accent shadow-8 rounded-borders flex items-center q-pa-xs">
-        <span class="text-caption text-bold q-ml-sm q-mr-sm text-black"
-          >Row</span
+  <q-footer
+    class="bg-accent text-black rounded-borders shadow-5"
+    v-if="editor?.tiptap?.content.isActive('link')"
+  >
+    <q-btn-group unelevated class="bg-secondary rounded-borders">
+      <q-btn
+        label="Open link"
+        no-caps
+        icon="mdi-open-in-new"
+        padding="9.5px 12px"
+        color="secondary"
+        size="12px"
+        @click="openLink()"
+      />
+      <q-separator vertical dark />
+      <q-btn
+        label="Edit"
+        no-caps
+        icon="mdi-pencil"
+        padding="9.5px 12px"
+        size="12px"
+        color="secondary"
+        @click="editor.openLinkDialog()"
+      />
+      <q-separator vertical dark />
+      <q-btn
+        label="Remove"
+        no-caps
+        icon="mdi-link-off"
+        padding="9.5px 12px"
+        size="12px"
+        color="secondary"
+        @click="removeLink()"
+      />
+    </q-btn-group>
+  </q-footer>
+
+  <q-footer
+    class="bg-secondary rounded-borders shadow-5"
+    v-if="editor?.tiptap?.content.isActive('table')"
+    dark
+  >
+    <q-btn-group unelevated class="flex items-center">
+      <span class="text-caption text-bold q-ml-md q-mr-xs">Column</span>
+      <q-btn
+        unelevated
+        icon="mdi-table-column-plus-before"
+        flat
+        padding="8px 6px"
+        @click="editor.tiptap.content.chain().focus().addColumnBefore().run()"
+        :disabled="!editor.tiptap.content.can().addColumnBefore()"
+      >
+        <q-tooltip
+          transition-show="none"
+          transition-hide="none"
+          class="bg-grey-9 text-white"
+          :offset="[0, 4]"
+          >Add column before</q-tooltip
         >
-        <q-btn
-          unelevated
-          icon="mdi-table-row-plus-before"
-          flat
-          padding="sm"
-          @click="editor.tiptap.content.chain().focus().addRowBefore().run()"
-          :disabled="!editor.tiptap.content.can().addRowBefore()"
+      </q-btn>
+      <q-btn
+        flat
+        padding="8px 6px"
+        icon="mdi-close-box"
+        @click="editor.tiptap.content.chain().focus().deleteColumn().run()"
+        :disabled="!editor.tiptap.content.can().deleteColumn()"
+      >
+        <q-tooltip
+          transition-show="none"
+          transition-hide="none"
+          class="bg-grey-9 text-white"
+          :offset="[0, 4]"
+          >Remove column</q-tooltip
         >
-          <q-tooltip
-            transition-show="none"
-            transition-hide="none"
-            class="bg-grey-9 text-white"
-            :offset="[0, 4]"
-            >Add column before</q-tooltip
-          >
-        </q-btn>
-        <q-btn
-          flat
-          padding="sm"
-          icon="mdi-close-box"
-          @click="editor.tiptap.content.chain().focus().deleteRow().run()"
-          :disabled="!editor.tiptap.content.can().deleteRow()"
+      </q-btn>
+      <q-btn
+        flat
+        icon="mdi-table-column-plus-after"
+        padding="8px 6px"
+        @click="editor.tiptap.content.chain().focus().addColumnAfter().run()"
+        :disabled="!editor.tiptap.content.can().addColumnAfter()"
+      >
+        <q-tooltip
+          transition-show="none"
+          transition-hide="none"
+          class="bg-grey-9 text-white"
+          :offset="[0, 4]"
+          >Add column after</q-tooltip
         >
-          <q-tooltip
-            transition-show="none"
-            transition-hide="none"
-            class="bg-grey-9 text-white"
-            :offset="[0, 4]"
-            >Remove column</q-tooltip
-          >
-        </q-btn>
-        <q-btn
-          flat
-          icon="mdi-table-row-plus-after"
-          padding="sm"
-          @click="editor.tiptap.content.chain().focus().addRowAfter().run()"
-          :disabled="!editor.tiptap.content.can().addRowAfter()"
+      </q-btn>
+      <q-separator vertical class="q-ml-xs q-mr-md" dark />
+      <span class="text-caption text-bold q-mr-xs">Row</span>
+      <q-btn
+        unelevated
+        icon="mdi-table-row-plus-before"
+        flat
+        padding="8px 6px"
+        @click="editor.tiptap.content.chain().focus().addRowBefore().run()"
+        :disabled="!editor.tiptap.content.can().addRowBefore()"
+      >
+        <q-tooltip
+          transition-show="none"
+          transition-hide="none"
+          class="bg-grey-9 text-white"
+          :offset="[0, 4]"
+          >Add column before</q-tooltip
         >
-          <q-tooltip
-            transition-show="none"
-            transition-hide="none"
-            class="bg-grey-9 text-white"
-            :offset="[0, 4]"
-            >Add column after</q-tooltip
-          >
-        </q-btn>
-      </div>
-    </div>
-  </div>
+      </q-btn>
+      <q-btn
+        flat
+        padding="8px 6px"
+        icon="mdi-close-box"
+        @click="editor.tiptap.content.chain().focus().deleteRow().run()"
+        :disabled="!editor.tiptap.content.can().deleteRow()"
+      >
+        <q-tooltip
+          transition-show="none"
+          transition-hide="none"
+          class="bg-grey-9 text-white"
+          :offset="[0, 4]"
+          >Remove column</q-tooltip
+        >
+      </q-btn>
+      <q-btn
+        flat
+        icon="mdi-table-row-plus-after"
+        padding="8px 6px"
+        @click="editor.tiptap.content.chain().focus().addRowAfter().run()"
+        :disabled="!editor.tiptap.content.can().addRowAfter()"
+        class="q-mr-xs"
+      >
+        <q-tooltip
+          transition-show="none"
+          transition-hide="none"
+          class="bg-grey-9 text-white"
+          :offset="[0, 4]"
+          >Add column after</q-tooltip
+        >
+      </q-btn>
+    </q-btn-group>
+  </q-footer>
 
   <!-- DIALOGS -->
   <ImageSelector v-model="imageDialogOpen" @hide="imageDialogOpen = false" />
@@ -539,16 +591,20 @@ export default defineComponent({
         .extendMarkRange("link")
         .setLink({ href: finalLink })
         .run();
-      this.linkDialog = false;
+      this.editor.ui.linkDialog.open = false;
     },
     removeLink() {
       this.editor.tiptap.content.chain().focus().unsetLink().run();
     },
-    openLinkDialog(event) {
-      event.preventDefault();
-      this.currentLink = this.editor.tiptap.content.getAttributes("link").href;
-      this.linkDialog = true;
+    openLink() {
+      const link = this.editor.tiptap.content.getAttributes("link").href;
+      if (link.startsWith("http")) {
+        window.open(link);
+      } else {
+        window.open("https://activisthandbook.org" + link);
+      }
     },
+
     openYoutubeDialog(event) {
       // this.currentYoutubeLink = this.editor.tiptap.content.getAttributes("link").href;
       this.youtubeDialog = true;
@@ -570,8 +626,9 @@ export default defineComponent({
   top: 8px;
   z-index: 100;
 }
-.table-menu {
-  top: 76px;
+.q-footer {
+  right: auto;
+  margin: 8px 10px;
 }
 .is-active {
   background: $secondary;

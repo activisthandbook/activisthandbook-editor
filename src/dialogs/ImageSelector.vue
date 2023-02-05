@@ -519,9 +519,9 @@
               icon="mdi-alert"
               class="q-mt-md"
               :href="
-                'mailto:contact@activisthandbook.org?subject=⚠️+Report+image:+' +
+                'mailto:contact@activisthandbook.org?subject=⚠️%20Report%20image:%20' +
                 image.data.id +
-                '&body=I+would+like+to+report+an+image+on+Activist+Handbook.%0D%0A%0D%0AReason%3A'
+                '&body=I%20would%20like%20to%20report%20an%20image%20on%20Activist%20Handbook.%0D%0A%0D%0AReason%3A'
               "
               target="_blank"
             />
