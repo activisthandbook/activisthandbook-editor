@@ -598,7 +598,7 @@ export default defineComponent({
     },
     openLink() {
       const link = this.editor.tiptap.content.getAttributes("link").href;
-      if (link.startsWith("http")) {
+      if (link.startsWith("http") || link.startsWith("mailto:")) {
         window.open(link);
       } else {
         window.open("https://activisthandbook.org" + link);

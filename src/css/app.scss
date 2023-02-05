@@ -51,13 +51,13 @@ h3,
   font-family: $font-secondary;
 
   &:not(.q-btn--round, .q-btn--fab, .q-btn--rounded) {
-    border-radius: 8px;
+    border-radius: 0px;
   }
 }
 .q-card,
 .rounded-borders,
 .q-menu {
-  border-radius: 12px;
+  border-radius: 2px;
 }
 .q-field--with-bottom {
   padding-bottom: 0;
@@ -115,4 +115,12 @@ h3,
   100% {
     background-position: 0% 50%;
   }
+}
+
+.q-btn--standard:before {
+  box-shadow: 2px 2px 0 black;
+}
+
+.q-dialog__inner > div {
+  border-radius: 2px;
 }
