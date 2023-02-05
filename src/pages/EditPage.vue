@@ -134,10 +134,11 @@
                 <q-btn
                   label="Writing guide"
                   no-caps
+                  outline
                   color="accent"
                   text-color="black"
                   icon-right="mdi-arrow-right"
-                  href="https://activisthandbook.org/en/support/writers"
+                  href="https://activisthandbook.org/contribute/write"
                   target="_blank"
                 />
               </div>
