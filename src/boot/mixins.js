@@ -35,9 +35,13 @@ export default boot(({ app }) => {
   app.mixin({
     methods: {
       mixin_humanDate(firestoreTimestamp) {
-        if (firestoreTimestamp) {
-          return dayjs(firestoreTimestamp.toDate()).calendar();
-        } else return "Date unknown";
+        try {
+          if (firestoreTimestamp) {
+            return dayjs(firestoreTimestamp.toDate()).calendar();
+          } else return "Date unknown";
+        } catch {
+          return null;
+        }
       },
 
       mixin_openURL: (link) => {
