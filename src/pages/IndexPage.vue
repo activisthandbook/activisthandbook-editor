@@ -4,6 +4,8 @@
       <q-toolbar class="flex q-py-md">
         <AppSwitcher />
         <q-toolbar-title>Activist Handbook</q-toolbar-title>
+        <q-btn round icon="mdi-magnify" flat @click="searchDialogOpen = true" />
+        <SearchDialog v-model="searchDialogOpen" />
       </q-toolbar>
     </q-header>
     <q-page-container>
@@ -94,6 +96,8 @@ import { useFirebaseStore } from "src/stores/firebase";
 
 import AppSwitcher from "components/AppSwitcher.vue";
 
+import SearchDialog from "src/dialogs/SearchDialog.vue";
+
 // Subpages
 import HomeView from "src/pages/index/HomeView.vue";
 import MyArticles from "src/pages/index/MyArticles.vue";
@@ -106,6 +110,7 @@ export default {
   name: "IndexPage",
   components: {
     AppSwitcher,
+    SearchDialog,
     HomeView,
     MyArticles,
     NewArticles,
@@ -116,6 +121,7 @@ export default {
   data() {
     return {
       tab: null,
+      searchDialogOpen: false,
     };
   },
   watch: {
