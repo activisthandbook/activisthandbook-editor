@@ -203,9 +203,9 @@
         icon="mdi-alert"
         outline
         :href="
-          'mailto:contact@activisthandbook.org?subject=⚠️+Report+article%3A+' +
+          'mailto:contact@activisthandbook.org?subject=⚠️%20Report%20article%3A%20' +
           editorStore.article.id +
-          '&body=I+would+like+to+report+an+article+on+Activist+Handbook.%0D%0A%0D%0AReason%3A'
+          '&body=I%20would%20like%20to%20report%20an%20article%20on%20Activist%20Handbook.%0D%0A%0D%0AReason%3A'
         "
         target="_blank"
       />
@@ -214,7 +214,7 @@
 
   <q-page-sticky
     position="bottom-left"
-    :offset="[12, 12]"
+    :offset="[8, 12]"
     v-if="editorStore && editorStore.tiptap.content"
     style="z-index: 1"
   >
@@ -633,10 +633,6 @@ export default {
   &:hover {
     opacity: 0.5;
   }
-}
-
-.has-focus a {
-  background: rgba($secondary, 0.1);
 }
 
 .generator {

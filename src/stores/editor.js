@@ -34,6 +34,13 @@ export const useEditorStore = defineStore("editor", {
       content: null,
     },
 
+    ui: {
+      linkDialog: {
+        open: false,
+        currentLink: null,
+      },
+    },
+
     article: {
       id: null,
       title: null,
@@ -358,6 +365,12 @@ export const useEditorStore = defineStore("editor", {
         hasErrors,
         errorList,
       };
+    },
+    openLinkDialog(event) {
+      event.preventDefault();
+      this.ui.linkDialog.currentLink =
+        this.tiptap.content.getAttributes("link").href;
+      this.ui.linkDialog.open = true;
     },
   },
 });
