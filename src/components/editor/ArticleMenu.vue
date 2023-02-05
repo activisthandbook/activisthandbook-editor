@@ -388,7 +388,7 @@
         padding="9.5px 12px"
         size="12px"
         color="secondary"
-        @click="editor.openLinkDialog()"
+        @click="editor.openLinkDialog($event)"
       />
       <q-separator vertical dark />
       <q-btn
