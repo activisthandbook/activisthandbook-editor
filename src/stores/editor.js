@@ -174,7 +174,7 @@ export const useEditorStore = defineStore("editor", {
                     ],
                     div: ["data-youtube-video"],
                     "dynamic-image": ["alt", "imageid", "title"],
-                    "action-signup": ["tags", "redirect"],
+                    "action-signup": ["tags", "redirect", "buttonlabel"],
                     "action-custom": [
                       "buttonlink",
                       "buttonlabel",
