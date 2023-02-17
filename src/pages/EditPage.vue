@@ -1,7 +1,7 @@
 <template>
-  <q-layout view="hhh lpR fFf">
+  <q-layout view="hHh lpR fFf">
     <q-header class="bg-accent text-black" bordered>
-      <q-toolbar class="q-py-md">
+      <q-toolbar style="padding: 12px">
         <!-- <q-icon name="mdi-file-document-edit" size="24px" class="gt-xs" /> -->
         <AppSwitcher> </AppSwitcher>
         <q-toolbar-title>Edit</q-toolbar-title>
@@ -116,13 +116,19 @@
       <q-page padding style="max-width: 720px; margin: auto; width: 100%">
         <div class="q-gutter-y-md q-mt-md q-mb-xl">
           <!-- GUIDE -->
-          <q-card class="bg-grey-2 q-mb-md text-body2" flat>
-            <q-card-section>
-              <div class="q-gutter-y-sm">
-                <div>
-                  <strong
-                    >Thank you for making Activist Handbook better.</strong
-                  >
+          <q-card class="bg-grey-2 q-mb-md flex q-py-sm" flat>
+            <q-item>
+              <q-item-section avatar>
+                <q-avatar
+                  icon="mdi-pencil"
+                  size="52px"
+                  color="secondary"
+                  text-color="accent"
+                />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label class="text-body2">
+                  <strong>You are now editing Activist Handbook.</strong>
                   All your edits are automatically saved and publicly shared
                   with others under a
                   <a
@@ -130,19 +136,22 @@
                     target="_blank"
                     >Creative Commons BY-NC-SA 4.0 licence</a
                   >.
-                </div>
-                <q-btn
-                  label="Writing guide"
-                  no-caps
-                  outline
-                  color="accent"
-                  text-color="black"
-                  icon-right="mdi-arrow-right"
-                  href="https://activisthandbook.org/contribute/write"
-                  target="_blank"
-                />
-              </div>
-            </q-card-section>
+                </q-item-label>
+
+                <!-- <q-btn
+                    label="Writing guide"
+                    no-caps
+                    outline
+                    color="accent"
+                    text-color="black"
+                    icon-right="mdi-arrow-right"
+                    href="https://activisthandbook.org/contribute/write"
+                    target="_blank"
+                  /> -->
+              </q-item-section>
+            </q-item>
+
+            <!-- <q-card-section> </q-card-section> -->
           </q-card>
 
           <!-- EDITOR -->
@@ -239,15 +248,20 @@
     </q-dialog>
 
     <q-dialog flat v-model="this.publishedSuccesfullyDialog">
-      <q-card class="text-center bg-accent">
-        <q-card-section class="q-pa-xl">
+      <q-card class="text-center bg-accent" style="max-width: 450px">
+        <q-card-section class="q-py-xl q-px-lg">
           <div>
-            <q-icon name="mdi-heart" size="64px" color="primary" />
+            <q-icon
+              name="mdi-heart"
+              size="64px"
+              color="primary"
+              class="confetti"
+            />
           </div>
-          <h2 class="q-mt-md q-mb-sm">Thank you for contributing!</h2>
+          <h2 class="q-mt-md q-mb-md">We will review your edits soon</h2>
           <div>
-            Our moderators will have a look at your edits. Thank you for making
-            Activist Handbook better.
+            Our moderators will have a look at your contributions. Thank you for
+            making Activist Handbook better.
           </div>
           <div class="q-mt-md q-gutter-sm">
             <q-btn
@@ -317,6 +331,8 @@ import { mapStores } from "pinia";
 import { useEditorStore } from "stores/editor";
 import { useFirebaseStore } from "stores/firebase";
 import AppSwitcher from "components/AppSwitcher.vue";
+
+import party from "party-js";
 
 import {
   getFirestore,
@@ -479,6 +495,15 @@ export default {
 
           if (!this.editorStore.article.deleteArticle) {
             this.publishedSuccesfullyDialog = true;
+
+            setTimeout(function () {
+              //your code to be executed after 1 second
+              party.confetti(document.querySelector(".confetti"), {
+                color: party.Color.fromHex("#D70057"),
+                count: 10,
+                size: 1,
+              });
+            }, 400);
           }
         })
         .catch((error) => {
@@ -537,7 +562,7 @@ aside {
   // border-radius: 6px;
   margin: 32px;
   position: sticky;
-  top: 32px;
+  top: 88px;
   width: 300px;
   max-height: calc(100vh - 64px);
   overflow: scroll;

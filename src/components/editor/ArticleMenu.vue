@@ -1,9 +1,7 @@
 <template>
   <q-card
     v-if="editor && editor.tiptap.content"
-    class="bg-accent justify-center sticky"
-    flat
-    bordered
+    class="bg-accent justify-center sticky shadow-5"
   >
     <div class="q-gutter-x-xs flex" style="padding: 12px">
       <!-- HEADINGS -->
@@ -623,7 +621,7 @@ export default defineComponent({
 <style scoped lang="scss">
 .sticky {
   position: sticky;
-  top: 8px;
+  top: 80px;
   z-index: 100;
 }
 .q-footer {
