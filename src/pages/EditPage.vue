@@ -369,7 +369,7 @@ export default {
     // },
     websiteURL: function () {
       return (
-        "https://new.activisthandbook.org/" +
+        "https://activisthandbook.org/" +
         this.editorStore.article.publishedFullPath
       );
     },
