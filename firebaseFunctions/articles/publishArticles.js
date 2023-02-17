@@ -30,6 +30,7 @@ const elementsToKeep = [
   "action-smart-small",
   "action-signup",
   "action-button",
+  "table",
 ];
 function isOneOfElements(node, array) {
   log("isOneOfElements node", node);
@@ -324,21 +325,26 @@ async function updatePublishedArticles(articles) {
     // 6. Create, add to or update articles_published array
     else if (!article.deleteArticle) {
       log("⚪️ edit article", article);
-      // 1. Update articles_published collection
-      if (i < 500) batch1.set(publishedArticleRef, article);
-      else if (i < 1000) batch2.set(publishedArticleRef, article);
-      else batch3.set(publishedArticleRef, article);
-      i++;
 
-      // 2. Build full link from languageCode and path
+      // 1. Build full link from languageCode and path
       const fullPublishedPath = generateFullPath(article);
 
       log("⚪️ fullPublishedPath article", fullPublishedPath);
 
-      // Update full published path in live draft
+      // Update full published path
+      const publishedArticleData = {
+        ...article,
+        publishedFullPath: fullPublishedPath,
+      };
       const draftArticleData = {
         publishedFullPath: fullPublishedPath,
       };
+
+      // 2. Update articles_published and articles_draft collections
+      if (i < 500) batch1.set(publishedArticleRef, publishedArticleData);
+      else if (i < 1000) batch2.set(publishedArticleRef, publishedArticleData);
+      else batch3.set(publishedArticleRef, publishedArticleData);
+      i++;
 
       if (i < 500) batch1.update(draftArticleRef, draftArticleData);
       else if (i < 1000) batch2.update(draftArticleRef, draftArticleData);

@@ -244,7 +244,7 @@
           <div>
             <q-icon name="mdi-heart" size="64px" color="primary" />
           </div>
-          <h2 class="q-mt-md q-mb-sm">Thank you for contributing</h2>
+          <h2 class="q-mt-md q-mb-sm">Thank you for contributing!</h2>
           <div>
             Our moderators will have a look at your edits. Thank you for making
             Activist Handbook better.
@@ -263,22 +263,30 @@
               :to="{ name: 'Review', params: { reviewTab: 'articles' } }"
               outline
             />
-            <q-btn
-              v-else
-              label="Home"
-              no-caps
-              color="secondary"
-              icon="mdi-home"
-              :to="{ name: 'Home', params: { homeTab: 'home' } }"
-              outline
-            />
 
             <q-btn
+              v-else
               label="Continue editing"
               no-caps
               color="secondary"
               @click="this.publishedSuccesfullyDialog = false"
-              autofocus
+            />
+
+            <q-btn
+              v-if="editorStore.article.publishedFullPath"
+              label="Back to website"
+              no-caps
+              color="secondary"
+              :href="websiteURL"
+            />
+
+            <q-btn
+              v-else
+              label="Dashboard"
+              no-caps
+              color="secondary"
+              icon="mdi-home"
+              :to="{ name: 'Home', params: { homeTab: 'home' } }"
             />
           </div>
         </q-card-section>
