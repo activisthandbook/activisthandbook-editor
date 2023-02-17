@@ -247,7 +247,7 @@ export default {
           this.usersStore.profile.data[this.firebaseStore.auth.currentUser.uid];
 
         // TO-DO: change url
-        await fetch("https://new.activisthandbook.org/api/subscribe", {
+        await fetch("https://activisthandbook.org/api/subscribe", {
           method: "POST",
           body: JSON.stringify({
             firstName: profile.firstName,

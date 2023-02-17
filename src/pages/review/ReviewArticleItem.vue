@@ -227,7 +227,7 @@
               <q-btn
                 class="q-mt-sm"
                 label="Open on website"
-                :href="`https://new.activisthandbook.org/${fullPath(
+                :href="`https://activisthandbook.org/${fullPath(
                   articleVersions.data[articleVersions.data.length - 1]
                 )}`"
                 target="_blank"
