@@ -241,11 +241,11 @@
       <q-separator vertical class="q-mx-sm" />
       <span v-if="unsaved">
         <q-icon name="mdi-sync" />
-        Saving...
+        Saving draft...
       </span>
       <span v-else icon="">
         <q-icon name="mdi-cloud-check" />
-        Saved
+        Saved draft
       </span>
     </q-chip>
   </q-page-sticky>

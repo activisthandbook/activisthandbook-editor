@@ -37,6 +37,7 @@
     "dayjs": "^1.11.3",
     "firebase": "^9.8.3",
     "lodash": "^4.17.21",
+    "party-js": "^2.2.0",
     "pinia": "^2.0.14",
     "quasar": "^2.6.0",
     "sanitize-html": "^2.7.0",
