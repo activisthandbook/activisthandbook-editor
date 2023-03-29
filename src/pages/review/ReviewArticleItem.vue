@@ -42,8 +42,13 @@
               {{
                 mixin_humanDate(
                   articleVersions.data[this.articleVersionSelected].metadata
-                    .createdTimestamp
+                    .updatedTimestamp
                 )
+              }}
+              |
+              {{
+                articleVersions.data[this.articleVersionSelected].metadata
+                  .updatedBy
               }}
             </q-item-label>
             <q-item-label class="text-bold">

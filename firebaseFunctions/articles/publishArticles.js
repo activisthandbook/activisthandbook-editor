@@ -448,6 +448,9 @@ async function updatePublishedArticles(articles) {
       const languageCollectionData = {
         articles_published:
           languageCollections[article.languageCollectionID].articles_published,
+        articles_published_count:
+          languageCollections[article.languageCollectionID].articles_published
+            .length,
         lastPublishedServerTimestamp: FieldValue.serverTimestamp(),
       };
       if (i < 500) batch1.update(languageCollectionRef, languageCollectionData);

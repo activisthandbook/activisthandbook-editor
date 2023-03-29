@@ -106,11 +106,14 @@ service cloud.firestore {
           if signedIn();
         allow create:
           if signedIn() &&
+          request.resource.data.id == articleID &&
+          request.resource.data.publishedFullPath == null &&
           validMetadataCreated() &&
           validMetadataUpdated();
         allow update:
           if signedIn() &&
           validMetadataUpdated() &&
+          request.resource.data.id == articleID &&
           request.resource.data.publishedFullPath == resource.data.publishedFullPath;
         allow delete:
           if hasRole(getRoles(), "moderator");
