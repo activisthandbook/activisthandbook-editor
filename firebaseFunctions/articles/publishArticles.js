@@ -288,7 +288,7 @@ async function updatePublishedArticles(articles) {
       log("⚪️ publishedArticlesIndex", publishedArticlesIndex);
     }
 
-    // 🗑 DELETE ARTICLE
+    // 🗑 DELETE ARTICLE (published ones)
     // Actions:
     // - remove from language collection
     if (article.deleteArticle && article.publishedFullPath) {

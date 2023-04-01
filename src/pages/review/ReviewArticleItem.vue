@@ -507,9 +507,6 @@ export default {
     deleteArticle: async function () {
       try {
         await runTransaction(db, async (transaction) => {
-          const acceptedVersion =
-            this.articleVersions.data[this.articleVersionSelected];
-
           // Read the language collection that this article is member of
           const languageCollectionRef = doc(
             db,
@@ -520,28 +517,42 @@ export default {
           const languageCollectionDoc = await transaction.get(
             languageCollectionRef
           );
+          let languageCollectionData = null;
           if (!languageCollectionDoc.exists()) {
             throw "Language collection not found";
+          } else {
+            languageCollectionData = languageCollectionDoc.data();
           }
 
           // Copy the currently selected version to the publishingQueue collection
-          const publishingQueueRef = doc(
-            db,
-            "articles_inQueue",
-            this.liveDraftArticle.id
-          );
-          transaction.set(publishingQueueRef, {
-            ...acceptedVersion,
-            id: acceptedVersion.articleID,
-          });
+          if (this.liveDraftArticle.lastPublishedServerTimestamp) {
+            const publishingQueueRef = doc(
+              db,
+              "articles_inQueue",
+              this.liveDraftArticle.id
+            );
+
+            transaction.set(publishingQueueRef, {
+              deleteArticle: true,
+              languageCollectionID: this.liveDraftArticle.languageCollectionID,
+              id: this.liveDraftArticle.articleID,
+            });
+          }
 
           // Remove from language collection
-          transaction.update(languageCollectionRef, {
-            articles: arrayRemove({
-              articleID: this.liveDraftArticle.id,
-              langCode: this.liveDraftArticle.langCode,
-            }),
-          });
+          if (
+            languageCollectionData.articles_draft.length > 1 ||
+            this.liveDraftArticle.lastPublishedServerTimestamp
+          ) {
+            transaction.update(languageCollectionRef, {
+              articles_draft: arrayRemove({
+                articleID: this.liveDraftArticle.id,
+                langCode: this.liveDraftArticle.langCode,
+              }),
+            });
+          } else {
+            transaction.delete(languageCollectionRef);
+          }
 
           // Delete live draft article. Versions are automatically deleted
           const liveArticleRef = doc(
@@ -553,7 +564,12 @@ export default {
         });
 
         // update analytics locally (it will be updated on server automatically with a counter, but this way we prevent a delay)
-        this.analyticsStore.data.articles_inQueue_count++;
+        if (
+          !this.liveDraftArticle.deleteArticle &&
+          !this.liveDraftArticle.lastPublishedServerTimestamp
+        ) {
+          this.analyticsStore.data.articles_inQueue_count++;
+        }
       } catch (e) {
         console.log("Transaction failed: ", e);
       }
