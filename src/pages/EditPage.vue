@@ -337,6 +337,7 @@ import party from "party-js";
 import {
   getFirestore,
   setDoc,
+  updateDoc,
   doc,
   serverTimestamp,
   writeBatch,
@@ -512,15 +513,14 @@ export default {
         });
     },
     deleteAndPublish() {
-      setDoc(
-        doc(db, "articles_draft", this.$route.params.articleID),
-        {
-          deleteArticle: true,
+      updateDoc(doc(db, "articles_draft", this.$route.params.articleID), {
+        ...this.article,
+        deleteArticle: true,
+        metadata: {
+          updatedTimestamp: serverTimestamp(),
+          updatedBy: this.firebaseStore.auth.currentUser.uid,
         },
-        {
-          merge: true,
-        }
-      ).then(() => {
+      }).then(() => {
         this.editorStore.article.deleteArticle = true;
         this.publish();
       });
