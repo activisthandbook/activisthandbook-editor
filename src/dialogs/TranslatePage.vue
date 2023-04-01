@@ -107,9 +107,11 @@ export default {
       const batch = writeBatch(db);
 
       batch.set(doc(db, "articles_draft", newArticleID), {
+        id: newArticleID,
         langCode: this.lang.code,
         languageCollectionID: this.$route.params.languageCollectionID,
         publishedFullPath: null,
+        lastPublishedServerTimestamp: null,
         metadata: {
           updatedTimestamp: serverTimestamp(),
           updatedBy: this.firebaseStore.auth.currentUser.uid,

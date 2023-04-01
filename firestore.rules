@@ -108,6 +108,7 @@ service cloud.firestore {
           if signedIn() &&
           request.resource.data.id == articleID &&
           request.resource.data.publishedFullPath == null &&
+          request.resource.data.lastPublishedServerTimestamp == null &&
           validMetadataCreated() &&
           validMetadataUpdated();
         allow update:
