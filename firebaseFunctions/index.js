@@ -1,4 +1,5 @@
 const admin = require("firebase-admin");
+const functions = require("firebase-functions");
 
 // 🔄 INITIALISATIONS
 if (admin.apps.length === 0) {
@@ -21,6 +22,7 @@ exports.publishArticles = publishArticles.publishArticles;
 // Triggers 🔥
 exports.articles_draft = require("./articles/articles_draft");
 exports.articles_inQueue = require("./articles/articles_inQueue");
+exports.vlad = require("./articles/vlad");
 exports.articles_published = require("./articles/articles_published");
 exports.articles_versionsDraft = require("./articles/articles_versionsDraft");
 exports.articles_versionsPublished = require("./articles/articles_versionsPublished");

@@ -2,8 +2,9 @@ const functions = require("firebase-functions");
 const vision = require("@google-cloud/vision");
 
 const admin = require("firebase-admin");
-const { getFirestore, FieldValue } = require("firebase-admin/firestore");
+const { getFirestore, FieldValue, connectFirestoreEmulator } = require("firebase-admin/firestore");
 const db = getFirestore();
+// connectFirestoreEmulator(db, 'localhost', 8080);
 
 const debugging = true;
 
