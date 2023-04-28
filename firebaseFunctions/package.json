@@ -1,10 +1,12 @@
 {
   "name": "functions",
+  "version": "1.0.0",
   "description": "Cloud Functions for Firebase",
   "scripts": {
     "🔥 deploy": "firebase deploy --only functions",
     "serve": "firebase emulators:start --only functions",
     "shell": "firebase functions:shell",
+    "vlad": "firebase deploy --only functions:vlad",
     "start": "npm run shell",
     "logs": "firebase functions:log"
   },
@@ -20,6 +22,7 @@
     "cors": "^2.8.5",
     "firebase-admin": "^10.0.2",
     "firebase-functions": "^4.2.1",
+    "@google-analytics/data": "3.2.2",
     "firebase-tools": "^11.16.0",
     "js-base64": "^3.7.2",
     "lodash": "^4.17.21",

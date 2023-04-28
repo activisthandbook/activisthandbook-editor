@@ -41,6 +41,7 @@ exports.vlad = functions.region("europe-west1").pubsub.schedule('20 19 * * 1').o
     console.log('This wiMYsssVLAD!');
     const analyticsDataClient = new BetaAnalyticsDataClient();
     const propertyId = '252631605';
+    console.log(propertyId);
     // Add your code here to perform the desired action
     const [response] = await analyticsDataClient.runReport({
         property: `properties/${propertyId}`,
