@@ -120,7 +120,7 @@
           <div class="text-caption">Monthly readers</div>
           <div class="text-h2 flex">
             <q-icon name="mdi-google-analytics" class="q-mr-sm" />
-            4K
+            6K
           </div>
         </q-card-section>
       </q-card>
