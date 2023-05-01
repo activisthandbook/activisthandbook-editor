@@ -1,4 +1,4 @@
-const debugging = false;
+const debugging = true;
 
 const functions = require("firebase-functions");
 

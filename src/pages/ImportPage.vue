@@ -140,6 +140,8 @@
 
     <div class="text-bold">Tooling</div>
     <q-btn label="Put all published in queue" @click="reRender()" />
+    <q-btn label="Get all published IDs" @click="getPublishedIDs()" />
+    <q-btn label="Get all draft IDs" @click="getDraftIDs()" />
   </div>
 </template>
 <script>
@@ -675,6 +677,32 @@ export default {
 
       await batch.commit();
       console.log("success");
+    },
+    async getDraftIDs() {
+      const databaseArticles = await getDocs(
+        query(collection(db, "articles_draft"))
+      );
+
+      let list = [];
+
+      databaseArticles.forEach(async (article) => {
+        list.push(article.id);
+      });
+
+      console.log("draftIDs", list);
+    },
+    async getPublishedIDs() {
+      const databaseArticles = await getDocs(
+        query(collection(db, "articles_published"))
+      );
+
+      let list = [];
+
+      databaseArticles.forEach(async (article) => {
+        list.push(article.id);
+      });
+
+      console.log("publishedIDs", list);
     },
   },
 };

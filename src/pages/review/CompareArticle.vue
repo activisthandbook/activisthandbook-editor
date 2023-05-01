@@ -575,17 +575,15 @@ export default {
             );
 
             transaction.set(publishingQueueRef, {
+              ...this.article_draft.data,
               deleteArticle: true,
-              languageCollectionID:
-                this.article_draft_live.languageCollectionID,
-              id: this.article_draft_live.articleID,
             });
           }
 
           // Remove from language collection
           if (
-            languageCollectionData.articles_draft.length > 1 ||
-            this.article_draft_live.lastPublishedServerTimestamp
+            languageCollectionData.articles_draft.length > 1 &&
+            !this.article_draft_live.lastPublishedServerTimestamp
           ) {
             transaction.update(languageCollectionRef, {
               articles_draft: arrayRemove({
@@ -593,7 +591,7 @@ export default {
                 langCode: this.article_draft_live.langCode,
               }),
             });
-          } else {
+          } else if (!this.article_draft_live.lastPublishedServerTimestamp) {
             transaction.delete(languageCollectionRef);
           }
 
