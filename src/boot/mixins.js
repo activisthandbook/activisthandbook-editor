@@ -77,7 +77,7 @@ export default boot(({ app }) => {
         // console.log(offset, verticalScrollPosition);
       },
       async mixin_validatePath(path, langCode, currentID) {
-        const validPathRegex = /^[A-Za-z0-9\/]+(-[A-Za-z0-9\/]+)*$/;
+        const validPathRegex = /^[a-z0-9\/]+(-[a-z0-9\/]+)*$/;
 
         // Empty path
         if (!path) {

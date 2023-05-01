@@ -7,10 +7,15 @@
       included in our our search index.
     </q-card-section>
   </q-card>
-  <editor-content :editor="editorStore.tiptap.title" class="title" />
+  <editor-content
+    :editor="editorStore.tiptap.title"
+    class="title"
+    :dir="languagesStore.languageDirection(editorStore.article.langCode)"
+  />
   <editor-content
     :editor="editorStore.tiptap.description"
     class="description"
+    :dir="languagesStore.languageDirection(editorStore.article.langCode)"
   />
 
   <LanguageSelector
@@ -28,7 +33,11 @@
 
   <ArticleMenu />
 
-  <editor-content :editor="editorStore.tiptap.content" class="article" />
+  <editor-content
+    :editor="editorStore.tiptap.content"
+    class="article"
+    :dir="languagesStore.languageDirection(editorStore.article.langCode)"
+  />
 
   <!-- ℹ️ ARTICLE DETAILS -->
 

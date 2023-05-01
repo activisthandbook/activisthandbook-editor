@@ -3,32 +3,36 @@
     <q-card v-if="!articles_draft.data[0]" class="bg-accent">
       <q-card-section>No new edits.</q-card-section>
     </q-card>
-    <ReviewArticleItem
-      v-for="article_draft in articles_draft.data"
-      :liveDraftArticle="article_draft"
-      :key="article_draft.id"
+
+    <CompareArticle
+      v-for="article in articles_draft.data"
+      :article_draft_live="article"
+      :key="article.id"
     />
   </div>
 </template>
 <script>
-import ReviewArticleItem from "./ReviewArticleItem.vue";
+import CompareArticle from "./CompareArticle.vue";
 
 import {
-  collection,
-  getDoc,
-  doc,
-  query,
-  where,
-  orderBy,
-  limit,
-  onSnapshot,
   getFirestore,
+  collection,
+  query,
+  onSnapshot,
+  orderBy,
+  writeBatch,
+  doc,
+  serverTimestamp,
+  where,
+  limit,
+  runTransaction,
+  arrayRemove,
 } from "firebase/firestore";
 const db = getFirestore();
 
 export default {
   components: {
-    ReviewArticleItem,
+    CompareArticle,
   },
   data() {
     return {
@@ -40,8 +44,8 @@ export default {
       },
     };
   },
-  created: function () {
-    this.fetchArticles();
+  async created() {
+    await this.fetchArticles();
   },
   unmounted() {
     this.articles_draft.unsubscribe();
