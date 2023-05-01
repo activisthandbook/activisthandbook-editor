@@ -1,7 +1,7 @@
 <template>
   <q-layout view="hHh lpR fFf">
     <q-header class="bg-accent text-black" bordered>
-      <q-toolbar style="padding: 12px">
+      <q-toolbar class="flex q-py-md">
         <!-- <q-icon name="mdi-file-document-edit" size="24px" class="gt-xs" /> -->
         <AppSwitcher> </AppSwitcher>
         <q-toolbar-title>Edit</q-toolbar-title>
