@@ -29,8 +29,11 @@ service cloud.firestore {
 
       function validMetadataUpdated(){
         return
-          request.resource.data.metadata.updatedBy == request.auth.uid &&
-          (request.resource.data.metadata.updatedTimestamp == request.time || hasRole(getRoles(), "moderator"))
+          (
+            request.resource.data.metadata.updatedBy == request.auth.uid &&
+            request.resource.data.metadata.updatedTimestamp == request.time
+          ) ||
+          hasRole(getRoles(), "moderator")
       }
 
       // APP

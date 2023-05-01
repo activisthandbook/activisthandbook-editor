@@ -32,7 +32,7 @@ export const useUsersStore = defineStore("users", {
   }),
   actions: {
     // USER
-    async fetchUser(userID, settings) {
+    async fetchUser(userID) {
       if (!this.profile.loadStarted[userID]) {
         return new Promise(async (resolve, reject) => {
           this.profile.loadStarted[userID] = true;

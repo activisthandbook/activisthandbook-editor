@@ -16,7 +16,7 @@
             <strong>
               {{ analyticsStore.data.articles_inQueue_count }}
             </strong>
-            <span v-if="analyticsStore.data.articlesInQueueCount > 1">
+            <span v-if="analyticsStore.data.articles_inQueue_count > 1">
               articles</span
             >
             <span v-else> article</span>
@@ -82,16 +82,6 @@ export default {
 };
 </script>
 <style lang="scss" scoped>
-.list-enter-active,
-.list-leave-active {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.list-enter-from,
-.list-leave-to {
-  opacity: 0;
-  transform: translateY(8px);
-}
-
 /* The element to apply the animation to */
 .draw-attention {
   animation-name: draw-attention;

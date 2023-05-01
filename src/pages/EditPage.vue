@@ -82,36 +82,6 @@
       </q-toolbar>
     </q-header>
 
-    <!-- <q-drawer
-      show-if-above
-      v-model="rightDrawerOpen"
-      side="right"
-      bordered
-      class="bg-accent"
-      :width="400"
-    >
-      <div class="q-ma-md table-of-contents">
-        <div
-          v-for="(header, index) in editorStore.article.contentHeaders"
-          :key="index"
-          :class="{ 'q-ml-lg': header.level === 3 }"
-        >
-          <q-btn
-            @click="mixin_scrollToID(header.id)"
-            no-caps
-            square
-            flat
-            class="full-width"
-            align="left"
-            :class="{ 'text-bold': header.level === 2 }"
-            :dense="header.level > 2"
-          >
-            <div class="ellipsis">{{ header.text }}</div>
-          </q-btn>
-        </div>
-      </div>
-    </q-drawer> -->
-
     <q-page-container class="flex items-start">
       <q-page padding style="max-width: 720px; margin: auto; width: 100%">
         <div class="q-gutter-y-md q-mt-md q-mb-xl">
@@ -178,7 +148,10 @@
         </q-page-sticky> -->
       </q-page>
       <aside>
-        <div class="table-of-contents">
+        <div
+          class="table-of-contents"
+          :dir="languagesStore.languageDirection(editorStore.article.langCode)"
+        >
           <div class="text-caption q-mb-sm text-grey-9">Contents</div>
           <div
             v-if="
@@ -192,7 +165,16 @@
             v-for="(header, index) in editorStore.article.contentHeaders"
             :key="index"
             :class="{
-              'q-ml-md': header.level === 3,
+              'q-ml-md':
+                header.level === 3 &&
+                languagesStore.languageDirection(
+                  editorStore.article.langCode
+                ) === 'ltr',
+              'q-mr-md':
+                header.level === 3 &&
+                languagesStore.languageDirection(
+                  editorStore.article.langCode
+                ) === 'rtl',
             }"
           >
             <q-btn
@@ -330,6 +312,8 @@
 import { mapStores } from "pinia";
 import { useEditorStore } from "stores/editor";
 import { useFirebaseStore } from "stores/firebase";
+import { useLanguagesStore } from "stores/languages";
+
 import AppSwitcher from "components/AppSwitcher.vue";
 
 import party from "party-js";
@@ -364,7 +348,12 @@ export default {
   },
 
   computed: {
-    ...mapStores(useEditorStore, useFirebaseStore, useUsersStore),
+    ...mapStores(
+      useEditorStore,
+      useFirebaseStore,
+      useUsersStore,
+      useLanguagesStore
+    ),
     allowedToPublish: function () {
       if (
         this.editorStore.article.requestedPublication &&

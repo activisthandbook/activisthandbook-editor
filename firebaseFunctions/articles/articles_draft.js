@@ -19,6 +19,10 @@ exports.onCreate = functions
   });
 
 exports.onDelete = functions
+  .runWith({
+    timeoutSeconds: 540,
+    memory: "2GB",
+  })
   .region("europe-west1")
   .firestore.document("articles_draft/{articleID}")
   .onDelete(async (snap, context) => {
@@ -30,12 +34,25 @@ exports.onDelete = functions
     // Run a recursive delete on the given document or collection path.
     // The 'token' must be set in the functions config, and can be generated
     // at the command line by running 'firebase login:ci'.
-    await firebase_tools.firestore.delete(`articles_draft/${articleID}`, {
-      project: process.env.GCLOUD_PROJECT,
-      recursive: true,
-      force: true,
-      token: functions.config().fb.token,
-    });
+    await firebase_tools.firestore.delete(
+      `articles_draft/${articleID}/versions_draft`,
+      {
+        project: process.env.GCLOUD_PROJECT,
+        recursive: true,
+        force: true,
+        // token: functions.config().fb.token,
+      }
+    );
+
+    await firebase_tools.firestore.delete(
+      `articles_draft/${articleID}/versions_published`,
+      {
+        project: process.env.GCLOUD_PROJECT,
+        recursive: true,
+        force: true,
+        // token: functions.config().fb.token,
+      }
+    );
 
     // TO-DO: Remove article from recently edited user profiles
 

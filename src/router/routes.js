@@ -86,7 +86,7 @@ const routes = [
         name: "Import",
       },
       {
-        path: "/review/:reviewTab",
+        path: "/review",
         component: () => import("pages/ReviewPage.vue"),
         name: "Review",
         meta: {

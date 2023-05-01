@@ -1,6 +1,13 @@
 import { defineStore } from "pinia";
 
 export const useLanguagesStore = defineStore("languages", {
+  actions: {
+    languageDirection(langCode) {
+      // console.log(this.languages);
+      const lang = this.languages.find((l) => l.code === langCode);
+      return lang?.direction;
+    },
+  },
   state: () => ({
     languages: [
       {
