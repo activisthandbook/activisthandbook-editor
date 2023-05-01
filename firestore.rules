@@ -21,14 +21,19 @@ service cloud.firestore {
         return !request.resource.data.keys().hasAny(fieldsArray)
       }
 
-      function validMetadataCreated(){
+      function validMetadataCreated(id){
         return
-          request.resource.data.metadata.createdBy == request.auth.uid &&
-          (request.resource.data.metadata.createdTimestamp == request.time || hasRole(getRoles(), "moderator"))
+          request.resource.data.id == id &&
+          (
+            request.resource.data.metadata.createdBy == request.auth.uid &&
+            request.resource.data.metadata.createdTimestamp == request.time
+          ) ||
+          hasRole(getRoles(), "moderator")
       }
 
-      function validMetadataUpdated(){
+      function validMetadataUpdated(id){
         return
+          request.resource.data.id == id &&
           (
             request.resource.data.metadata.updatedBy == request.auth.uid &&
             request.resource.data.metadata.updatedTimestamp == request.time
@@ -51,51 +56,51 @@ service cloud.firestore {
         allow read: if signedIn();
         allow create: if
           signedIn() &&
-          validMetadataCreated() &&
-          validMetadataUpdated() &&
+          validMetadataCreated(userID) &&
+          validMetadataUpdated(userID) &&
           // User can only edit their own document
           request.auth.uid == userID &&
           // Users cannot set their roles
           (doesNotContainFields(['roles']) || request.resource.data.roles == resource.data.roles);
         allow update: if
           signedIn() &&
-          validMetadataUpdated() &&
+          validMetadataUpdated(userID) &&
           // User can only edit their own document, except if they are admin
           request.auth.uid == userID &&
           // User cannot set their own roles, except if they are admin
           (doesNotContainFields(['roles']) || request.resource.data.roles == resource.data.roles);
 
         allow write: if
-          validMetadataUpdated() &&
+          validMetadataUpdated(userID) &&
           hasRole(getRoles(), "admin");
       }
 
       // MENU
-      match /menu/draft {
-        allow read, create, update: if signedIn();
+      // match /menu/draft {
+      //   allow read, create, update: if signedIn();
 
-        match /versions_draft/{versionID} {
-          allow read: if signedIn();
-          allow create: if
-            signedIn() &&
-            validMetadataUpdated();
-          allow delete: if hasRole(getRoles(), "moderator");
-        }
-        match /versions_published/{versionID} {
-          allow read: if signedIn();
-          allow create: if
-            validMetadataCreated() &&
-            hasRole(getRoles(), "moderator");
-          allow delete: if hasRole(getRoles(), "moderator");
-        }
-      }
-      match /menu/published {
-        allow read, create, update: if signedIn();
-      }
+      //   match /versions_draft/{versionID} {
+      //     allow read: if signedIn();
+      //     allow create: if
+      //       signedIn() &&
+      //       validMetadataUpdated(versionID);
+      //     allow delete: if hasRole(getRoles(), "moderator");
+      //   }
+      //   match /versions_published/{versionID} {
+      //     allow read: if signedIn();
+      //     allow create: if
+      //       validMetadataCreated(versionID) &&
+      //       hasRole(getRoles(), "moderator");
+      //     allow delete: if hasRole(getRoles(), "moderator");
+      //   }
+      // }
+      // match /menu/published {
+      //   allow read, create, update: if signedIn();
+      // }
 
-       match /menu/inQueue {
-        allow read, write: if hasRole(getRoles(), "moderator");
-      }
+      //  match /menu/inQueue {
+      //   allow read, write: if hasRole(getRoles(), "moderator");
+      // }
 
       // IMAGES
       match /images/{imageID} {
@@ -109,31 +114,41 @@ service cloud.firestore {
           if signedIn();
         allow create:
           if signedIn() &&
-          request.resource.data.id == articleID &&
           request.resource.data.publishedFullPath == null &&
           request.resource.data.lastPublishedServerTimestamp == null &&
-          validMetadataCreated() &&
-          validMetadataUpdated();
+          validMetadataCreated(articleID) &&
+          validMetadataUpdated(articleID);
         allow update:
           if signedIn() &&
-          validMetadataUpdated() &&
-          request.resource.data.id == articleID &&
+          validMetadataUpdated(articleID) &&
           request.resource.data.publishedFullPath == resource.data.publishedFullPath;
         allow delete:
           if hasRole(getRoles(), "moderator");
 
         match /versions_draft/{versionID} {
-        	allow read, create: if signedIn();
-          allow write, delete: if hasRole(getRoles(), "moderator");
+        	allow read: if
+            signedIn();
+          allow create: if
+            signedIn() &&
+            request.resource.data.articleID == articleID &&
+            validMetadataCreated(versionID) &&
+            validMetadataUpdated(versionID);
+          allow delete: if hasRole(getRoles(), "moderator");
         }
         match /versions_published/{versionID} {
-        	allow read, create: if signedIn();
-          allow write, delete: if hasRole(getRoles(), "moderator");
+        	allow read: if signedIn();
+          allow create: if
+            request.resource.data.articleID == articleID &&
+            validMetadataCreated(versionID) &&
+            validMetadataUpdated(versionID) &&
+            hasRole(getRoles(), "moderator");
+          allow delete: if hasRole(getRoles(), "moderator");
         }
       }
 
       match /articles_inQueue/{articleID} {
-        allow read, create, update: if hasRole(getRoles(), "moderator");
+        allow read, create, update: if
+          hasRole(getRoles(), "moderator");
       }
 
       match /articles_published/{collectionID} {
@@ -148,13 +163,13 @@ service cloud.firestore {
           // articles_published
           request.resource.data.articles_published == null &&
           // metadata
-          validMetadataCreated() &&
-          validMetadataUpdated();
+          validMetadataCreated(collectionID) &&
+          validMetadataUpdated(collectionID);
         allow update: if
           signedIn() &&
           // articles_published
           request.resource.data.articles_published == resource.data.articles_published &&
-          validMetadataUpdated();
+          validMetadataUpdated(collectionID);
         allow delete: if hasRole(getRoles(), "moderator")
       }
 

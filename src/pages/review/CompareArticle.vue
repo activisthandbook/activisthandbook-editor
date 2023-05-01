@@ -2,7 +2,11 @@
   <q-skeleton
     class="rounded-borders"
     height="144.77px"
-    v-if="!article_draft.dataLoaded || !article_published.dataLoaded"
+    v-if="
+      !article_draft.dataLoaded ||
+      !article_draft.data ||
+      !article_published.dataLoaded
+    "
   />
   <q-card v-else class="bg-accent" flat bordered>
     <q-expansion-item>
@@ -576,6 +580,7 @@ export default {
 
             transaction.set(publishingQueueRef, {
               ...this.article_draft.data,
+              id: this.article_draft.data.articleID,
               deleteArticle: true,
             });
           }
@@ -606,9 +611,11 @@ export default {
 
         // update analytics locally (it will be updated on server automatically with a counter, but this way we prevent a delay)
         if (
-          !this.article_draft_live.deleteArticle &&
+          this.article_draft_live.deleteArticle &&
           !this.article_draft_live.lastPublishedServerTimestamp
         ) {
+          // do nothing
+        } else {
           this.analyticsStore.data.articles_inQueue_count++;
         }
       } catch (e) {
