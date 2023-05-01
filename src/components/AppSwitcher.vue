@@ -2,21 +2,21 @@
   <q-btn icon="mdi-apps" round color="primary" text-color="accent" unelevated>
     <q-menu
       :offset="[0, 8]"
-      class="shadow-10 bg-accent q-pa-sm"
-      style="width: 292px"
+      class="bg-accent q-px-sm q-py-md"
+      style="width: 330px"
       max-height="calc(100vh - 70px)"
     >
       <slot></slot>
 
-      <div class="q-gutter-sm text-center q-mb-sm q-pt-sm">
+      <div class="q-gutter-sm text-center">
         <q-btn
           icon="mdi-home"
           padding="0"
           no-caps
           label="Home"
           stack
-          style="width: 80px; height: 72px"
-          size="13px"
+          style="width: 94px; height: 80px"
+          size="16px"
           v-close-popup
           :to="{ name: 'Home', params: { homeTab: 'home' } }"
           exact
@@ -29,8 +29,8 @@
           no-caps
           label="New"
           stack
-          style="width: 80px; height: 72px"
-          size="13px"
+          style="width: 94px; height: 80px"
+          size="16px"
           v-close-popup
           :to="{ name: 'New' }"
           exact
@@ -43,8 +43,8 @@
           no-caps
           label="Review"
           stack
-          style="width: 80px; height: 72px"
-          size="13px"
+          style="width: 94px; height: 80px"
+          size="16px"
           v-close-popup
           :to="{ name: 'Review', params: { reviewTab: 'articles' } }"
           flat
@@ -56,8 +56,8 @@
           padding="0"
           no-caps
           label="Authors"
-          style="width: 80px; height: 72px"
-          size="13px"
+          style="width: 94px; height: 80px"
+          size="16px"
           stack
           color="primary"
           :to="{ name: 'Authors' }"
@@ -69,8 +69,8 @@
           padding="0"
           no-caps
           label="Menu"
-          style="width: 80px; height: 72px"
-          size="13px"
+          style="width: 94px; height: 80px"
+          size="16px"
           stack
           color="grey"
           :to="{ name: 'Menu' }"
@@ -82,8 +82,8 @@
           padding="0"
           no-caps
           label="Translate"
-          style="width: 80px; height: 72px"
-          size="13px"
+          style="width: 94px; height: 80px"
+          size="16px"
           stack
           color="grey"
           :to="{ name: 'Translate' }"
@@ -91,9 +91,21 @@
         />
         <q-btn
           class="q-mt-md bg-grey-2"
+          label="Website"
+          icon="mdi-link"
+          style="width: 298px"
+          size="16px"
+          flat
+          no-caps
+          v-close-popup
+          href="https://activisthandbook.org"
+        />
+        <q-btn
+          class="bg-grey-2"
           label="Account"
           icon="mdi-account"
-          style="width: 256px"
+          style="width: 298px"
+          size="16px"
           flat
           no-caps
           v-close-popup
@@ -102,10 +114,9 @@
           }"
         />
         <q-btn
-          class="bg-grey-2"
           label="Sign out"
           icon="mdi-exit-to-app"
-          style="width: 256px"
+          dense
           flat
           no-caps
           v-close-popup

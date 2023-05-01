@@ -1,6 +1,6 @@
 <template>
   <div v-if="articles_draft.dataLoaded" class="q-gutter-y-md q-my-md">
-    <q-card v-if="!articles_draft.data[0]" class="bg-accent">
+    <q-card v-if="!articles_draft.data[0]" class="bg-accent" flat bordered>
       <q-card-section>No new edits.</q-card-section>
     </q-card>
 

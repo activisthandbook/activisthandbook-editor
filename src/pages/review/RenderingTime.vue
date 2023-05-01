@@ -1,23 +1,28 @@
 <template>
-  <q-card class="bg-secondary text-accent">
+  <q-card class="bg-secondary text-accent text-center q-py-md" flat>
     <q-card-section>
-      <div class="flex items-center q-gutter-md">
-        <q-spinner size="24px" style="opacity: 0.5" class="q-mr-sm" />
-        <div class="q-ml-sm text-bold">
-          <div>
-            Updating website... ({{ this.remainingSeconds }} seconds left)
-          </div>
-          <div class="text-caption">
-            Sending the update to servers in 100+ countries
-          </div>
+      <div>
+        <q-icon name="mdi-earth" size="64px" />
+        <q-spinner-rings
+          size="64px"
+          class="q-mr-sm"
+          style="margin-left: -40px"
+          color="accent"
+        />
+      </div>
+      <div class="q-mt-sm q-gutter-y-sm">
+        <div class="text-h2">Updating website...</div>
+        <div>
+          Sending the update to servers in 100+ countries. This may take a few
+          minutes.
         </div>
-        <q-space />
         <q-btn
+          class="q-mt-md"
           label="View changes"
           href="https://github.com/activisthandbook/activisthandbook/commits/main"
           target="_blank"
           no-caps
-          flat
+          outline
         />
       </div>
     </q-card-section>
@@ -27,7 +32,7 @@
 export default {
   data: function () {
     return {
-      remainingSeconds: 70,
+      remainingSeconds: 180,
     };
   },
   created() {
