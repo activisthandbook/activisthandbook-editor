@@ -20,7 +20,6 @@
           <div class="q-gutter-y-md q-mt-md q-mb-xl">
             <!-- ⌛️ RENDERING TIME -->
             <RenderingTime v-if="showRenderingTime" />
-            <RenderingTime />
 
             <!-- PUBLISHING QUEUE -->
             <PublishingQueue
