@@ -62,7 +62,7 @@
             <MyArticles v-if="tab === 'me'" />
             <NewArticles v-if="tab === 'new'" />
             <PublishedArticles v-if="tab === 'published'" />
-            <TreeArticles v-if="tab === 'tree'" />
+            <TreeArticles v-if="tab === 'tree'" folder="en/" />
             <ImportedArticles v-if="tab === 'import'" />
           </div>
         </div>

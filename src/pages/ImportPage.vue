@@ -142,6 +142,7 @@
     <q-btn label="Put all published in queue" @click="reRender()" />
     <q-btn label="Get all published IDs" @click="getPublishedIDs()" />
     <q-btn label="Get all draft IDs" @click="getDraftIDs()" />
+    <q-btn label="Set article folders" @click="setArticleFolders()" />
   </div>
 </template>
 <script>
@@ -158,8 +159,10 @@ import {
   where,
   collection,
   limit,
+  updateDoc,
   setDoc,
   Timestamp,
+  deleteField,
 } from "firebase/firestore";
 import { mapStores } from "pinia";
 import { useFirebaseStore } from "src/stores/firebase";
@@ -703,6 +706,36 @@ export default {
       });
 
       console.log("publishedIDs", list);
+    },
+    async setArticleFolders() {
+      const databaseArticles = await getDocs(
+        query(collection(db, "articles_draft"))
+      );
+
+      let list = [];
+
+      databaseArticles.forEach(async (article) => {
+        list.push(article.id);
+
+        const ref = doc(db, "articles_draft", article.id);
+
+        const data = article.data();
+
+        const pathParts = data.path.split("/");
+        let inFolder = data.langCode + "/";
+
+        for (let index = 0; index < pathParts.length - 1; index++) {
+          inFolder += pathParts[index] + "/";
+        }
+
+        await updateDoc(ref, {
+          inFolder: inFolder,
+          pathTags: deleteField(),
+          pathDepth: deleteField(),
+        });
+      });
+
+      console.log("done");
     },
   },
 };
