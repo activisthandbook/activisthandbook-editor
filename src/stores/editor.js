@@ -229,7 +229,7 @@ export const useEditorStore = defineStore("editor", {
 
       await this.updateHeadings();
       await this.updateImages();
-      await this.updatePathTags();
+      await this.updatePathFolder();
     },
     throttledSave: _.throttle(async function (userID) {
       await this.save(userID);
@@ -329,17 +329,16 @@ export const useEditorStore = defineStore("editor", {
 
       this.article.contentImages = images;
     },
-    async updatePathTags() {
+    async updatePathFolder() {
       if (this.article.path) {
-        const array = this.article.path.split("/");
-        let finalArray = [];
+        const pathParts = this.article.path.split("/");
+        let inFolder = this.article.langCode + "/";
 
-        for (let i = 0; i < array.length; i++) {
-          finalArray.push(`${i}*${array[i]}`);
+        for (let index = 0; index < pathParts.length - 1; index++) {
+          inFolder += pathParts[index] + "/";
         }
 
-        this.article.pathTags = finalArray;
-        this.article.pathDepth = finalArray.length;
+        this.article.inFolder = inFolder;
       }
     },
     validateArticle() {

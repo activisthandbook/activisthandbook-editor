@@ -46,7 +46,7 @@
           style="width: 94px; height: 80px"
           size="16px"
           v-close-popup
-          :to="{ name: 'Review', params: { reviewTab: 'articles' } }"
+          :to="{ name: 'Review' }"
           flat
           color="primary"
         />
