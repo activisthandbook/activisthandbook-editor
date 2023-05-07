@@ -10,7 +10,7 @@
     {{ part.value }}
   </span>
   <span
-    v-if="differences.length === 1 && differences[0].count === 0"
+    v-if="differences?.length === 1 && differences[0].count === 0"
     class="text-grey"
   >
     {{ fallback }}
