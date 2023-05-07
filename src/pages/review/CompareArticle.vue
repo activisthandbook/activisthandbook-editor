@@ -9,7 +9,7 @@
     "
   />
   <q-card v-else class="bg-accent" flat bordered>
-    <q-expansion-item>
+    <q-expansion-item @click="renderContentDifferences()">
       <template v-slot:header>
         <q-item-section class="q-py-md">
           <q-item-label class="text-caption q-pb-xs">
@@ -241,8 +241,15 @@
             <HighlightedDifferences
               :differences="differences.content"
               fallback="No content"
+              v-if="differences.content.length"
             />
           </code>
+          <q-btn
+            v-if="!differences.content.length"
+            label="Render differences (slow)"
+            @click="renderContentDifferences(true)"
+            outline
+          />
         </q-card-section>
       </q-card>
     </q-expansion-item>
@@ -295,39 +302,18 @@ export default {
         data: null,
         dataLoaded: false,
       },
+      differences: {
+        title: [],
+        description: [],
+        path: [],
+        content: [],
+      },
       article_draft_selected: 0,
     };
   },
   computed: {
     ...mapStores(useUsersStore, useAnalyticsStore),
-    differences() {
-      let differences = {};
 
-      const article_draft = this.article_draft.data;
-      let article_published = this.article_published.data;
-
-      differences.title = diffChars(
-        article_published.title || "",
-        article_draft.title || ""
-      );
-
-      differences.description = diffChars(
-        article_published.description || "",
-        article_draft.description || ""
-      );
-
-      differences.path = diffChars(
-        article_published.path || "",
-        article_draft.path || ""
-      );
-
-      differences.content = diffChars(
-        html_beautify(article_published.content || ""),
-        html_beautify(article_draft.content || "")
-      );
-
-      return differences;
-    },
     versionAuthor: function () {
       if (
         this.usersStore.profile.dataLoaded[
@@ -345,9 +331,10 @@ export default {
       );
     },
   },
-  async created() {
+  async mounted() {
     await this.fetch_article_draft({});
     await this.fetch_article_published();
+    await this.render_differences();
   },
   methods: {
     fullPath(article) {
@@ -408,7 +395,8 @@ export default {
         }
 
         const querySnapshot = await getDocs(q);
-        querySnapshot.forEach(async (doc) => {
+
+        for (const doc of querySnapshot.docs) {
           article_draft_doc = doc;
           this.article_draft.data = doc.data();
 
@@ -417,7 +405,7 @@ export default {
           await this.usersStore.fetchUser(
             this.article_draft.data.metadata.updatedBy
           );
-        });
+        }
       } else {
         this.article_draft.dataLoaded = true;
       }
@@ -445,6 +433,78 @@ export default {
         } else {
           // docSnap.data() will be undefined in this case
           this.$q.notify("Published version not found");
+        }
+      }
+    },
+    async render_differences() {
+      let differences = {};
+
+      const article_draft = this.article_draft.data;
+      let article_published = this.article_published.data;
+
+      differences.title = await diffChars(
+        article_published.title || "",
+        article_draft.title || ""
+      );
+
+      differences.description = await diffChars(
+        article_published.description || "",
+        article_draft.description || ""
+      );
+
+      differences.path = await diffChars(
+        article_published.path || "",
+        article_draft.path || ""
+      );
+
+      differences.content = [];
+
+      // differences.content = await diffChars(
+      //   await html_beautify(article_published.content || ""),
+      //   await html_beautify(article_draft.content || "")
+      // );
+
+      // setTimeout(async () => {
+      //   const article_published_beautified = await html_beautify(
+      //     article_published.content || ""
+      //   );
+      //   const article_draft_beautified = await html_beautify(
+      //     article_draft.content || ""
+      //   );
+
+      //   differences.content = await diffChars(
+      //     article_published_beautified,
+      //     article_draft_beautified
+      //   );
+      // }, 0);
+
+      this.differences = differences;
+    },
+    async renderContentDifferences(evenIfLong) {
+      if (!this.differences.content.length) {
+        const article_draft = this.article_draft.data;
+        let article_published = this.article_published.data;
+
+        console.log(article_published.content.length);
+        const diffLength =
+          article_draft.content.length - article_published.content.length || 0;
+
+        if (diffLength < 5000 || evenIfLong) {
+          let content;
+
+          const article_published_beautified = await html_beautify(
+            article_published.content || ""
+          );
+          const article_draft_beautified = await html_beautify(
+            article_draft.content || ""
+          );
+
+          content = await diffChars(
+            article_published_beautified,
+            article_draft_beautified
+          );
+
+          this.differences.content = content;
         }
       }
     },

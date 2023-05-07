@@ -32,24 +32,42 @@
           >No articles in this folder.</q-card-section
         >
         <div v-else v-for="(article, indexData) in set.data" :key="article.id">
-          <q-item clickable class="q-py-md" @click="openFolder(article)">
-            <q-item-section avatar>
-              <q-avatar icon="mdi-folder" />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label class="text-bold">/{{ article.path }}</q-item-label>
-              <q-item-label>{{ article.title }}</q-item-label>
-            </q-item-section>
-            <q-item-section side>
+          <q-item clickable class="q-pa-none flex full-with">
+            <div
+              style="width: calc(100%)"
+              class="q-py-sm flex q-pl-md"
+              @click="openFolder(article)"
+            >
+              <q-item-section avatar>
+                <q-avatar icon="mdi-folder" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label class="text-bold"
+                  >/{{ article.path }}</q-item-label
+                >
+                <q-item-label>{{ article.title }}</q-item-label>
+              </q-item-section>
+              <!-- <q-item-section side>
               <q-btn
                 icon="mdi-pencil"
                 round
                 flat
                 :to="{ name: 'Edit', params: { articleID: article.id } }"
               />
-            </q-item-section>
+            </q-item-section> -->
+            </div>
+            <div class="flex items-center q-pr-md">
+              <q-btn
+                icon="mdi-pencil"
+                round
+                flat
+                :to="{ name: 'Edit', params: { articleID: article.id } }"
+              />
+            </div>
           </q-item>
+
           <q-separator
+            class="full-width"
             v-if="
               !(
                 indexSet === scrollSet.length - 2 &&
