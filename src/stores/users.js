@@ -84,28 +84,6 @@ export const useUsersStore = defineStore("users", {
       delete this.profile.error[userID];
       delete this.profile.unsubscribe[userID];
     },
-    async createUser(userID, currentUserID) {
-      let data = {
-        ...this.profile.data[userID],
-        metadata: {
-          createdTimestamp: serverTimestamp(),
-          createdBy: currentUserID,
-          updatedTimestamp: serverTimestamp(),
-          updatedBy: currentUserID,
-        },
-      };
-      if (!this.profile.data[userID].metadata?.createdTimestamp) {
-        console.log("created");
-        data.metadata.createdTimestamp = serverTimestamp();
-        data.metadata.createdBy = userID;
-      }
-      await setDoc(doc(db, "users_profile", userID), data, {
-        merge: true,
-      }).catch((error) => {
-        Notify.create("Creating user failed");
-        console.error(error);
-      });
-    },
     async saveUser(userID, currentUserID) {
       let data = {
         ...this.profile.data[userID],
@@ -115,10 +93,12 @@ export const useUsersStore = defineStore("users", {
         },
       };
       if (!this.profile.data[userID].metadata?.createdTimestamp) {
-        console.log("created");
+        console.log("creating...");
+        data.id = currentUserID;
         data.metadata.createdTimestamp = serverTimestamp();
         data.metadata.createdBy = userID;
       }
+      console.log(data);
       await setDoc(doc(db, "users_profile", userID), data, {
         merge: true,
       }).catch((error) => {
