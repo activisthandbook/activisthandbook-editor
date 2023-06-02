@@ -164,7 +164,7 @@
         </div>
       </q-card>
       <div class="text-bold row items-center justify-center q-mt-xl">
-        <q-icon name="mdi-heart" class="q-mr-sm" /> We train 4000 activists
+        <q-icon name="mdi-heart" class="q-mr-sm" /> We train 6000 activists
         every month
       </div>
     </div>
@@ -215,7 +215,7 @@ export default {
           .firstName
       ) {
         this.loading = true;
-        await this.usersStore.saveUser(
+        await this.usersStore.createUser(
           this.firebaseStore.auth.currentUser.uid,
           this.firebaseStore.auth.currentUser.uid
         );
