@@ -215,7 +215,7 @@ export default {
           .firstName
       ) {
         this.loading = true;
-        await this.usersStore.createUser(
+        await this.usersStore.saveUser(
           this.firebaseStore.auth.currentUser.uid,
           this.firebaseStore.auth.currentUser.uid
         );
