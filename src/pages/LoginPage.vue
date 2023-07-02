@@ -77,7 +77,7 @@
               <div class="text-bold">The Wikipedia for activists</div>
               <div>
                 Activist Handbook is written by activists all over the globe.
-                With our guides, we train over 4000 change-makers every month.
+                With our guides, we train over 6000 change-makers every month.
               </div>
               <div>
                 We use an

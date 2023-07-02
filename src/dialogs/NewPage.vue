@@ -106,6 +106,7 @@ export default {
           },
         ],
         articles_published: null,
+        id: newLanguageCollectionID,
         metadata: {
           updatedTimestamp: serverTimestamp(),
           updatedBy: this.firebaseStore.auth.currentUser.uid,
