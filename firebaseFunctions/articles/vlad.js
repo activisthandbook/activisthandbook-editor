@@ -7,74 +7,37 @@ const propertyId =
 const {BetaAnalyticsDataClient} = require('@google-analytics/data');
 const analyticsDataClient = new BetaAnalyticsDataClient();
 
-// exports.vlad = functions
-// .region("europe-west1").https.onRequest((req, res) => {
-//   try {
-//     // Return a success response
-//     res.status(200).send("Function ran successfully.");
-//   } catch (err) {
-//     // Return an error response
-//     res.status(500).send("Function failed: " + err.message);
-//   }
-// });
 
-// exports.vlad = functions
-// .region("europe-west1").https.onCall(async (data, context) => {
-  
-//     return "yes"
-// });
+// stored in articles_published collection per page
+const perPageQueries = [
+  // views per page with last 30days, last 30-60days, and last week
+  {"dimensions":[{"name":"pagePath"}],"metrics":[{"name":"screenPageViews"}],"dateRanges":[{"startDate":"30daysAgo","endDate":"yesterday"},{"startDate":"60daysAgo","endDate":"30daysAgo"},{"startDate":"7daysAgo","endDate":"yesterday"}]},
+  // user visits per page
+  {"dimensions":[{"name":"pagePath"}],"metrics":[{"name":"screenPageViewsPerUser"}],"dateRanges":[{"startDate":"30daysAgo","endDate":"yesterday"},{"startDate":"60daysAgo","endDate":"30daysAgo"},{"startDate":"7daysAgo","endDate":"yesterday"}]},
+  // user engagement duration per page
+  {"dimensions":[{"name":"pagePath"}],"metrics":[{"name":"userEngagementDuration"}],"dateRanges":[{"startDate":"30daysAgo","endDate":"yesterday"},{"startDate":"60daysAgo","endDate":"30daysAgo"},{"startDate":"7daysAgo","endDate":"yesterday"}]},
+  // conversions per page
+  {"dimensions":[{"name":"pagePath"}],"metrics":[{"name":"conversions"}],"dateRanges":[{"startDate":"30daysAgo","endDate":"yesterday"},{"startDate":"60daysAgo","endDate":"30daysAgo"},{"startDate":"7daysAgo","endDate":"yesterday"}]}
+]
 
-  /**
-   * TODO(developer): Uncomment this variable and replace with your
-   *   Google Analytics 4 property ID before running the sample.
-   */
+// Currently unused as IDK where to store this data
+// average engagement??? Is that total engagement time divided by active users or pages?
+// Average engaged sessions per user??? total users or active user PER engagedSessions or userEngagementDuration?
+const totalQueries = [
+  // active users, now including weekly
+  {"metrics":[{"name":"activeUsers"}],"dateRanges":[{"startDate":"30daysAgo","endDate":"yesterday"},{"startDate":"60daysAgo","endDate":"30daysAgo"},{"startDate":"7daysAgo","endDate":"yesterday"}]},
+  // new users
+  {"metrics":[{"name":"newUsers"}],"dateRanges":[{"startDate":"30daysAgo","endDate":"yesterday"},{"startDate":"60daysAgo","endDate":"30daysAgo"},{"startDate":"7daysAgo","endDate":"yesterday"}]},
+  // all page views
+  {"metrics":[{"name":"screenPageViews"}],"dateRanges":[{"startDate":"30daysAgo","endDate":"yesterday"},{"startDate":"60daysAgo","endDate":"30daysAgo"},{"startDate":"7daysAgo","endDate":"yesterday"}]},
 
-  // Imports the Google Analytics Data API client library.
 
-  // Using a default constructor instructs the client to use the credentials
-  // specified in GOOGLE_APPLICATION_CREDENTIALS environment variable.
-
-  // Runs a simple report.
-
-// let x = [
-//   // store into articles_published collection per page
-//   // views per page with last 30days, last 30-60days, and last week
-//   {"dimensions":[{"name":"pagePath"}],"metrics":[{"name":"screenPageViews"}],"dateRanges":[{"startDate":"30daysAgo","endDate":"yesterday"},{"startDate":"60daysAgo","endDate":"30daysAgo"},{"startDate":"7daysAgo","endDate":"yesterday"}]}
-  
-//   // views per page with both last 30days and last 30-60days
-//   {"dimensions":[{"name":"pagePath"}],"metrics":[{"name":"screenPageViews"}],"dateRanges":[{"startDate":"30daysAgo","endDate":"yesterday"},{"startDate":"60daysAgo","endDate":"30daysAgo"},{"startDate":"7daysAgo","endDate":"yesterday"}]}
-
-//   // user visits per page
-//   {"dimensions":[{"name":"pagePath"}],"metrics":[{"name":"screenPageViewsPerUser"}],"dateRanges":[{"startDate":"30daysAgo","endDate":"yesterday"},{"startDate":"60daysAgo","endDate":"30daysAgo"},{"startDate":"7daysAgo","endDate":"yesterday"}]}
-
-//   // user engagement duration per page
-//   {"dimensions":[{"name":"pagePath"}],"metrics":[{"name":"userEngagementDuration"}],"dateRanges":[{"startDate":"30daysAgo","endDate":"yesterday"},{"startDate":"60daysAgo","endDate":"30daysAgo"},{"startDate":"7daysAgo","endDate":"yesterday"}]}
-
-//   // conversions per page
-//   {"dimensions":[{"name":"pagePath"}],"metrics":[{"name":"conversions"}],"dateRanges":[{"startDate":"30daysAgo","endDate":"yesterday"},{"startDate":"60daysAgo","endDate":"30daysAgo"},{"startDate":"7daysAgo","endDate":"yesterday"}]}
-
-//   // active users, now including weekly
-//   {"metrics":[{"name":"activeUsers"}],"dateRanges":[{"startDate":"30daysAgo","endDate":"yesterday"},{"startDate":"60daysAgo","endDate":"30daysAgo"},{"startDate":"7daysAgo","endDate":"yesterday"}]}
-
-//   // new users
-//   {"metrics":[{"name":"newUsers"}],"dateRanges":[{"startDate":"30daysAgo","endDate":"yesterday"},{"startDate":"60daysAgo","endDate":"30daysAgo"},{"startDate":"7daysAgo","endDate":"yesterday"}]}
-
-//   // all page views
-//   {"metrics":[{"name":"screenPageViews"}],"dateRanges":[{"startDate":"30daysAgo","endDate":"yesterday"},{"startDate":"60daysAgo","endDate":"30daysAgo"},{"startDate":"7daysAgo","endDate":"yesterday"}]}
-
-//   // all page views per language, language is a dimension and not a metric that we can query, so I took something very generic, to see the language demographics
-//   {"dimensions":[{"name":"language"}],"metrics":[{"name":"screenPageViews"}],"dateRanges":[{"startDate":"30daysAgo","endDate":"yesterday"},{"startDate":"60daysAgo","endDate":"30daysAgo"},{"startDate":"7daysAgo","endDate":"yesterday"}]}
-  
-//   // all page views per country, same problem as with language demographics
-//   {"dimensions":[{"name":"country"}],"metrics":[{"name":"screenPageViews"}],"dateRanges":[{"startDate":"30daysAgo","endDate":"yesterday"},{"startDate":"60daysAgo","endDate":"30daysAgo"},{"startDate":"7daysAgo","endDate":"yesterday"}]}
-
-//   // average engagement??? Is that total engagement time divided by active users or pages?
-//   // Average engaged sessions per user??? total users or active user PER engagedSessions or userEngagementDuration?
-// ]
-
-// const myquery = {"metrics":[{"name":"screenPageViews"}],"dateRanges":[{"startDate":"30daysAgo","endDate":"yesterday"},{"startDate":"60daysAgo","endDate":"30daysAgo"},{"startDate":"7daysAgo","endDate":"yesterday"}]}
-
-const myquery = [{"dimensions":[{"name":"pagePath"}],"metrics":[{"name":"screenPageViews"}],"dateRanges":[{"startDate":"30daysAgo","endDate":"yesterday"},{"startDate":"60daysAgo","endDate":"30daysAgo"},{"startDate":"7daysAgo","endDate":"yesterday"}]}, {"dimensions":[{"name":"pagePath"}],"metrics":[{"name":"screenPageViewsPerUser"}],"dateRanges":[{"startDate":"30daysAgo","endDate":"yesterday"},{"startDate":"60daysAgo","endDate":"30daysAgo"},{"startDate":"7daysAgo","endDate":"yesterday"}]}]
+  // These two might require different handling
+  // all page views per language, language is a dimension and not a metric that we can query, so I took something very generic, to see the language demographics
+  {"dimensions":[{"name":"language"}],"metrics":[{"name":"screenPageViews"}],"dateRanges":[{"startDate":"30daysAgo","endDate":"yesterday"},{"startDate":"60daysAgo","endDate":"30daysAgo"},{"startDate":"7daysAgo","endDate":"yesterday"}]},
+  // all page views per country, same problem as with language demographics
+  {"dimensions":[{"name":"country"}],"metrics":[{"name":"screenPageViews"}],"dateRanges":[{"startDate":"30daysAgo","endDate":"yesterday"},{"startDate":"60daysAgo","endDate":"30daysAgo"},{"startDate":"7daysAgo","endDate":"yesterday"}]}
+]
 
 async function getPublishedArticles(publishedArticlesRef) {
   const publishedArticlesSnapshot = await publishedArticlesRef.get()
@@ -136,8 +99,6 @@ function fillMissingFields(articleStatistics, articleID, metricName) {
 }
 
 async function getDataFromQuery(query, articles) {
-  // sadly i awfully fear that we will need a different mapping for each thing
-  // like mapping for time ranges, and all other things like total view counts as well
   const [response] = await analyticsDataClient.runReport({
     property: `properties/${propertyId}`,
     ...query
@@ -145,7 +106,6 @@ async function getDataFromQuery(query, articles) {
   
   let articleStatistics = {}
   response.rows.forEach(row => {
-    // console.log(row.dimensionValues[0].value);
     if (row.dimensionValues[0].value in articles) {
       const articleID = articles[row.dimensionValues[0].value].articleID
       const timeRange = mapTimeRange(row.dimensionValues[1].value)
@@ -154,22 +114,15 @@ async function getDataFromQuery(query, articles) {
       // We will be updating "statistics" field, each statistic has a name taken from the OG
       // query we used. Then each statistic has some time ranges to choose from.
       articleStatistics[articleID]["statistics"][query["metrics"][0].name][timeRange] = row.metricValues[0].value
-      // console.log(articleStatistics[articleID]["statistics"][query["metrics"][0].name][timeRange]);
     }
   });
-  console.log(articleStatistics["QbshbTYjS2_21RHiZuFH24wVQ2FQFgiB"]["statistics"]);
-  console.log(articleStatistics["0iM1Ybt-Lhrxd1sDOzRcCnsbqVLb06gG"]["statistics"]);
-  console.log(articleStatistics["giNhpzUbgC6kk7sqMLbvELn8eLhpzayB"]["statistics"]);
-  console.log(articleStatistics["0iM1Ybt-Lhrxd1sDOzRcCnsbqVLb06gG"]["statistics"]["screenPageViews"]);
-  console.log(articleStatistics["0iM1Ybt-Lhrxd1sDOzRcCnsbqVLb06gG"]["statistics"]["screenPageViewsPerUser"]);
-  // console.log(articles);
-  // console.log(query);
+  console.log("Article lenght:", Object.keys(articleStatistics).length); // just a debug log
   return articleStatistics
 }
 
 function getAllStatistics(articles) {
   let allStatistics = {}
-  myquery.forEach(query => {
+  perPageQueries.forEach(query => {
     newStatistics = getDataFromQuery(query, articles)
     allStatistics = {
       ...allStatistics,
@@ -179,45 +132,10 @@ function getAllStatistics(articles) {
   return allStatistics
 }
 
-
-// get articles
-// get data for each articles
-// update it
-
 exports.vlad = functions.region("europe-west1").pubsub.schedule('20 19 * * 1').onRun( async (context) => {
-    const publishedArticlesRef = await db.collection("articles_published")
-    const articles = await getPublishedArticles(publishedArticlesRef);
-    const allStatistics = getAllStatistics(articles)
-    saveData(allStatistics, publishedArticlesRef)
-    return null;
-  });
-
-
-
-
-//   const analyticsreporting = google.analyticsreporting('v4');
-  
-//   const res = await analyticsreporting.reports.batchGet({
-//       requestBody: {
-//       reportRequests: [
-//           {
-//           viewId: '65704806',
-//           dateRanges: [
-//               {
-//               startDate: '14daysAgo',
-//               endDate: '7daysAgo',
-//               },
-//           ],
-//           metrics: [
-//               {
-//               expression: 'ga:users',
-//               },
-//           ],
-//           },
-//       ],
-//       },
-//   });
-//   console.log(res.data);
-//   return res.data;
-  
-    
+  const publishedArticlesRef = await db.collection("articles_published")
+  const articles = await getPublishedArticles(publishedArticlesRef);
+  const allStatistics = getAllStatistics(articles)
+  saveData(allStatistics, publishedArticlesRef)
+  return null;
+});
