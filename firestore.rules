@@ -131,7 +131,7 @@ service cloud.firestore {
           allow create: if
             signedIn() &&
             request.resource.data.articleID == articleID &&
-            validMetadataCreated(versionID) &&
+            // validMetadataCreated(versionID) &&
             validMetadataUpdated(versionID);
           allow delete: if hasRole(getRoles(), "moderator");
         }

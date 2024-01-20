@@ -319,9 +319,6 @@ const CustomHeading = Heading.extend({
       },
       id: {
         default: null,
-        // rendered: false,
-        // parseHTML: (element) =>
-        //   element.querySelector("img")?.getAttribute("imageID"),
       },
     };
   },

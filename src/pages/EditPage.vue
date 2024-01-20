@@ -463,7 +463,7 @@ export default {
 
       // 2. Update live draft
       batch.set(
-        doc(db, "articles_draft", this.$route.params.articleID),
+        doc(db, "articles_draft", this.editorStore.article.id),
         {
           requestedPublication: true,
           requestedPublicationTimestamp: time,

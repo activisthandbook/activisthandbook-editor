@@ -1,4 +1,5 @@
 <template>
+  {{ article_draft_live.id }}
   <q-skeleton
     class="rounded-borders"
     height="144.77px"
@@ -12,50 +13,33 @@
     <q-expansion-item @click="renderContentDifferences()">
       <template v-slot:header>
         <q-item-section class="q-py-md">
-          <q-item-label class="text-caption q-pb-xs">
-            <q-chip
-              dense
-              square
-              class="text-caption q-ml-none q-mt-none q-mr-sm"
-              color="grey-2"
-              text-color="black"
-            >
+          <q-item-label class="q-pb-sm q-gutter-sm" caption>
+            <q-badge color="grey-2" text-color="black">
               {{ versionDate }}
-            </q-chip>
-            <q-chip
+            </q-badge>
+            <q-badge
               v-if="!article_draft_live.lastPublishedServerTimestamp"
-              dense
-              square
-              class="text-caption q-ml-none q-mt-none q-mr-sm"
               color="secondary"
               text-color="accent"
               icon="mdi-star"
             >
+              <q-icon name="mdi-star" class="q-mr-xs" />
               New
-            </q-chip>
-            <q-chip
-              v-if="article_draft.data.deleteArticle"
-              dense
-              square
-              class="text-caption q-ml-none q-mt-none q-mr-sm"
-              color="warning"
-              icon="mdi-delete"
-            >
+            </q-badge>
+            <q-badge v-if="article_draft.data.deleteArticle" color="warning">
+              <q-icon name="mdi-delete" class="q-mr-xs" />
               Delete
-            </q-chip>
-            <q-chip
+            </q-badge>
+            <q-badge
               v-if="
                 article_draft.data.content === article_published.data.content
               "
-              dense
-              square
-              class="text-caption q-ml-none q-mt-none q-mr-sm"
               color="grey-8"
               text-color="accent"
-              icon="mdi-pencil-off"
             >
+              <q-icon name="mdi-pencil-off" class="q-mr-xs" />
               Same content
-            </q-chip>
+            </q-badge>
           </q-item-label>
           <q-item-label class="text-bold">
             <HighlightedDifferences
@@ -443,18 +427,18 @@ export default {
       let article_published = this.article_published.data;
 
       differences.title = await diffChars(
-        article_published.title || "",
-        article_draft.title || ""
+        article_published?.title || "",
+        article_draft?.title || ""
       );
 
       differences.description = await diffChars(
-        article_published.description || "",
-        article_draft.description || ""
+        article_published?.description || "",
+        article_draft?.description || ""
       );
 
       differences.path = await diffChars(
-        article_published.path || "",
-        article_draft.path || ""
+        article_published?.path || "",
+        article_draft?.path || ""
       );
 
       differences.content = [];
@@ -489,7 +473,7 @@ export default {
         const diffLength =
           article_draft.content.length - article_published.content.length || 0;
 
-        if (diffLength < 5000 || evenIfLong) {
+        if (evenIfLong) {
           let content;
 
           const article_published_beautified = await html_beautify(
