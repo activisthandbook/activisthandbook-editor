@@ -16,28 +16,30 @@
         <q-item-label class="text-bold">
           {{ author.firstName }} {{ author.lastName }}
         </q-item-label>
-        <q-item-label>
-          <q-chip
+        <q-item-label class="q-gutter-xs">
+          <q-badge
             color="primary"
-            text-color="accent"
+            outline
             icon="mdi-file-document-edit"
             v-if="author.editCount"
+            class="text-body2"
           >
+            <q-icon name="mdi-heart" class="q-mr-xs" />
             <span class="q-mr-xs text-bold">{{ author.editCount }}</span>
             <span v-if="author.editCount > 1">edits</span>
             <span v-else>edit</span>
-          </q-chip>
-          <RoleChips :roles="author.roles" />
+          </q-badge>
+          <RoleBadges :roles="author.roles" />
         </q-item-label>
       </q-item-section>
     </q-item>
   </q-list>
 </template>
 <script>
-import RoleChips from "components/RoleChips.vue";
+import RoleBadges from "src/components/RoleBadges.vue";
 
 export default {
   props: ["authors"],
-  components: { RoleChips },
+  components: { RoleBadges },
 };
 </script>

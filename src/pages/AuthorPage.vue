@@ -27,23 +27,28 @@
                   {{ usersStore.profile.data[$route.params.authorID].lastName }}
                 </h2>
 
-                <q-chip color="primary" dark icon="mdi-file-document-edit">
-                  <span class="q-mr-xs text-bold">{{
-                    usersStore.profile.data[$route.params.authorID].editCount
-                  }}</span>
-                  <span
-                    v-if="
-                      usersStore.profile.data[$route.params.authorID]
-                        .editCount > 1
-                    "
-                    >edits</span
-                  >
-                  <span v-else>edit</span>
-                </q-chip>
+                <div class="q-gutter-sm">
+                  <q-badge color="primary" outline class="text-body2">
+                    <q-icon name="mdi-heart" class="q-mr-xs" />
+                    <span class="q-mr-xs text-bold">{{
+                      usersStore.profile.data[$route.params.authorID].editCount
+                    }}</span>
+                    <span
+                      v-if="
+                        usersStore.profile.data[$route.params.authorID]
+                          .editCount > 1
+                      "
+                      >edits</span
+                    >
+                    <span v-else>edit</span>
+                  </q-badge>
 
-                <RoleChips
-                  :roles="usersStore.profile.data[$route.params.authorID].roles"
-                />
+                  <RoleBadges
+                    :roles="
+                      usersStore.profile.data[$route.params.authorID].roles
+                    "
+                  />
+                </div>
               </div>
             </q-card-section>
 
@@ -86,7 +91,7 @@
                     {{
                       mixin_humanDate(
                         usersStore.profile.data[$route.params.authorID].metadata
-                          .createdTimestamp
+                          .updatedTimestamp
                       )
                     }}
                   </q-item-label>
@@ -166,12 +171,12 @@ import { mapStores } from "pinia";
 import { useUsersStore } from "src/stores/users";
 import { useFirebaseStore } from "src/stores/firebase";
 
-import RoleChips from "components/RoleChips.vue";
+import RoleBadges from "components/RoleBadges.vue";
 import AppSwitcher from "components/AppSwitcher.vue";
 import ArticleList from "components/ArticleList.vue";
 
 export default {
-  components: { AppSwitcher, RoleChips, ArticleList },
+  components: { AppSwitcher, RoleBadges, ArticleList },
   computed: {
     ...mapStores(useUsersStore, useFirebaseStore),
   },
